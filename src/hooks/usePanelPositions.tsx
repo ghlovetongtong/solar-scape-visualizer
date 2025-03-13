@@ -52,7 +52,7 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              Math.PI/6,          // X轴旋转30度（π/6弧度 = 30度）
+              -Math.PI/6,         // X轴旋转-30度（-π/6弧度 = -30度）
               0,                  // Y轴旋转保持为0
               0                   // Z轴旋转保持为0
             ],
@@ -106,7 +106,7 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              Math.PI/6,          // X轴旋转30度（π/6弧度 = 30度）
+              -Math.PI/6,         // X轴旋转-30度（-π/6弧度 = -30度）
               0,                  // Y轴旋转保持为0
               0                   // Z轴旋转保持为0
             ],
@@ -120,7 +120,7 @@ export function usePanelPositions(initialCount: number = 2000) {
       setPanelPositions(instances);
       setInitialPositions(instances);
       setIsInitialized(true);
-      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列且X轴旋转30度`);
+      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列且X轴旋转-30度`);
     } catch (error) {
       console.error("初始化面板位置时出错:", error);
     }
