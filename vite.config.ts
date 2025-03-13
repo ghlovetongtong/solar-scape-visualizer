@@ -28,4 +28,6 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  // Ensure Vite properly handles non-JavaScript assets like images
+  assetsInclude: ['**/*.jpg', '**/*.png', '**/*.svg', '**/*.gif'],
 }));
