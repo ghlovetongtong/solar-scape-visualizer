@@ -79,43 +79,52 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return panelPositions.find(panel => panel.id === selectedPanelId) || null;
   }, [panelPositions, selectedPanelId]);
   
+  const instancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
+  
+  // Update the matrices for all instances using useEffect
+  useEffect(() => {
+    panelBatches.forEach((batch, batchIndex) => {
+      const mesh = instancedMeshRefs.current[batchIndex];
+      if (!mesh) return;
+      
+      batch.forEach((panel, index) => {
+        const matrix = new THREE.Matrix4();
+        const position = new THREE.Vector3(...panel.position);
+        const rotation = new THREE.Euler(...panel.rotation);
+        const quaternion = new THREE.Quaternion().setFromEuler(rotation);
+        const scale = new THREE.Vector3(...panel.scale);
+        
+        matrix.compose(position, quaternion, scale);
+        
+        // Hide the panel if it's the selected one (we'll render it separately)
+        if (panel.id === selectedPanelId) {
+          // Make it invisible by scaling to zero
+          const invisibleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+          mesh.setMatrixAt(index, invisibleMatrix);
+        } else {
+          mesh.setMatrixAt(index, matrix);
+        }
+      });
+      
+      // Mark the instance matrix as needing update
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+  }, [panelBatches, selectedPanelId]);
+  
   return (
     <group onClick={handleClick}>
       {/* Render panels in batches using instancing for performance */}
       {panelBatches.map((batch, batchIndex) => (
-        <group key={`batch-${batchIndex}`}>
-          <instancedMesh
-            args={[undefined, undefined, batch.length]}
-            geometry={panelGeometry}
-            material={materials.panelMaterial}
-            castShadow
-            receiveShadow
-            userData={{ batchIndex }}
-          >
-            {batch.map((panel, index) => {
-              const matrix = new THREE.Matrix4();
-              const position = new THREE.Vector3(...panel.position);
-              const rotation = new THREE.Euler(...panel.rotation);
-              const quaternion = new THREE.Quaternion().setFromEuler(rotation);
-              const scale = new THREE.Vector3(...panel.scale);
-              
-              matrix.compose(position, quaternion, scale);
-              
-              // Hide the panel if it's the selected one (we'll render it separately)
-              if (panel.id === selectedPanelId) {
-                matrix.makeScale(0, 0, 0); // Make it invisible
-              }
-              
-              return (
-                <instancedBufferAttribute
-                  key={index}
-                  attach={`instanceMatrix[${index}]`}
-                  args={[matrix.toArray(), 16, false, index]}
-                />
-              );
-            })}
-          </instancedMesh>
-        </group>
+        <instancedMesh
+          key={`batch-${batchIndex}`}
+          ref={(mesh) => {
+            if (mesh) instancedMeshRefs.current[batchIndex] = mesh;
+          }}
+          args={[panelGeometry, materials.panelMaterial, batch.length]}
+          castShadow
+          receiveShadow
+          userData={{ batchIndex }}
+        />
       ))}
       
       {/* Render selected panel separately with highlight material */}
