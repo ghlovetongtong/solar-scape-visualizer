@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
@@ -6,10 +5,11 @@ import { getHeightAtPosition } from '@/components/Scene/Ground';
 // 根据电站分布图精确定义布局常量
 const PANEL_SPACING_X = 1.2; // 光伏板水平间距
 const PANEL_SPACING_Z = 3.0; // 光伏板垂直间距（行间距）
-const ROW_SPACING = 16;      // 每组行之间的间距
-const PANELS_PER_ROW = 20;   // 每行的面板数量
-const ROWS_IN_SECTION_1 = 14; // 左侧区域行数
-const ROWS_IN_SECTION_2 = 16; // 右侧区域行数
+const ROAD_WIDTH = 20;      // 中间公路的宽度
+const PANELS_PER_ROW_LEFT = 15;   // 左侧每行的面板数量
+const PANELS_PER_ROW_RIGHT = 25;  // 右侧每行的面板数量（较大区域）
+const ROWS_IN_LEFT_SECTION = 12; // 左侧区域行数
+const ROWS_IN_RIGHT_SECTION = 18; // 右侧区域行数
 
 export function usePanelPositions(initialCount: number = 2000) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
@@ -26,24 +26,16 @@ export function usePanelPositions(initialCount: number = 2000) {
       // 根据图片，整体旋转约15度
       const totalRotation = Math.PI * 0.083; // 约15度的旋转
       
-      // 绘制第一个区域（左侧区域）- 根据图片显示为较小的区域
-      const startX1 = -70;
+      // 绘制左侧区域 - 规则的小矩形
+      const startX1 = -100;
       const startZ1 = -40;
       let panelId = 0;
       
-      // 左侧区域排列 - 每行的面板数量略有减少，形状更为不规则
-      for (let row = 0; row < ROWS_IN_SECTION_1 && panelId < initialCount; row++) {
-        // 每行末端根据图片显示应该是不齐的，有特定形状
-        const isEdgeRow = row < 2 || row > ROWS_IN_SECTION_1 - 3;
-        const rowPanelCount = isEdgeRow ? PANELS_PER_ROW - 4 : PANELS_PER_ROW;
-        
-        // 左上和左下角特有的形状处理
-        const rowOffset = row * 0.2; // 轻微的错位效果
-        const startColOffset = row < 3 ? 2 : (row > ROWS_IN_SECTION_1 - 4 ? 2 : 0);
-        
-        for (let col = startColOffset; col < rowPanelCount; col++) {
-          // 根据图片显示，光伏板排列不是完全规则的
-          const rawX = startX1 + col * PANEL_SPACING_X + rowOffset;
+      // 左侧区域排列 - 规则矩形区域
+      for (let row = 0; row < ROWS_IN_LEFT_SECTION && panelId < initialCount; row++) {
+        for (let col = 0; col < PANELS_PER_ROW_LEFT; col++) {
+          // 计算位置但确保没有叠放
+          const rawX = startX1 + col * PANEL_SPACING_X;
           const rawZ = startZ1 + row * PANEL_SPACING_Z;
           
           // 旋转坐标以匹配图片中的方向
@@ -53,8 +45,8 @@ export function usePanelPositions(initialCount: number = 2000) {
           // 获取该位置的地面高度
           const groundHeight = getHeightAtPosition(x, z);
           
-          // 根据图片显示，面板有轻微的旋转变化
-          const rowRotationY = (Math.random() - 0.5) * 0.02 + totalRotation;
+          // 随机微调角度使排列看起来更自然
+          const rowRotationY = totalRotation + (Math.random() - 0.5) * 0.01;
           
           instances.push({
             id: panelId,
@@ -75,52 +67,47 @@ export function usePanelPositions(initialCount: number = 2000) {
         }
       }
       
-      // 根据图片中显示的间隙设置中间通道宽度
-      const middleGap = 25;
+      // 中间是一条公路, 设置间隔
       
-      // 绘制第二个区域（右侧区域）
-      const startX2 = startX1 + middleGap;
-      const startZ2 = startZ1 - 5; // 根据图片，右侧区域位置应该更靠上
+      // 绘制右侧区域 - 不规则大矩形
+      const startX2 = startX1 + PANELS_PER_ROW_LEFT * PANEL_SPACING_X + ROAD_WIDTH;
+      const startZ2 = startZ1 - 5; // 右侧区域位置稍微偏上
       
-      // 右侧区域排列 - 根据图片显示为较大的区域，但形状仍然不规则
-      for (let row = 0; row < ROWS_IN_SECTION_2 && panelId < initialCount; row++) {
-        // 根据图片处理右侧区域特有的形状
-        const isTopRow = row < 3;
-        const isBottomRow = row > ROWS_IN_SECTION_2 - 4;
-        const isMiddleRow = row >= 5 && row <= ROWS_IN_SECTION_2 - 6;
-        
-        // 根据图片确定每行面板数量
-        let rowPanelCount = PANELS_PER_ROW + 6; // 右侧区域比左侧宽
+      // 右侧区域排列 - 不规则矩形
+      for (let row = 0; row < ROWS_IN_RIGHT_SECTION && panelId < initialCount; row++) {
+        // 不规则形状处理：顶部和底部行数少一些，中间行数多一些
+        let rowPanelCount = PANELS_PER_ROW_RIGHT;
         let startColOffset = 0;
         
-        if (isTopRow) {
-          // 右上角有特殊形状
-          rowPanelCount -= 8;
-          startColOffset = 4;
-        } else if (isBottomRow) {
-          // 右下角有特殊形状
-          rowPanelCount -= 4;
-        } else if (isMiddleRow) {
-          // 中间区域最宽
-          rowPanelCount += 2;
+        // 上部形状处理（梯形上部）
+        if (row < 3) {
+          startColOffset = 6 - row * 2; // 上部收窄
+          rowPanelCount -= startColOffset;
+        }
+        // 下部形状处理（右下角缺口）
+        else if (row > ROWS_IN_RIGHT_SECTION - 5) {
+          const bottomRow = row - (ROWS_IN_RIGHT_SECTION - 5);
+          rowPanelCount -= bottomRow * 3; // 右下角缺口
+        }
+        // 右侧中部往外凸出
+        else if (row >= 6 && row <= 10) {
+          rowPanelCount += 3; // 中间部分向右凸出
         }
         
-        const rowOffset = row * 0.2; // 轻微的错位效果
-        
-        for (let col = startColOffset; col < rowPanelCount; col++) {
-          // 根据图片显示的不规则排列
-          const rawX = startX2 + col * PANEL_SPACING_X + rowOffset;
+        for (let col = 0; col < rowPanelCount; col++) {
+          // 计算位置
+          const rawX = startX2 + (col + startColOffset) * PANEL_SPACING_X;
           const rawZ = startZ2 + row * PANEL_SPACING_Z;
           
-          // 旋转坐标以匹配图片中的方向
+          // 旋转坐标
           const x = rawX * Math.cos(totalRotation) - rawZ * Math.sin(totalRotation);
           const z = rawX * Math.sin(totalRotation) + rawZ * Math.cos(totalRotation);
           
           // 获取该位置的地面高度
           const groundHeight = getHeightAtPosition(x, z);
           
-          // 根据图片显示，面板有轻微的旋转变化
-          const rowRotationY = (Math.random() - 0.5) * 0.02 + totalRotation;
+          // 随机微调角度
+          const rowRotationY = totalRotation + (Math.random() - 0.5) * 0.01;
           
           instances.push({
             id: panelId,
@@ -130,7 +117,7 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              -Math.PI / 8, // 标准倾斜角度
+              -Math.PI / 8,
               rowRotationY,
               0
             ],
