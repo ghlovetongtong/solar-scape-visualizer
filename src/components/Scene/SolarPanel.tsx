@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { createInstancedMesh, updateInstancedMesh, type InstanceData } from '@/lib/instancedMesh';
-import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 interface SolarPanelsProps {
   panelPositions: InstanceData[];
@@ -53,7 +53,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     });
     
     // Merge all geometries into one buffer geometry
-    const mergedGeometry = mergeBufferGeometries(meshes);
+    const mergedGeometry = mergeGeometries(meshes);
     
     return mergedGeometry;
   }, []);

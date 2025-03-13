@@ -78,7 +78,7 @@ function Loader() {
 }
 
 function CustomEnvironment({ timeOfDay = 0.5 }) {
-  const sunPosition = [
+  const sunPosition: [number, number, number] = [
     Math.sin(timeOfDay * Math.PI) * 100,
     Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50,
     Math.cos(timeOfDay * Math.PI) * 100
@@ -110,14 +110,14 @@ function CustomEnvironment({ timeOfDay = 0.5 }) {
         position={sunPosition}
         intensity={1.5 * lightIntensity} 
         castShadow 
-        shadow-mapSize-width={1024} 
-        shadow-mapSize-height={1024}
-        shadow-camera-left={-500}
-        shadow-camera-right={500}
-        shadow-camera-top={500}
-        shadow-camera-bottom={-500}
+        shadow-mapSize={[2048, 2048]} 
+        shadow-camera-left={-1000}
+        shadow-camera-right={1000}
+        shadow-camera-top={1000}
+        shadow-camera-bottom={-1000}
         shadow-camera-near={0.1}
-        shadow-camera-far={1000}
+        shadow-camera-far={2000}
+        shadow-bias={-0.0001}
         color={sunColor}
       />
     </>
