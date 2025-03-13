@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -159,15 +160,18 @@ export default function SceneContainer() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 根据居中的布局更新设备位置
   const inverterPositions = isInitialized && panelPositions.length > 0 ? [
-    [-85, 0, -20],   // 左侧区域中部
+    // 左侧区域1个逆变器
+    [-70, 0, -20],   // 左侧区域中部
     
-    [0, 0, -50],    // 右侧上部
-    [30, 0, -50],   // 右侧上部
-    [60, 0, -40],   // 右侧上部
-    [0, 0, 0],      // 右侧中部
-    [30, 0, 0],     // 右侧中部
-    [60, 0, 10]     // 右侧下部
+    // 右侧区域6个逆变器
+    [-10, 0, -50],   // 右侧上部
+    [20, 0, -50],    // 右侧上部
+    [50, 0, -40],    // 右侧上部
+    [-10, 0, 0],     // 右侧中部
+    [20, 0, 0],      // 右侧中部
+    [50, 0, 10]      // 右侧下部
   ] : [
     [0, 0, 0],
     [30, 0, 0],
@@ -179,23 +183,25 @@ export default function SceneContainer() {
   ];
 
   const transformerPositions = isInitialized && panelPositions.length > 0 ? [
-    [70, 0, -70],    // 右侧上方区域
-    [90, 0, 20]      // 右侧下方区域
+    [60, 0, -70],    // 右侧上方区域
+    [80, 0, 20]      // 右侧下方区域
   ] : [
     [0, 0, 0],
     [30, 0, 0]
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [100, 0, -20]    // 放在右侧区域
+    [90, 0, -20]    // 放在右侧区域
     : [0, 0, 0];     // 默认位置
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
-    [-110, 8, -50],  // 左上角
-    [-70, 8, -50],   // 右上角
-    [-110, 8, -10],  // 左下角
-    [-70, 8, -10],   // 右下角
+    // 左侧区域4个摄像头
+    [-90, 8, -50],  // 左上角
+    [-50, 8, -50],  // 右上角
+    [-90, 8, -10],  // 左下角
+    [-50, 8, -10],  // 右下角
     
+    // 右侧区域8个摄像头
     [-10, 8, -60],   // 右侧区域左上
     [20, 8, -60],    // 右侧区域中上
     [50, 8, -60],    // 右侧区域右上
@@ -233,7 +239,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [140, 70, 220], fov: 45 }}
+        camera={{ position: [0, 70, 220], fov: 45 }}
         gl={{ 
           antialias: true,
           alpha: false,

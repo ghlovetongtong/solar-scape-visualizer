@@ -1,10 +1,11 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
 
 // 根据电站分布图精确定义布局常量
-const PANEL_SPACING_X = 1.2; // 光伏板水平间距
-const PANEL_SPACING_Z = 3.0; // 光伏板垂直间距（行间距）
+const PANEL_SPACING_X = 3.0; // 光伏板水平间距，调整为每个面板的宽度，无间隙
+const PANEL_SPACING_Z = 2.0; // 光伏板垂直间距（行间距），调整为每个面板的深度，无间隙
 const ROAD_WIDTH = 20;      // 中间公路的宽度
 const PANELS_PER_ROW_LEFT = 15;   // 左侧每行的面板数量
 const PANELS_PER_ROW_RIGHT = 25;  // 右侧每行的面板数量（较大区域）
@@ -26,15 +27,20 @@ export function usePanelPositions(initialCount: number = 2000) {
       // 根据图片，整体旋转约15度
       const totalRotation = Math.PI * 0.083; // 约15度的旋转
       
-      // 绘制左侧区域 - 规则的小矩形
-      const startX1 = -100;
+      // 计算总宽度以居中整个布局
+      const totalWidthLeft = PANELS_PER_ROW_LEFT * PANEL_SPACING_X;
+      const totalWidthRight = PANELS_PER_ROW_RIGHT * PANEL_SPACING_X;
+      const totalWidth = Math.max(totalWidthLeft, totalWidthRight) + ROAD_WIDTH;
+      
+      // 居中整个布局的起始位置
+      const startX1 = -totalWidth / 2;
       const startZ1 = -40;
       let panelId = 0;
       
       // 左侧区域排列 - 规则矩形区域
       for (let row = 0; row < ROWS_IN_LEFT_SECTION && panelId < initialCount; row++) {
         for (let col = 0; col < PANELS_PER_ROW_LEFT; col++) {
-          // 计算位置但确保没有叠放
+          // 计算位置，确保面板挨着放置
           const rawX = startX1 + col * PANEL_SPACING_X;
           const rawZ = startZ1 + row * PANEL_SPACING_Z;
           
