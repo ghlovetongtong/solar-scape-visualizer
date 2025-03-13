@@ -1,8 +1,9 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
-import { createInstancedMesh, updateInstancedMesh, type InstanceData } from '@/lib/instancedMesh';
+import { createInstancedMesh, updateInstancedMesh, type InstanceData, getShadowIntensity } from '@/lib/instancedMesh';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 interface SolarPanelsProps {
@@ -68,9 +69,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     }
   }, [panelTexture]);
   
-  // Create an array to track which panels are in shadow
-  const shadowedPanels = useRef<boolean[]>(new Array(panelPositions.length).fill(true));
-  
   // Reference to the sunlight direction for shadow calculation
   const sunDirection = useRef<THREE.Vector3>(new THREE.Vector3(0, 1, 0));
   
@@ -83,24 +81,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         sunDirection.current.copy(object.position).normalize();
         foundDirectionalLight = true;
       }
-    });
-    
-    // Calculate which panels are in shadow based on their position and sun direction
-    // We'll use a simple heuristic for now - panels facing away from the sun are shadowed
-    panelPositions.forEach((panel, index) => {
-      const panelNormal = new THREE.Vector3(0, 1, 0); // Assuming panels face up by default
-      
-      // Apply panel rotation to get its actual normal
-      const rotation = new THREE.Euler(...panel.rotation);
-      panelNormal.applyEuler(rotation);
-      
-      // Dot product between panel normal and sun direction 
-      // If positive, panel faces toward the sun; if negative, panel faces away
-      const dotProduct = panelNormal.dot(sunDirection.current);
-      
-      // Panels with normals pointed somewhat toward the sun are considered in sunlight
-      // We use a threshold to determine this (0.2 means roughly >78° angle to sun)
-      shadowedPanels.current[index] = dotProduct < 0.2;
     });
   });
   
@@ -117,6 +97,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       color: new THREE.Color('#D3E4FD'),  // Soft blue color for shadowed panels
       metalness: 0.5,
       roughness: 0.4,
+      emissive: new THREE.Color('#D3E4FD'), // Add a subtle glow to shadowed panels
+      emissiveIntensity: 0.15 // Low intensity glow
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -219,8 +201,9 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           shadowedPanelMesh.setMatrixAt(index, invisibleMatrix);
           bracketMesh.setMatrixAt(index, invisibleMatrix);
         } else {
-          // Check if panel is in shadow
-          const isInShadow = shadowedPanels.current[panel.id];
+          // Calculate shadow intensity based on panel orientation and sun direction
+          const shadowIntensity = getShadowIntensity(panel.rotation, sunDirection.current);
+          const isInShadow = shadowIntensity < 0.2;
           
           // Set appropriate visibility based on lighting condition
           if (isInShadow) {

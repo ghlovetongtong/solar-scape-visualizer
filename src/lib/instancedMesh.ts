@@ -95,3 +95,23 @@ export function isPanelInShadow(
   // If dot product is negative or very small, panel faces away from sun
   return dotProduct < 0.2; // Threshold to consider a panel in shadow
 }
+
+// Enhanced function to get shadow intensity based on panel orientation
+export function getShadowIntensity(
+  panelRotation: [number, number, number],
+  sunDirection: THREE.Vector3
+): number {
+  // Create a normal vector (pointing up by default)
+  const panelNormal = new THREE.Vector3(0, 1, 0);
+  
+  // Apply the panel's rotation to get its actual normal direction
+  const rotation = new THREE.Euler(...panelRotation);
+  panelNormal.applyEuler(rotation);
+  
+  // Calculate dot product between panel normal and sun direction
+  const dotProduct = panelNormal.dot(sunDirection);
+  
+  // Return a value between 0 and 1 representing how directly the panel faces the sun
+  // 1 = directly facing the sun, 0 = completely away
+  return Math.max(0, Math.min(1, dotProduct));
+}
