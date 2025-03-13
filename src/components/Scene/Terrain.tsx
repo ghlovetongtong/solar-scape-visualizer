@@ -26,8 +26,23 @@ export default function Terrain() {
     }
   }, [groundGeometry]);
 
-  // Add grass instances for visual detail
-  const grassCount = 1000;
+  // Ground textures - creating a more realistic terrain with textures
+  const [grassMap, soilMap, soilNormalMap] = useTexture([
+    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/dirt_01.jpg',
+    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/soil_01.jpg',
+    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/soil_normal.jpg'
+  ]);
+  
+  // Configure texture properties
+  useMemo(() => {
+    [grassMap, soilMap, soilNormalMap].forEach(texture => {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(100, 100);
+    });
+  }, [grassMap, soilMap, soilNormalMap]);
+
+  // Add grass instances for visual detail - using more realistic grass shapes
+  const grassCount = 1500; // Increased grass count for better coverage
   const grassInstances = useMemo(() => {
     const instances = [];
     for (let i = 0; i < grassCount; i++) {
@@ -38,18 +53,28 @@ export default function Terrain() {
         z = (Math.random() - 0.5) * 900;
       } while (Math.sqrt(x * x + z * z) < 210); // Keep grass outside the solar farm
 
-      instances.push({
-        position: [x, 0, z],
-        scale: 0.5 + Math.random() * 1.5,
-        rotation: Math.random() * Math.PI
-      });
+      // Create clusters of grass for more realistic appearance
+      const clusterSize = Math.floor(Math.random() * 3) + 1;
+      for (let j = 0; j < clusterSize; j++) {
+        const offsetX = (Math.random() - 0.5) * 2;
+        const offsetZ = (Math.random() - 0.5) * 2;
+        
+        instances.push({
+          position: [x + offsetX, 0, z + offsetZ],
+          scale: 0.3 + Math.random() * 1.2, // Smaller scale for more realism
+          rotation: Math.random() * Math.PI,
+          color: Math.random() > 0.5 ? "#568203" : "#4A7023", // Variation in grass color
+          height: 0.8 + Math.random() * 1.4, // Variation in grass height
+          bend: -0.2 + Math.random() * 0.4 // Random bend direction
+        });
+      }
     }
     return instances;
   }, []);
   
   return (
     <group>
-      {/* Ground plane with loess (yellowish-brown soil) color */}
+      {/* Ground plane with loess (yellowish-brown soil) color and texture */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]} 
@@ -57,28 +82,12 @@ export default function Terrain() {
       >
         <primitive object={groundGeometry} />
         <meshStandardMaterial 
+          map={soilMap}
+          normalMap={soilNormalMap}
+          normalScale={new THREE.Vector2(0.5, 0.5)}
           color="#D7C28F" 
           roughness={0.95} 
           metalness={0.05}
-          // Create subtle color variations to make the ground look more natural
-          onBeforeCompile={(shader) => {
-            shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <color_fragment>',
-              `
-              #include <color_fragment>
-              // Add noise to create soil texture variation
-              float noise = sin(vUv.x * 100.0) * sin(vUv.y * 100.0) * 0.2;
-              float largeNoise = sin(vUv.x * 5.0) * sin(vUv.y * 5.0) * 0.1;
-              
-              // Mix between two earth tones
-              vec3 color1 = vec3(0.843, 0.761, 0.561); // Light loess
-              vec3 color2 = vec3(0.761, 0.682, 0.502); // Darker loess
-              vec3 colorMix = mix(color1, color2, noise + largeNoise + 0.5);
-              
-              diffuseColor.rgb = colorMix;
-              `
-            );
-          }}
         />
       </mesh>
       
@@ -109,7 +118,7 @@ export default function Terrain() {
         />
       </mesh>
 
-      {/* Grass clumps scattered across the terrain */}
+      {/* More realistic grass clumps scattered across the terrain */}
       {grassInstances.map((grass, index) => (
         <mesh
           key={`grass-${index}`}
@@ -118,51 +127,95 @@ export default function Terrain() {
           castShadow
         >
           <group scale={[grass.scale, grass.scale, grass.scale]}>
-            {/* Single grass blade */}
-            <mesh rotation={[0, 0, 0.2]}>
-              <boxGeometry args={[0.2, 1.5, 0.05]} />
-              <meshStandardMaterial color="#568203" />
+            {/* Improved grass blade - thinner and with varying heights */}
+            <mesh rotation={[0, 0, grass.bend]}>
+              <planeGeometry args={[0.1, grass.height, 2]} />
+              <meshStandardMaterial 
+                color={grass.color} 
+                side={THREE.DoubleSide}
+                alphaTest={0.5}
+              />
             </mesh>
             {/* Second grass blade */}
-            <mesh rotation={[0, Math.PI / 3, -0.1]}>
-              <boxGeometry args={[0.2, 1.3, 0.05]} />
-              <meshStandardMaterial color="#4A7023" />
+            <mesh rotation={[0, Math.PI / 3, grass.bend - 0.1]}>
+              <planeGeometry args={[0.1, grass.height * 0.9, 2]} />
+              <meshStandardMaterial 
+                color={grass.color === "#568203" ? "#4A7023" : "#568203"} 
+                side={THREE.DoubleSide}
+                alphaTest={0.5}
+              />
             </mesh>
             {/* Third grass blade */}
-            <mesh rotation={[0, -Math.PI / 4, 0.3]}>
-              <boxGeometry args={[0.15, 1.7, 0.05]} />
-              <meshStandardMaterial color="#6B8E23" />
+            <mesh rotation={[0, -Math.PI / 4, grass.bend + 0.2]}>
+              <planeGeometry args={[0.1, grass.height * 1.1, 2]} />
+              <meshStandardMaterial 
+                color="#6B8E23" 
+                side={THREE.DoubleSide}
+                alphaTest={0.5}
+              />
             </mesh>
           </group>
         </mesh>
       ))}
       
-      {/* Terrain decoration - rocks */}
+      {/* Terrain decoration - rocks with more realistic textures */}
       <group position={[100, 0, -100]}>
         <mesh castShadow receiveShadow position={[0, 1, 0]}>
-          <dodecahedronGeometry args={[3, 0]} />
-          <meshStandardMaterial color="#888888" roughness={0.9} />
+          <dodecahedronGeometry args={[3, 1]} />
+          <meshStandardMaterial color="#7d7d7d" roughness={0.9} />
         </mesh>
         <mesh castShadow receiveShadow position={[4, 0.6, 3]}>
-          <dodecahedronGeometry args={[2, 0]} />
-          <meshStandardMaterial color="#888888" roughness={0.9} />
+          <dodecahedronGeometry args={[2, 1]} />
+          <meshStandardMaterial color="#6e6e6e" roughness={0.9} />
         </mesh>
         <mesh castShadow receiveShadow position={[-3, 0.4, -2]}>
-          <dodecahedronGeometry args={[1.5, 0]} />
+          <dodecahedronGeometry args={[1.5, 1]} />
           <meshStandardMaterial color="#888888" roughness={0.9} />
         </mesh>
       </group>
       
       <group position={[-150, 0, 150]}>
         <mesh castShadow receiveShadow position={[0, 0.8, 0]}>
-          <dodecahedronGeometry args={[2.5, 0]} />
-          <meshStandardMaterial color="#888888" roughness={0.9} />
+          <dodecahedronGeometry args={[2.5, 1]} />
+          <meshStandardMaterial color="#7d7d7d" roughness={0.9} />
         </mesh>
         <mesh castShadow receiveShadow position={[3, 0.5, 2]}>
-          <dodecahedronGeometry args={[1.7, 0]} />
-          <meshStandardMaterial color="#888888" roughness={0.9} />
+          <dodecahedronGeometry args={[1.7, 1]} />
+          <meshStandardMaterial color="#6e6e6e" roughness={0.9} />
         </mesh>
       </group>
+      
+      {/* Sparse small bush-like vegetation */}
+      {Array.from({ length: 30 }).map((_, index) => {
+        const posX = (Math.random() - 0.5) * 800;
+        const posZ = (Math.random() - 0.5) * 800;
+        const distance = Math.sqrt(posX * posX + posZ * posZ);
+        
+        // Only place bushes outside the solar farm area
+        if (distance < 220) return null;
+        
+        const scale = 2 + Math.random() * 3;
+        return (
+          <group 
+            key={`bush-${index}`}
+            position={[posX, 0, posZ]}
+            scale={[scale, scale, scale]}
+          >
+            <mesh castShadow receiveShadow>
+              <sphereGeometry args={[1, 8, 8]} />
+              <meshStandardMaterial color="#3a5f0b" roughness={1} />
+            </mesh>
+            <mesh castShadow receiveShadow position={[0.7, 0.2, 0]}>
+              <sphereGeometry args={[0.8, 8, 8]} />
+              <meshStandardMaterial color="#4b7413" roughness={1} />
+            </mesh>
+            <mesh castShadow receiveShadow position={[-0.5, 0.3, 0.5]}>
+              <sphereGeometry args={[0.7, 8, 8]} />
+              <meshStandardMaterial color="#3a5f0b" roughness={1} />
+            </mesh>
+          </group>
+        );
+      })}
     </group>
   );
 }
