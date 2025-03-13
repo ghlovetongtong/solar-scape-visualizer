@@ -1,7 +1,6 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Stats, OrbitControls, Sky, useProgress } from '@react-three/drei';
+import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { toast } from 'sonner';
 
@@ -12,6 +11,7 @@ import Camera from './Camera';
 import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
 import Controls from './Controls';
+import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 
 function Loader() {
@@ -159,10 +159,7 @@ export default function SceneContainer() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Repositioned inverters to be within the solar panel array
-  // They should be placed strategically to connect groups of panels
   const inverterPositions = isInitialized && panelPositions.length > 0 ? [
-    // Place inverters inside the array, distributed among panel groups
     [-30, 0, -30],   // Top-left quadrant
     [30, 0, -30],    // Top-right quadrant
     [-30, 0, 30],    // Bottom-left quadrant
@@ -180,9 +177,7 @@ export default function SceneContainer() {
     [180, 0, 0]
   ];
 
-  // Repositioned cameras around the perimeter of the solar panel array
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
-    // Perimeter cameras to monitor the site
     [-100, 10, -100],  // Far corners
     [100, 10, -100],
     [-100, 10, 100],
@@ -210,7 +205,6 @@ export default function SceneContainer() {
     [330, 10, 0]
   ];
 
-  // Repositioned transformer stations to the middle of the solar panel array
   const transformerPositions = isInitialized && panelPositions.length > 0 ? [
     [0, 0, -15],  // Central location, offset slightly
     [15, 0, 15]   // Central location, offset slightly in another direction
@@ -219,7 +213,6 @@ export default function SceneContainer() {
     [30, 0, 0]
   ];
 
-  // Repositioned IT house to the middle of the solar panel array
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
     [-15, 0, 0]   // Central location, offset slightly to not overlap with transformers
     : [0, 0, 0];  // Default position if panels not initialized
@@ -253,20 +246,7 @@ export default function SceneContainer() {
         
         <CustomEnvironment timeOfDay={timeOfDay} />
         
-        <Sky 
-          distance={450000} 
-          sunPosition={[
-            Math.sin(timeOfDay * Math.PI) * 100, 
-            Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50, 
-            Math.cos(timeOfDay * Math.PI) * 100
-          ]} 
-          inclination={0.5} 
-          azimuth={0.25} 
-          rayleigh={timeOfDay < 0.25 || timeOfDay > 0.75 ? 2 : 1}
-          turbidity={timeOfDay < 0.25 || timeOfDay > 0.75 ? 10 : 8}
-          mieCoefficient={0.005}
-          mieDirectionalG={0.8}
-        />
+        <SkyBox timeOfDay={timeOfDay} />
         
         <Suspense fallback={null}>
           <Terrain />
