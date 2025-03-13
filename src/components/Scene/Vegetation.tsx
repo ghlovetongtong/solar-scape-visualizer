@@ -10,9 +10,9 @@ interface VegetationProps {
 }
 
 export default function Vegetation({ 
-  count = 800, 
-  minRadius = 220, 
-  maxRadius = 400 
+  count = 500, 
+  minRadius = 120, 
+  maxRadius = 180 
 }: VegetationProps) {
   const instancedGrass = useRef<THREE.InstancedMesh>(null);
   
@@ -31,12 +31,12 @@ export default function Vegetation({
       z = Math.sin(angle) * radius;
       
       // Add some irregularity by introducing patches/clusters
-      x += (Math.random() - 0.5) * 30;
-      z += (Math.random() - 0.5) * 30;
+      x += (Math.random() - 0.5) * 20;
+      z += (Math.random() - 0.5) * 20;
       
       // If we randomly generated a position inside the solar panel area, skip it
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 200) {
+      if (distanceFromCenter < 100) {
         i--; // Try again
         continue;
       }

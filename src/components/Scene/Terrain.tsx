@@ -6,7 +6,7 @@ import Vegetation from './Vegetation';
 export default function Terrain() {
   return (
     <group>
-      <Ground />
+      <Ground size={400} />
       <Vegetation />
     </group>
   );

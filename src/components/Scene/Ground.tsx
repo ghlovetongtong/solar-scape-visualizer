@@ -8,8 +8,8 @@ interface GroundProps {
   resolution?: number;
 }
 
-export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
-  // Create a larger plane for the ground
+export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
+  // Create a more appropriately sized plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
   // Use the new Imgur URL directly for the texture
@@ -36,7 +36,7 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
         const z = positions[i + 2];
         const distanceFromCenter = Math.sqrt(x * x + z * z);
         
-        if (distanceFromCenter > 200) {
+        if (distanceFromCenter > 100) {
           // Add some very subtle undulations to mimic the sandy terrain
           positions[i + 1] = 
             Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
@@ -67,7 +67,7 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
 // Utility function to get height at a position
 export function getHeightAtPosition(x: number, z: number) {
   const distanceFromCenter = Math.sqrt(x * x + z * z);
-  if (distanceFromCenter > 200) {
+  if (distanceFromCenter > 100) {
     return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
            Math.sin(x * 0.03 + 0.5) * Math.sin(z * 0.02 + 0.5) * 1;
   }
