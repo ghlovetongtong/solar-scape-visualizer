@@ -90,8 +90,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       color: new THREE.Color('#60A5FA'),  // Brightened blue color for sunlit panels
       metalness: 0.8,
       roughness: 0.2,
-      emissive: new THREE.Color('#60A5FA'), // Add emissive glow to all panels
-      emissiveIntensity: 0.3 // Moderate glow intensity
+      emissive: new THREE.Color('#333333'), // Darker emissive color for a more subtle glow
+      emissiveIntensity: 0.2 // Reduced intensity for a more subdued glow
     });
     
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
@@ -99,8 +99,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       color: new THREE.Color('#93C5FD'),  // Bright soft blue for shadowed panels
       metalness: 0.5,
       roughness: 0.4,
-      emissive: new THREE.Color('#93C5FD'), // Add emissive glow to shadowed panels
-      emissiveIntensity: 0.8 // Increased glow intensity for better visibility
+      emissive: new THREE.Color('#222222'), // Darker emissive color for shadowed panels
+      emissiveIntensity: 0.5 // Adjusted intensity
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -288,7 +288,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
               metalness={0.8}
               roughness={0.2}
               emissive='#38BDF8'
-              emissiveIntensity={0.8}  // Brighter glow
+              emissiveIntensity={0.6}  // Slightly reduced glow intensity
             />
           </mesh>
           
@@ -303,8 +303,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             <primitive object={bracketGeometry} />
             <meshStandardMaterial 
               color='#565c64' 
-              emissive='#38BDF8'
-              emissiveIntensity={0.4}  // Slightly brighter
+              emissive='#222222'  // Darker emissive for selected bracket
+              emissiveIntensity={0.3}  // Reduced intensity
               metalness={0.7}
               roughness={0.3}
             />
