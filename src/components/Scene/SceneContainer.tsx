@@ -1,7 +1,7 @@
 
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Stats, OrbitControls, Sky, Environment, useProgress } from '@react-three/drei';
+import { Stats, OrbitControls, Sky, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 
 import Terrain from './Terrain';
@@ -20,6 +20,16 @@ function Loader() {
       <div className="loading-spinner"></div>
       <div className="text-lg font-medium mt-4">Loading solar station... {progress.toFixed(1)}%</div>
     </div>
+  );
+}
+
+// Custom environment that doesn't rely on external HDR files
+function CustomEnvironment() {
+  return (
+    <>
+      <ambientLight intensity={0.5} />
+      <hemisphereLight intensity={0.3} color="#b1e1ff" groundColor="#000000" />
+    </>
   );
 }
 
@@ -75,11 +85,16 @@ export default function SceneContainer() {
           shadows
           camera={{ position: [50, 50, 250], fov: 50 }}
           gl={{ antialias: true }}
+          onError={(e) => {
+            console.error("Canvas error:", e);
+          }}
         >
           <color attach="background" args={['#d6e4ff']} />
           
-          {/* Lighting */}
-          <ambientLight intensity={0.5} />
+          {/* Custom lighting instead of Environment component */}
+          <CustomEnvironment />
+          
+          {/* Directional light (sun) */}
           <directionalLight 
             position={[Math.sin(timeOfDay * Math.PI) * 100, 100, Math.cos(timeOfDay * Math.PI) * 100]} 
             intensity={1.5} 
@@ -94,14 +109,13 @@ export default function SceneContainer() {
             shadow-camera-far={500}
           />
           
-          {/* Environment */}
+          {/* Sky */}
           <Sky 
             distance={450000} 
             sunPosition={[Math.sin(timeOfDay * Math.PI) * 100, Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50, Math.cos(timeOfDay * Math.PI) * 100]} 
             inclination={0.5} 
             azimuth={0.25} 
           />
-          <Environment preset="sunset" background={false} />
           
           {/* Solar farm components */}
           <Terrain />
@@ -166,3 +180,4 @@ export default function SceneContainer() {
     </div>
   );
 }
+

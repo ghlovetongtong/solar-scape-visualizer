@@ -2,7 +2,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
-import { useGLTF, Instances, Instance } from '@react-three/drei';
 import { createInstancedMesh, updateInstancedMesh, type InstanceData } from '@/lib/instancedMesh';
 
 interface SolarPanelsProps {
@@ -12,8 +11,6 @@ interface SolarPanelsProps {
 }
 
 export default function SolarPanels({ panelPositions, selectedPanelId, onSelectPanel }: SolarPanelsProps) {
-  const instancedMeshRef = useRef<THREE.InstancedMesh>(null);
-  
   // Create panel geometry and materials
   const panelGeometry = useMemo(() => {
     const baseGeometry = new THREE.BoxGeometry(3, 0.1, 2);
@@ -21,11 +18,10 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, []);
   
   const materials = useMemo(() => {
-    const panelMaterial = new THREE.MeshPhysicalMaterial({
+    const panelMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#1a1f2c'),
       metalness: 0.8,
       roughness: 0.2,
-      envMapIntensity: 0.5,
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -45,19 +41,14 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return { panelMaterial, frameMaterial, selectedMaterial };
   }, []);
   
-  // Update instance matrices
-  useEffect(() => {
-    if (instancedMeshRef.current && panelPositions.length > 0) {
-      updateInstancedMesh(instancedMeshRef.current, panelPositions);
-    }
-  }, [panelPositions]);
-  
   // For selection, we need a custom raycaster function
   const handleClick = (event: any) => {
     if (event.intersections.length > 0) {
       const intersection = event.intersections[0];
       if (intersection.instanceId !== undefined) {
         onSelectPanel(intersection.instanceId);
+      } else if (intersection.object.userData.panelId !== undefined) {
+        onSelectPanel(intersection.object.userData.panelId);
       }
     } else {
       onSelectPanel(null);
@@ -77,13 +68,15 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           scale={new THREE.Vector3(...panel.scale)}
           castShadow
           receiveShadow
+          userData={{ panelId: panel.id }}
         >
           <boxGeometry args={[3, 0.1, 2]} />
-          <meshPhysicalMaterial 
+          <meshStandardMaterial 
             color={panel.id === selectedPanelId ? '#0ea5e9' : '#1a1f2c'}
             metalness={0.8}
             roughness={0.2}
-            envMapIntensity={0.5}
+            emissive={panel.id === selectedPanelId ? '#0ea5e9' : '#000000'}
+            emissiveIntensity={panel.id === selectedPanelId ? 0.5 : 0}
           />
         </mesh>
       ))}
