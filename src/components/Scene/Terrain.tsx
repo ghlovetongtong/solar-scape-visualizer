@@ -1,7 +1,6 @@
 
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { useTexture } from '@react-three/drei';
 
 export default function Terrain() {
   // Create a larger plane for the ground
@@ -26,21 +25,83 @@ export default function Terrain() {
     }
   }, [groundGeometry]);
 
-  // Ground textures - creating a more realistic terrain with textures
-  const [grassMap, soilMap, soilNormalMap] = useTexture([
-    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/dirt_01.jpg',
-    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/soil_01.jpg',
-    'https://cdn.jsdelivr.net/gh/pmndrs/drei-assets@master/textures/soil_normal.jpg'
-  ]);
+  // Create texture procedurally instead of loading from external sources
+  const groundTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return null;
+    
+    // Draw base loess soil color (yellowish-brown)
+    context.fillStyle = '#D7C28F';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add some texture/noise
+    for (let x = 0; x < canvas.width; x += 4) {
+      for (let y = 0; y < canvas.height; y += 4) {
+        const value = Math.random() * 0.1;
+        const color = Math.floor(180 + value * 40);
+        context.fillStyle = `rgba(${color}, ${Math.floor(color * 0.9)}, ${Math.floor(color * 0.6)}, 0.5)`;
+        context.fillRect(x, y, 4, 4);
+      }
+    }
+    
+    // Create a few darker spots for variation
+    for (let i = 0; i < 100; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const radius = 3 + Math.random() * 10;
+      context.fillStyle = 'rgba(160, 140, 100, 0.3)';
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.fill();
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(100, 100);
+    return texture;
+  }, []);
   
-  // Configure texture properties
-  useMemo(() => {
-    [grassMap, soilMap, soilNormalMap].forEach(texture => {
-      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(100, 100);
-    });
-  }, [grassMap, soilMap, soilNormalMap]);
-
+  // Create normal map procedurally
+  const normalMap = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    
+    if (!context) return null;
+    
+    // Fill with neutral normal (pointing up)
+    context.fillStyle = '#8080ff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add some bumps
+    for (let i = 0; i < 2000; i++) {
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const radius = 1 + Math.random() * 3;
+      const intensity = Math.random() * 0.2;
+      
+      // Create a radial gradient for each bump
+      const gradient = context.createRadialGradient(x, y, 0, x, y, radius);
+      gradient.addColorStop(0, `rgba(128, 128, ${255 - Math.floor(intensity * 100)}, 1)`);
+      gradient.addColorStop(1, 'rgba(128, 128, 255, 0)');
+      
+      context.fillStyle = gradient;
+      context.beginPath();
+      context.arc(x, y, radius, 0, Math.PI * 2);
+      context.fill();
+    }
+    
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(100, 100);
+    return texture;
+  }, []);
+  
   // Add grass instances for visual detail - using more realistic grass shapes
   const grassCount = 1500; // Increased grass count for better coverage
   const grassInstances = useMemo(() => {
@@ -82,8 +143,8 @@ export default function Terrain() {
       >
         <primitive object={groundGeometry} />
         <meshStandardMaterial 
-          map={soilMap}
-          normalMap={soilNormalMap}
+          map={groundTexture || undefined}
+          normalMap={normalMap || undefined}
           normalScale={new THREE.Vector2(0.5, 0.5)}
           color="#D7C28F" 
           roughness={0.95} 
