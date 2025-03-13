@@ -55,7 +55,7 @@ export function generateGridPositions(
     instances.push({
       id: i,
       position: [col * spacing, 0, row * spacing],
-      rotation: [-Math.PI/6, 0, 0], // X轴旋转-30度
+      rotation: [0, 0, 0],
       scale: [1, 1, 1]
     });
   }
@@ -76,42 +76,42 @@ export function optimizeScene(scene: THREE.Scene): void {
   });
 }
 
-// 更新计算阴影逻辑，考虑面板X轴旋转-30度的情况
+// Add a utility function to calculate if a panel is in shadow
 export function isPanelInShadow(
   panelPosition: [number, number, number],
   panelRotation: [number, number, number],
   sunDirection: THREE.Vector3
 ): boolean {
-  // 考虑到X轴旋转-30度，我们需要计算面板的实际法线
+  // Create a normal vector (pointing up by default)
   const panelNormal = new THREE.Vector3(0, 1, 0);
   
-  // 应用面板旋转
+  // Apply the panel's rotation to get its actual normal direction
   const rotation = new THREE.Euler(...panelRotation);
   panelNormal.applyEuler(rotation);
   
-  // 计算面板法线和太阳方向之间的点积
+  // Calculate dot product between panel normal and sun direction
   const dotProduct = panelNormal.dot(sunDirection);
   
-  // 如果点积为负或非常小，则面板背对太阳
-  return dotProduct < 0.1;
+  // If dot product is negative or very small, panel faces away from sun
+  return dotProduct < 0.1; // Further lowered threshold to consider more panels in sunlight
 }
 
-// 基于面板方向计算阴影强度的增强函数
+// Enhanced function to get shadow intensity based on panel orientation
 export function getShadowIntensity(
   panelRotation: [number, number, number],
   sunDirection: THREE.Vector3
 ): number {
-  // 考虑到X轴旋转-30度，更新面板法线计算
+  // Create a normal vector (pointing up by default)
   const panelNormal = new THREE.Vector3(0, 1, 0);
   
-  // 应用面板旋转
+  // Apply the panel's rotation to get its actual normal direction
   const rotation = new THREE.Euler(...panelRotation);
   panelNormal.applyEuler(rotation);
   
-  // 计算面板法线和太阳方向之间的点积
+  // Calculate dot product between panel normal and sun direction
   const dotProduct = panelNormal.dot(sunDirection);
   
-  // 返回一个介于0和1之间的值，表示面板直接面对太阳的程度
-  // 1 = 直接面向太阳，0 = 完全背向
+  // Return a value between 0 and 1 representing how directly the panel faces the sun
+  // 1 = directly facing the sun, 0 = completely away
   return Math.max(0, Math.min(1, dotProduct));
 }

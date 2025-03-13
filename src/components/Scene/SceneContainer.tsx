@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -160,20 +159,16 @@ export default function SceneContainer() {
     return () => clearTimeout(timer);
   }, []);
 
-  // 根据居中的布局更新设备位置
   const inverterPositions = isInitialized && panelPositions.length > 0 ? [
-    // 左侧区域1个逆变器
-    [-70, 0, -20],   // 左侧区域中部
-    
-    // 右侧区域6个逆变器
-    [-10, 0, -50],   // 右侧上部
-    [20, 0, -50],    // 右侧上部
-    [50, 0, -40],    // 右侧上部
-    [-10, 0, 0],     // 右侧中部
-    [20, 0, 0],      // 右侧中部
-    [50, 0, 10]      // 右侧下部
+    [-20, 0, -20],   // Top-left quadrant
+    [20, 0, -20],    // Top-right quadrant
+    [-20, 0, 20],    // Bottom-left quadrant
+    [20, 0, 20],     // Bottom-right quadrant
+    [0, 0, 0],       // Center
+    [-40, 0, 0],     // Left middle
+    [40, 0, 0]       // Right middle
   ] : [
-    [0, 0, 0],
+    [0, 0, 0],       // Default position if panels not initialized
     [30, 0, 0],
     [60, 0, 0],
     [90, 0, 0],
@@ -183,35 +178,32 @@ export default function SceneContainer() {
   ];
 
   const transformerPositions = isInitialized && panelPositions.length > 0 ? [
-    [60, 0, -70],    // 右侧上方区域
-    [80, 0, 20]      // 右侧下方区域
+    [90, 0, -50],    // Positioned within terrain bounds
+    [90, 0, 50]      // Positioned within terrain bounds
   ] : [
     [0, 0, 0],
     [30, 0, 0]
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [90, 0, -20]    // 放在右侧区域
-    : [0, 0, 0];     // 默认位置
+    [-90, 0, 0]     // Positioned opposite to transformers (which are at x=90) and outside panel area
+    : [0, 0, 0];    // Default position if panels not initialized
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
-    // 左侧区域4个摄像头
-    [-90, 8, -50],  // 左上角
-    [-50, 8, -50],  // 右上角
-    [-90, 8, -10],  // 左下角
-    [-50, 8, -10],  // 右下角
-    
-    // 右侧区域8个摄像头
-    [-10, 8, -60],   // 右侧区域左上
-    [20, 8, -60],    // 右侧区域中上
-    [50, 8, -60],    // 右侧区域右上
-    [80, 8, -40],    // 右侧区域最右
-    [-10, 8, 0],     // 右侧区域左中
-    [20, 8, 0],      // 右侧区域中部
-    [50, 8, 20],     // 右侧区域右下
-    [20, 8, 30]      // 右侧区域下部
+    [-80, 8, -80],   // Far corners
+    [80, 8, -80],
+    [-80, 8, 80],
+    [80, 8, 80],
+    [-60, 8, 0],     // Middle of each side
+    [60, 8, 0],
+    [0, 8, -60],
+    [0, 8, 60],
+    [-40, 8, -40],   // Inner corners
+    [40, 8, -40],
+    [-40, 8, 40],
+    [40, 8, 40]
   ] : [
-    [0, 8, 0],
+    [0, 8, 0],       // Default positions if panels not initialized
     [30, 8, 0],
     [60, 8, 0],
     [90, 8, 0],
@@ -239,7 +231,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [0, 70, 220], fov: 45 }}
+        camera={{ position: [140, 50, 240], fov: 45 }}
         gl={{ 
           antialias: true,
           alpha: false,
@@ -292,7 +284,7 @@ export default function SceneContainer() {
           <OrbitControls 
             enableDamping 
             dampingFactor={0.05} 
-            maxDistance={600}
+            maxDistance={800}
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
           />
