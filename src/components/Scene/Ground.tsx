@@ -53,8 +53,14 @@ export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
   
   // Create geometry for the boundary line
   const boundaryGeometry = useMemo(() => {
-    const points = boundaryShape.getPoints(50); // Get points along the shape
-    const geometryPoints = points.map(p => new THREE.Vector3(p.x, 0.1, p.y)); // Elevate slightly above ground
+    const points = boundaryShape.getPoints(200); // Get more points along the shape for smoother lines
+    const geometryPoints = points.map(p => new THREE.Vector3(p.x, 0.2, p.y)); // Elevate slightly more above ground
+    
+    // Close the loop by adding the first point at the end
+    if (points.length > 0) {
+      geometryPoints.push(new THREE.Vector3(points[0].x, 0.2, points[0].y));
+    }
+    
     const geometry = new THREE.BufferGeometry().setFromPoints(geometryPoints);
     return geometry;
   }, [boundaryShape]);
@@ -75,16 +81,16 @@ export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
         />
       </mesh>
       
-      {/* Render the boundary outline - 修复line组件 */}
+      {/* Render the boundary outline with lineSegments */}
       <lineSegments>
-        <bufferGeometry attach="geometry" {...boundaryGeometry} />
-        <lineBasicMaterial attach="material" color="#00ff00" linewidth={2} />
+        <primitive object={boundaryGeometry} attach="geometry" />
+        <lineBasicMaterial color="#00ff00" linewidth={3} attach="material" />
       </lineSegments>
       
       {/* Optional: Add a slightly transparent surface to visualize the area */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
         <shapeGeometry args={[boundaryShape]} />
-        <meshBasicMaterial color="#00ff00" transparent opacity={0.1} side={THREE.DoubleSide} />
+        <meshBasicMaterial color="#00ff00" transparent opacity={0.05} side={THREE.DoubleSide} />
       </mesh>
     </>
   );
