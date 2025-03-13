@@ -37,8 +37,8 @@ export default function Camera({ position, cameraIndex }: CameraProps) {
         </mesh>
         
         {/* Camera lens */}
-        <mesh castShadow position={[0, 0, 0.6]}>
-          <cylinderGeometry args={[0.12, 0.15, 0.1, 16]} rotation={[Math.PI / 2, 0, 0]} />
+        <mesh castShadow position={[0, 0, 0.6]} rotation={[Math.PI / 2, 0, 0]}>
+          <cylinderGeometry args={[0.12, 0.15, 0.1, 16]} />
           <meshPhysicalMaterial 
             color="#111111" 
             roughness={0.1} 
