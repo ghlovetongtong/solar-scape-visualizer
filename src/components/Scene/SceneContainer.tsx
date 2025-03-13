@@ -242,8 +242,6 @@ export default function SceneContainer() {
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
       >
-        <color attach="background" args={['#d6e4ff']} />
-        
         <CustomEnvironment timeOfDay={timeOfDay} />
         
         <SkyBox timeOfDay={timeOfDay} />
