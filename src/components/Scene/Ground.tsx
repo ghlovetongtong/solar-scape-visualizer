@@ -75,11 +75,11 @@ export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
         />
       </mesh>
       
-      {/* Render the boundary outline */}
-      <line>
-        <primitive object={boundaryGeometry} />
-        <lineBasicMaterial color="#00ff00" linewidth={2} />
-      </line>
+      {/* Render the boundary outline - 修复line组件 */}
+      <lineSegments>
+        <bufferGeometry attach="geometry" {...boundaryGeometry} />
+        <lineBasicMaterial attach="material" color="#00ff00" linewidth={2} />
+      </lineSegments>
       
       {/* Optional: Add a slightly transparent surface to visualize the area */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.05, 0]}>
