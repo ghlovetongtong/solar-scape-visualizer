@@ -3,72 +3,57 @@ import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
 
-// Define group size and spacing constants
-const PANELS_PER_GROUP = 16; // 4x4 grid per group
-const PANEL_SPACING = 2.8; // Reduced spacing between panels within a group
-const GROUP_SPACING = 12; // Reduced spacing between groups
+// 根据电站分布图定义布局常量
+const PANEL_SPACING_X = 1.2; // 光伏板水平间距
+const PANEL_SPACING_Z = 3.8; // 光伏板垂直间距（行间距）
+const ROW_SPACING = 16;      // 每组行之间的间距
+const PANELS_PER_ROW = 26;   // 每行的面板数量
+const ROWS_IN_SECTION_1 = 12; // 左侧区域行数
+const ROWS_IN_SECTION_2 = 18; // 右侧区域行数
 
-export function usePanelPositions(initialCount: number = 100) {
+export function usePanelPositions(initialCount: number = 2000) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
   const [selectedPanelId, setSelectedPanelId] = useState<number | null>(null);
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize panel positions in groups
+  // 初始化面板位置，模拟电站图中的布局
   useEffect(() => {
-    console.log(`Initializing ${initialCount} panels`);
+    console.log(`按照真实电站图初始化 ${initialCount} 个光伏板`);
     try {
       const instances: InstanceData[] = [];
       
-      // Calculate number of groups needed
-      const groupsNeeded = Math.ceil(initialCount / PANELS_PER_GROUP);
+      // 创建一个模拟斜向的区域，整体旋转约15度
+      const totalRotation = Math.PI * 0.08; // 约15度的旋转
       
-      // Calculate the grid dimensions for groups
-      const groupGridSize = Math.ceil(Math.sqrt(groupsNeeded));
+      // 绘制第一个区域（左侧矩形区域）
+      const startX1 = -80;
+      const startZ1 = -40;
+      let panelId = 0;
       
-      // Calculate offset to center the entire grid
-      const totalGridWidth = (groupGridSize - 1) * GROUP_SPACING;
-      const centerOffsetX = totalGridWidth / 2;
-      const centerOffsetZ = totalGridWidth / 2;
-      
-      // Generate panels in groups
-      for (let g = 0; g < groupsNeeded; g++) {
-        // Calculate group position in the larger grid
-        const groupRow = Math.floor(g / groupGridSize);
-        const groupCol = g % groupGridSize;
+      // 计算左侧区域行数（约为总面板的1/3）
+      for (let row = 0; row < ROWS_IN_SECTION_1 && panelId < initialCount; row++) {
+        // 每行稍微错开，形成不完全的矩形
+        const rowOffset = row * 0.5;
         
-        // Center the entire grid by subtracting the offset
-        const groupCenterX = groupCol * GROUP_SPACING - centerOffsetX;
-        const groupCenterZ = groupRow * GROUP_SPACING - centerOffsetZ;
+        // 计算这一行需要多少面板
+        const panelsInThisRow = Math.min(PANELS_PER_ROW, initialCount - panelId);
         
-        // Calculate how many panels to create in this group
-        const panelsInThisGroup = Math.min(
-          PANELS_PER_GROUP, 
-          initialCount - g * PANELS_PER_GROUP
-        );
-        
-        if (panelsInThisGroup <= 0) break;
-        
-        // Create panels in a smaller grid within the group
-        const panelsPerRow = 4; // 4x4 grid within each group
-        
-        for (let p = 0; p < panelsInThisGroup; p++) {
-          const panelRow = Math.floor(p / panelsPerRow);
-          const panelCol = p % panelsPerRow;
+        for (let col = 0; col < panelsInThisRow; col++) {
+          // 应用整体旋转到坐标上
+          const rawX = startX1 + col * PANEL_SPACING_X + rowOffset;
+          const rawZ = startZ1 + row * PANEL_SPACING_Z;
           
-          // Calculate panel position within the group
-          const x = groupCenterX + (panelCol - 1.5) * PANEL_SPACING;
-          const z = groupCenterZ + (panelRow - 1.5) * PANEL_SPACING;
+          // 旋转坐标
+          const x = rawX * Math.cos(totalRotation) - rawZ * Math.sin(totalRotation);
+          const z = rawX * Math.sin(totalRotation) + rawZ * Math.cos(totalRotation);
           
-          // Get ground height at this position
+          // 获取该位置的地面高度
           const groundHeight = getHeightAtPosition(x, z);
           
-          // Calculate global panel ID
-          const panelId = g * PANELS_PER_GROUP + p;
-          
-          // Create panel instance with consistent rotation within group
-          // All panels in a group have same rotation for a uniform appearance
-          const groupRotationY = (Math.random() - 0.5) * 0.1; // Slight variation between groups
+          // 为每组面板添加细微的随机旋转，以创造自然效果
+          const groupIndex = Math.floor(row / 4);
+          const rowRotationY = (Math.random() - 0.5) * 0.02 + totalRotation; // 微小随机旋转
           
           instances.push({
             id: panelId,
@@ -78,21 +63,74 @@ export function usePanelPositions(initialCount: number = 100) {
               z
             ],
             rotation: [
-              -Math.PI / 8, // Fixed tilt for all panels in group
-              groupRotationY,
+              -Math.PI / 8, // 标准倾斜角度
+              rowRotationY,
               0
             ],
             scale: [1, 1, 1]
           });
+          
+          panelId++;
+        }
+      }
+      
+      // 留出一条中间的通道
+      const middleGap = 30;
+      
+      // 绘制第二个区域（右侧矩形区域，稍大于左侧）
+      const startX2 = startX1 + middleGap;
+      const startZ2 = startZ1 + 20; // 稍微错开
+      
+      // 计算右侧区域的行数（约为总面板的2/3）
+      for (let row = 0; row < ROWS_IN_SECTION_2 && panelId < initialCount; row++) {
+        // 每行稍微错开，形成不完全的矩形
+        const rowOffset = row * 0.5;
+        
+        // 第二区域的行长度略有变化
+        const rowLength = PANELS_PER_ROW + (row % 5 === 0 ? -2 : 0); // 部分行略短
+        const panelsInThisRow = Math.min(rowLength, initialCount - panelId);
+        
+        for (let col = 0; col < panelsInThisRow; col++) {
+          // 应用整体旋转到坐标上
+          const rawX = startX2 + col * PANEL_SPACING_X + rowOffset;
+          const rawZ = startZ2 + row * PANEL_SPACING_Z;
+          
+          // 旋转坐标
+          const x = rawX * Math.cos(totalRotation) - rawZ * Math.sin(totalRotation);
+          const z = rawX * Math.sin(totalRotation) + rawZ * Math.cos(totalRotation);
+          
+          // 获取该位置的地面高度
+          const groundHeight = getHeightAtPosition(x, z);
+          
+          // 为每组面板添加细微的随机旋转，以创造自然效果
+          const groupIndex = Math.floor(row / 4);
+          const rowRotationY = (Math.random() - 0.5) * 0.02 + totalRotation; // 微小随机旋转
+          
+          instances.push({
+            id: panelId,
+            position: [
+              x, 
+              1.0 + groundHeight,
+              z
+            ],
+            rotation: [
+              -Math.PI / 8, // 标准倾斜角度
+              rowRotationY,
+              0
+            ],
+            scale: [1, 1, 1]
+          });
+          
+          panelId++;
         }
       }
       
       setPanelPositions(instances);
       setInitialPositions(instances);
       setIsInitialized(true);
-      console.log("Panel positions initialized successfully in groups");
+      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站布局图排列`);
     } catch (error) {
-      console.error("Error initializing panel positions:", error);
+      console.error("初始化面板位置时出错:", error);
     }
   }, [initialCount]);
 
