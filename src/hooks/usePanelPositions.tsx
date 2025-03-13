@@ -16,33 +16,53 @@ export function usePanelPositions(initialCount: number = 100) {
       const rowSize = Math.ceil(Math.sqrt(initialCount));
       
       const instances: InstanceData[] = [];
-      for (let i = 0; i < initialCount; i++) {
-        const row = Math.floor(i / rowSize);
-        const col = i % rowSize;
-        
-        // Add some variation to make it look more natural
-        const xOffset = (Math.random() - 0.5) * 0.5;
-        const zOffset = (Math.random() - 0.5) * 0.5;
-        const yRotation = (Math.random() - 0.5) * 0.1;
-        
-        instances.push({
-          id: i,
-          position: [
-            col * spacing + xOffset, 
-            0.5, 
-            row * spacing + zOffset
-          ],
-          rotation: [
-            -Math.PI / 8, // Tilt panels slightly toward the sun
-            yRotation,
-            0
-          ],
-          scale: [1, 1, 1]
-        });
-      }
       
-      setPanelPositions(instances);
-      setInitialPositions(instances);
+      // Create a more efficient loop for a large number of panels
+      let currentId = 0;
+      
+      // Calculate the grid size needed to fit all panels
+      const gridSize = Math.ceil(Math.sqrt(initialCount));
+      const halfGrid = Math.floor(gridSize / 2);
+      
+      // Generate in batches to not block the main thread
+      const generateBatch = (startIndex: number, batchSize: number) => {
+        const endIndex = Math.min(startIndex + batchSize, initialCount);
+        const batchInstances: InstanceData[] = [];
+        
+        for (let i = startIndex; i < endIndex; i++) {
+          const row = Math.floor(i / gridSize) - halfGrid;
+          const col = (i % gridSize) - halfGrid;
+          
+          // Add some variation to make it look more natural
+          const xOffset = (Math.random() - 0.5) * 0.5;
+          const zOffset = (Math.random() - 0.5) * 0.5;
+          const yRotation = (Math.random() - 0.5) * 0.1;
+          
+          batchInstances.push({
+            id: i,
+            position: [
+              col * spacing + xOffset, 
+              0.5, 
+              row * spacing + zOffset
+            ],
+            rotation: [
+              -Math.PI / 8, // Tilt panels slightly toward the sun
+              yRotation,
+              0
+            ],
+            scale: [1, 1, 1]
+          });
+        }
+        
+        return batchInstances;
+      };
+      
+      // Generate all panels in a single batch for now
+      // For even more panels, we could split this into multiple batches
+      const allPanels = generateBatch(0, initialCount);
+      
+      setPanelPositions(allPanels);
+      setInitialPositions(allPanels);
       setIsInitialized(true);
       console.log("Panel positions initialized successfully");
     } catch (error) {

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 
@@ -152,33 +151,6 @@ export default function Terrain() {
         />
       </mesh>
       
-      {/* Road */}
-      <mesh 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        position={[0, 0.05, 0]} 
-        receiveShadow
-      >
-        <planeGeometry args={[15, 400]} />
-        <meshStandardMaterial 
-          color="#555555" 
-          roughness={0.9} 
-          metalness={0.1}
-        />
-      </mesh>
-      
-      {/* Road markings */}
-      <mesh 
-        rotation={[-Math.PI / 2, 0, 0]} 
-        position={[0, 0.1, 0]} 
-        receiveShadow
-      >
-        <planeGeometry args={[0.5, 400]} />
-        <meshStandardMaterial 
-          color="#ffffff" 
-          roughness={0.5}
-        />
-      </mesh>
-
       {/* More realistic grass clumps scattered across the terrain */}
       {grassInstances.map((grass, index) => (
         <mesh

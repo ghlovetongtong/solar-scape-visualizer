@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, Sky, useProgress } from '@react-three/drei';
@@ -78,7 +77,6 @@ function Loader() {
   );
 }
 
-// Custom environment that doesn't rely on external HDR files
 function CustomEnvironment() {
   return (
     <>
@@ -99,7 +97,7 @@ export default function SceneContainer() {
     updatePanelRotation,
     selectPanel,
     resetPanelPositions
-  } = usePanelPositions(60); // Reduced panel count for initial loading test
+  } = usePanelPositions(3000); // Changed from 60 to 3000
   
   useEffect(() => {
     // Force scene to be considered ready after a timeout
@@ -112,7 +110,6 @@ export default function SceneContainer() {
     return () => clearTimeout(timer);
   }, []);
 
-  // Define positions for inverters, cameras, IT house, and transformer stations
   const inverterPositions = [
     [-50, 0, -50],
     [50, 0, -50],
@@ -159,7 +156,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [50, 50, 250], fov: 50 }}
+        camera={{ position: [250, 250, 500], fov: 50 }} // Adjusted camera position to view more panels
         gl={{ 
           antialias: true,
           alpha: false,
@@ -182,12 +179,12 @@ export default function SceneContainer() {
           castShadow 
           shadow-mapSize-width={1024} 
           shadow-mapSize-height={1024}
-          shadow-camera-left={-200}
-          shadow-camera-right={200}
-          shadow-camera-top={200}
-          shadow-camera-bottom={-200}
+          shadow-camera-left={-500}
+          shadow-camera-right={500}
+          shadow-camera-top={500}
+          shadow-camera-bottom={-500}
           shadow-camera-near={0.1}
-          shadow-camera-far={500}
+          shadow-camera-far={1000}
         />
         
         {/* Sky */}
@@ -238,7 +235,7 @@ export default function SceneContainer() {
           <OrbitControls 
             enableDamping 
             dampingFactor={0.05} 
-            maxDistance={500}
+            maxDistance={1000}
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
           />
