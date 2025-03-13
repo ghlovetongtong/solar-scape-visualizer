@@ -177,6 +177,18 @@ export default function SceneContainer() {
     [180, 0, 0]
   ];
 
+  const transformerPositions = isInitialized && panelPositions.length > 0 ? [
+    [90, 0, -50],    // Positioned within terrain bounds but outside panel area
+    [90, 0, 50]      // Positioned within terrain bounds but outside panel area
+  ] : [
+    [0, 0, 0],
+    [30, 0, 0]
+  ];
+
+  const itHousePosition = isInitialized && panelPositions.length > 0 ? 
+    [130, 0, 0]     // Positioned within terrain bounds but outside panel area
+    : [0, 0, 0];    // Default position if panels not initialized
+
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
     [-80, 8, -80],   // Far corners
     [80, 8, -80],
@@ -205,18 +217,6 @@ export default function SceneContainer() {
     [330, 8, 0]
   ];
 
-  const transformerPositions = isInitialized && panelPositions.length > 0 ? [
-    [130, 0, -50],   // Far outside the panel area
-    [130, 0, 50]     // Far outside the panel area
-  ] : [
-    [0, 0, 0],
-    [30, 0, 0]
-  ];
-
-  const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [160, 0, 0]     // Outside the panel area, near transformers
-    : [0, 0, 0];    // Default position if panels not initialized
-
   const handleCanvasCreated = () => {
     console.log("Canvas created successfully");
     setSceneReady(true);
@@ -231,7 +231,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [180, 120, 350], fov: 45 }}
+        camera={{ position: [160, 100, 300], fov: 45 }}
         gl={{ 
           antialias: true,
           alpha: false,
