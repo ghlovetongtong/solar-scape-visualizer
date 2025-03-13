@@ -15,16 +15,16 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Use the Imgur URL directly for the texture
   const textureUrl = 'https://i.imgur.com/7c4KbBq_d.webp?maxwidth=760&fidelity=grand';
   
-  // Use a safer approach with useTexture
-  const textures = useTexture({
-    map: textureUrl,
-  }, (textures) => {
-    // When texture loads, make sure it repeats properly
-    if (textures.map) {
-      textures.map.wrapS = textures.map.wrapT = THREE.RepeatWrapping;
-      textures.map.repeat.set(4, 4); // Adjust repetition as needed
+  // Use useTexture hook without the callback function which was causing errors
+  const texture = useTexture(textureUrl);
+  
+  // Set texture properties directly after loading
+  useMemo(() => {
+    if (texture) {
+      texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(4, 4);
     }
-  });
+  }, [texture]);
   
   // Apply some gentle elevation to make the terrain more interesting
   useMemo(() => {
@@ -55,7 +55,7 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
     >
       <primitive object={groundGeometry} />
       <meshStandardMaterial 
-        map={textures.map}
+        map={texture}
         roughness={0.95} 
         metalness={0.05}
         envMapIntensity={0.4}
