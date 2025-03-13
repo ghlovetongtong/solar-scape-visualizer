@@ -2,8 +2,8 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
-// Import the texture image directly
-import groundTextureUrl from '../../assets/ground-texture.jpg';
+// Use the uploaded image as the ground texture
+import groundTextureUrl from '/lovable-uploads/74432eea-98e6-427b-a22c-95c86cacfbfe.png';
 
 interface GroundProps {
   size?: number;
@@ -14,7 +14,7 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Create a larger plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
-  // Load the ground texture from the imported file
+  // Load the ground texture from the uploaded file
   const textures = useTexture({
     map: groundTextureUrl,
   });

@@ -30,4 +30,7 @@ export default defineConfig(({ mode }) => ({
   },
   // Ensure Vite properly handles non-JavaScript assets like images
   assetsInclude: ['**/*.jpg', '**/*.png', '**/*.svg', '**/*.gif'],
+  
+  // Add specific configuration for handling uploaded images
+  publicDir: 'public',
 }));
