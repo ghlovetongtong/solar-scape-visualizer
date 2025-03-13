@@ -77,18 +77,56 @@ function Loader() {
   );
 }
 
-function CustomEnvironment() {
+function CustomEnvironment({ timeOfDay = 0.5 }) {
+  const sunPosition = [
+    Math.sin(timeOfDay * Math.PI) * 100,
+    Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50,
+    Math.cos(timeOfDay * Math.PI) * 100
+  ];
+  
+  const lightIntensity = Math.sin(timeOfDay * Math.PI) * 0.8 + 0.7;
+  const ambientIntensity = Math.sin(timeOfDay * Math.PI) * 0.3 + 0.2;
+  
+  const sunriseColor = new THREE.Color(0xffb347);
+  const noonColor = new THREE.Color(0xffffff);
+  const sunsetColor = new THREE.Color(0xff7e5f);
+  
+  let sunColor;
+  if (timeOfDay < 0.25) {
+    sunColor = sunriseColor.clone().lerp(noonColor, timeOfDay * 4);
+  } else if (timeOfDay < 0.75) {
+    const normalizedTime = (timeOfDay - 0.25) * 2;
+    sunColor = noonColor.clone();
+  } else {
+    sunColor = noonColor.clone().lerp(sunsetColor, (timeOfDay - 0.75) * 4);
+  }
+
   return (
     <>
-      <ambientLight intensity={0.5} />
-      <hemisphereLight intensity={0.3} color="#b1e1ff" groundColor="#000000" />
+      <ambientLight intensity={ambientIntensity} />
+      <hemisphereLight intensity={0.3 * lightIntensity} color="#b1e1ff" groundColor="#000000" />
+      
+      <directionalLight 
+        position={sunPosition}
+        intensity={1.5 * lightIntensity} 
+        castShadow 
+        shadow-mapSize-width={1024} 
+        shadow-mapSize-height={1024}
+        shadow-camera-left={-500}
+        shadow-camera-right={500}
+        shadow-camera-top={500}
+        shadow-camera-bottom={-500}
+        shadow-camera-near={0.1}
+        shadow-camera-far={1000}
+        color={sunColor}
+      />
     </>
   );
 }
 
 export default function SceneContainer() {
   const [showStats, setShowStats] = useState(false);
-  const [timeOfDay, setTimeOfDay] = useState(0.5); // 0-1, 0.5 is noon
+  const [timeOfDay, setTimeOfDay] = useState(0.5);
   const [sceneReady, setSceneReady] = useState(false);
   const {
     panelPositions,
@@ -97,11 +135,9 @@ export default function SceneContainer() {
     updatePanelRotation,
     selectPanel,
     resetPanelPositions
-  } = usePanelPositions(3000); // Changed from 60 to 3000
+  } = usePanelPositions(3000);
   
   useEffect(() => {
-    // Force scene to be considered ready after a timeout
-    // This helps if the progress event isn't firing correctly
     const timer = setTimeout(() => {
       setSceneReady(true);
       console.log("Scene forced ready after timeout");
@@ -156,7 +192,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [250, 250, 500], fov: 50 }} // Adjusted camera position to view more panels
+        camera={{ position: [250, 250, 500], fov: 50 }}
         gl={{ 
           antialias: true,
           alpha: false,
@@ -169,33 +205,23 @@ export default function SceneContainer() {
       >
         <color attach="background" args={['#d6e4ff']} />
         
-        {/* Custom lighting instead of Environment component */}
-        <CustomEnvironment />
+        <CustomEnvironment timeOfDay={timeOfDay} />
         
-        {/* Directional light (sun) */}
-        <directionalLight 
-          position={[Math.sin(timeOfDay * Math.PI) * 100, 100, Math.cos(timeOfDay * Math.PI) * 100]} 
-          intensity={1.5} 
-          castShadow 
-          shadow-mapSize-width={1024} 
-          shadow-mapSize-height={1024}
-          shadow-camera-left={-500}
-          shadow-camera-right={500}
-          shadow-camera-top={500}
-          shadow-camera-bottom={-500}
-          shadow-camera-near={0.1}
-          shadow-camera-far={1000}
-        />
-        
-        {/* Sky */}
         <Sky 
           distance={450000} 
-          sunPosition={[Math.sin(timeOfDay * Math.PI) * 100, Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50, Math.cos(timeOfDay * Math.PI) * 100]} 
+          sunPosition={[
+            Math.sin(timeOfDay * Math.PI) * 100, 
+            Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50, 
+            Math.cos(timeOfDay * Math.PI) * 100
+          ]} 
           inclination={0.5} 
           azimuth={0.25} 
+          rayleigh={timeOfDay < 0.25 || timeOfDay > 0.75 ? 2 : 1}
+          turbidity={timeOfDay < 0.25 || timeOfDay > 0.75 ? 10 : 8}
+          mieCoefficient={0.005}
+          mieDirectionalG={0.8}
         />
         
-        {/* Solar farm components */}
         <Suspense fallback={null}>
           <Terrain />
           
@@ -231,7 +257,6 @@ export default function SceneContainer() {
           
           <ITHouse position={new THREE.Vector3(...itHousePosition)} />
           
-          {/* Controls */}
           <OrbitControls 
             enableDamping 
             dampingFactor={0.05} 
