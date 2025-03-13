@@ -12,8 +12,8 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Create a larger plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
-  // Load the ground texture using relative URL - this will be handled by Vite's asset handling
-  const textureUrl = new URL('/lovable-uploads/74432eea-98e6-427b-a22c-95c86cacfbfe.png', import.meta.url).href;
+  // Use the Imgur URL directly for the texture
+  const textureUrl = 'https://i.imgur.com/7c4KbBq_d.webp?maxwidth=760&fidelity=grand';
   
   // Use a safer approach with useTexture
   const textures = useTexture({
