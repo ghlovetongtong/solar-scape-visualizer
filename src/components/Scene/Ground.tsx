@@ -12,8 +12,8 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Create a larger plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
-  // Use the Imgur URL directly for the texture
-  const textureUrl = 'https://i.imgur.com/7c4KbBq_d.webp?maxwidth=760&fidelity=grand';
+  // Use the new Imgur URL directly for the texture
+  const textureUrl = 'https://i.imgur.com/A9UZ1Ol.jpeg';
   
   // Use useTexture hook without the callback function which was causing errors
   const texture = useTexture(textureUrl);
