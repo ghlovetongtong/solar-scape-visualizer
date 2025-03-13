@@ -2,44 +2,52 @@
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 
-export function usePanelPositions(initialCount: number = 6000) {
+export function usePanelPositions(initialCount: number = 100) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
   const [selectedPanelId, setSelectedPanelId] = useState<number | null>(null);
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Initialize panel positions in a grid layout
   useEffect(() => {
-    const spacing = 5;
-    const rowSize = Math.ceil(Math.sqrt(initialCount));
-    
-    const instances: InstanceData[] = [];
-    for (let i = 0; i < initialCount; i++) {
-      const row = Math.floor(i / rowSize);
-      const col = i % rowSize;
+    console.log(`Initializing ${initialCount} panels`);
+    try {
+      const spacing = 5;
+      const rowSize = Math.ceil(Math.sqrt(initialCount));
       
-      // Add some variation to make it look more natural
-      const xOffset = (Math.random() - 0.5) * 0.5;
-      const zOffset = (Math.random() - 0.5) * 0.5;
-      const yRotation = (Math.random() - 0.5) * 0.1;
+      const instances: InstanceData[] = [];
+      for (let i = 0; i < initialCount; i++) {
+        const row = Math.floor(i / rowSize);
+        const col = i % rowSize;
+        
+        // Add some variation to make it look more natural
+        const xOffset = (Math.random() - 0.5) * 0.5;
+        const zOffset = (Math.random() - 0.5) * 0.5;
+        const yRotation = (Math.random() - 0.5) * 0.1;
+        
+        instances.push({
+          id: i,
+          position: [
+            col * spacing + xOffset, 
+            0.5, 
+            row * spacing + zOffset
+          ],
+          rotation: [
+            -Math.PI / 8, // Tilt panels slightly toward the sun
+            yRotation,
+            0
+          ],
+          scale: [1, 1, 1]
+        });
+      }
       
-      instances.push({
-        id: i,
-        position: [
-          col * spacing + xOffset, 
-          0.5, 
-          row * spacing + zOffset
-        ],
-        rotation: [
-          -Math.PI / 8, // Tilt panels slightly toward the sun
-          yRotation,
-          0
-        ],
-        scale: [1, 1, 1]
-      });
+      setPanelPositions(instances);
+      setInitialPositions(instances);
+      setIsInitialized(true);
+      console.log("Panel positions initialized successfully");
+    } catch (error) {
+      console.error("Error initializing panel positions:", error);
     }
-    
-    setPanelPositions(instances);
-    setInitialPositions(instances);
   }, [initialCount]);
 
   // Function to update a single panel's position
@@ -80,6 +88,7 @@ export function usePanelPositions(initialCount: number = 6000) {
     updatePanelPosition,
     updatePanelRotation,
     selectPanel,
-    resetPanelPositions
+    resetPanelPositions,
+    isInitialized
   };
 }
