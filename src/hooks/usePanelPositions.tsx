@@ -1,6 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
+import { getHeightAtPosition } from '@/components/Scene/Ground';
 
 export function usePanelPositions(initialCount: number = 100) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
@@ -38,15 +39,20 @@ export function usePanelPositions(initialCount: number = 100) {
           const zOffset = (Math.random() - 0.5) * 0.5;
           const yRotation = (Math.random() - 0.5) * 0.1;
           
+          // Calculate position and consider ground height
+          const x = col * spacing + xOffset;
+          const z = row * spacing + zOffset;
+          const groundHeight = getHeightAtPosition(x, z);
+          
           batchInstances.push({
             id: i,
             position: [
-              col * spacing + xOffset, 
-              0.5, 
-              row * spacing + zOffset
+              x, 
+              1.0 + groundHeight, // Increased y value to make room for tracking brackets
+              z
             ],
             rotation: [
-              -Math.PI / 8, // Tilt panels slightly toward the sun
+              -Math.PI / 8 + (Math.random() - 0.5) * 0.05, // Slight random variation in tilt
               yRotation,
               0
             ],
