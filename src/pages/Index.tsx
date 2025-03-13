@@ -1,7 +1,26 @@
 
-import React, { useEffect, useState } from 'react';
-import SceneContainer from '@/components/Scene/SceneContainer';
+import React, { useEffect, useState, Suspense } from 'react';
 import { toast } from 'sonner';
+import { ErrorBoundary } from 'react-error-boundary';
+
+// Lazy load the SceneContainer component to ensure all Three.js dependencies are loaded first
+const SceneContainer = React.lazy(() => import('@/components/Scene/SceneContainer'));
+
+// Error fallback component
+const ErrorFallback = ({ error }: { error: Error }) => {
+  return (
+    <div className="w-full h-screen flex flex-col items-center justify-center p-4 text-center">
+      <h2 className="text-xl font-bold text-red-600 mb-2">Something went wrong rendering the 3D scene</h2>
+      <p className="text-gray-600 mb-4">{error.message}</p>
+      <button 
+        onClick={() => window.location.reload()}
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+      >
+        Reload Application
+      </button>
+    </div>
+  );
+};
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -21,13 +40,21 @@ const Index = () => {
   return (
     <div className="w-full h-screen overflow-hidden">
       {isLoading ? (
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <div className="text-lg font-medium">Initializing Solar Power Station...</div>
           <div className="text-sm text-muted-foreground mt-2">Preparing 3D visualization</div>
         </div>
       ) : (
-        <SceneContainer />
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-full">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          }>
+            <SceneContainer />
+          </Suspense>
+        </ErrorBoundary>
       )}
     </div>
   );
