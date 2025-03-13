@@ -66,24 +66,27 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     event.stopPropagation();
   };
   
-  // Instead of InstancedMesh, we'll use drei's Instances for easier interaction
+  // Render each panel individually to avoid the instancing issue
   return (
-    <Instances
-      limit={6000}
-      range={6000}
-      geometry={panelGeometry}
-      material={materials.panelMaterial}
-      onClick={handleClick}
-    >
+    <group onClick={handleClick}>
       {panelPositions.map((panel) => (
-        <Instance
+        <mesh
           key={panel.id}
-          position={panel.position}
-          rotation={panel.rotation}
-          scale={panel.scale}
-          color={panel.id === selectedPanelId ? '#0ea5e9' : undefined}
-        />
+          position={new THREE.Vector3(...panel.position)}
+          rotation={new THREE.Euler(...panel.rotation)}
+          scale={new THREE.Vector3(...panel.scale)}
+          castShadow
+          receiveShadow
+        >
+          <boxGeometry args={[3, 0.1, 2]} />
+          <meshPhysicalMaterial 
+            color={panel.id === selectedPanelId ? '#0ea5e9' : '#1a1f2c'}
+            metalness={0.8}
+            roughness={0.2}
+            envMapIntensity={0.5}
+          />
+        </mesh>
       ))}
-    </Instances>
+    </group>
   );
 }
