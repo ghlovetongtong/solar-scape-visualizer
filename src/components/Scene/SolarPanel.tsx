@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -86,18 +87,20 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const materials = useMemo(() => {
     const sunlitPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#3B82F6'),  // Brighter blue color for sunlit panels
+      color: new THREE.Color('#60A5FA'),  // Brightened blue color for sunlit panels
       metalness: 0.8,
       roughness: 0.2,
+      emissive: new THREE.Color('#60A5FA'), // Add emissive glow to all panels
+      emissiveIntensity: 0.3 // Moderate glow intensity
     });
     
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#93C5FD'),  // Brighter soft blue for shadowed panels
+      color: new THREE.Color('#93C5FD'),  // Bright soft blue for shadowed panels
       metalness: 0.5,
       roughness: 0.4,
       emissive: new THREE.Color('#93C5FD'), // Add emissive glow to shadowed panels
-      emissiveIntensity: 0.6 // Increased glow intensity for better visibility
+      emissiveIntensity: 0.8 // Increased glow intensity for better visibility
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -285,7 +288,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
               metalness={0.8}
               roughness={0.2}
               emissive='#38BDF8'
-              emissiveIntensity={0.6}
+              emissiveIntensity={0.8}  // Brighter glow
             />
           </mesh>
           
@@ -301,7 +304,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             <meshStandardMaterial 
               color='#565c64' 
               emissive='#38BDF8'
-              emissiveIntensity={0.3}
+              emissiveIntensity={0.4}  // Slightly brighter
               metalness={0.7}
               roughness={0.3}
             />

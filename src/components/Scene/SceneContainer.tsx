@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, Sky, useProgress } from '@react-three/drei';
@@ -145,7 +146,8 @@ export default function SceneContainer() {
     updatePanelPosition,
     updatePanelRotation,
     selectPanel,
-    resetPanelPositions
+    resetPanelPositions,
+    isInitialized
   } = usePanelPositions(3000);
   
   useEffect(() => {
@@ -157,37 +159,70 @@ export default function SceneContainer() {
     return () => clearTimeout(timer);
   }, []);
 
-  const inverterPositions = [
-    [-50, 0, -50],
-    [50, 0, -50],
-    [150, 0, -50],
-    [-50, 0, 50],
-    [50, 0, 50],
-    [150, 0, 50],
-    [0, 0, 150]
+  // Repositioned inverters to be within the solar panel array
+  // They should be placed strategically to connect groups of panels
+  const inverterPositions = isInitialized && panelPositions.length > 0 ? [
+    // Place inverters inside the array, distributed among panel groups
+    [-30, 0, -30],   // Top-left quadrant
+    [30, 0, -30],    // Top-right quadrant
+    [-30, 0, 30],    // Bottom-left quadrant
+    [30, 0, 30],     // Bottom-right quadrant
+    [0, 0, 0],       // Center
+    [-60, 0, 0],     // Left middle
+    [60, 0, 0]       // Right middle
+  ] : [
+    [0, 0, 0],       // Default position if panels not initialized
+    [30, 0, 0],
+    [60, 0, 0],
+    [90, 0, 0],
+    [120, 0, 0],
+    [150, 0, 0],
+    [180, 0, 0]
   ];
 
-  const cameraPositions = [
-    [-70, 10, -70],
-    [70, 10, -70],
-    [170, 10, -70],
-    [-70, 10, 70],
-    [70, 10, 70],
-    [170, 10, 70],
-    [-70, 10, 170],
-    [70, 10, 170],
-    [170, 10, 170],
-    [0, 10, -100],
-    [0, 10, 100],
-    [100, 10, 0]
+  // Repositioned cameras around the perimeter of the solar panel array
+  const cameraPositions = isInitialized && panelPositions.length > 0 ? [
+    // Perimeter cameras to monitor the site
+    [-100, 10, -100],  // Far corners
+    [100, 10, -100],
+    [-100, 10, 100],
+    [100, 10, 100],
+    [-70, 10, 0],      // Middle of each side
+    [70, 10, 0],
+    [0, 10, -70],
+    [0, 10, 70],
+    [-50, 10, -50],    // Inner corners
+    [50, 10, -50],
+    [-50, 10, 50],
+    [50, 10, 50]
+  ] : [
+    [0, 10, 0],        // Default positions if panels not initialized
+    [30, 10, 0],
+    [60, 10, 0],
+    [90, 10, 0],
+    [120, 10, 0],
+    [150, 10, 0],
+    [180, 10, 0],
+    [210, 10, 0],
+    [240, 10, 0],
+    [270, 10, 0],
+    [300, 10, 0],
+    [330, 10, 0]
   ];
 
-  const transformerPositions = [
-    [-100, 0, 0],
-    [200, 0, 100]
+  // Repositioned transformer stations to the middle of the solar panel array
+  const transformerPositions = isInitialized && panelPositions.length > 0 ? [
+    [0, 0, -15],  // Central location, offset slightly
+    [15, 0, 15]   // Central location, offset slightly in another direction
+  ] : [
+    [0, 0, 0],    // Default positions if panels not initialized
+    [30, 0, 0]
   ];
 
-  const itHousePosition = [200, 0, 0];
+  // Repositioned IT house to the middle of the solar panel array
+  const itHousePosition = isInitialized && panelPositions.length > 0 ? 
+    [-15, 0, 0]   // Central location, offset slightly to not overlap with transformers
+    : [0, 0, 0];  // Default position if panels not initialized
 
   const handleCanvasCreated = () => {
     console.log("Canvas created successfully");
