@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
@@ -23,9 +22,6 @@ export function usePanelPositions(initialCount: number = 2000) {
     console.log(`按照电站实际分布图初始化 ${initialCount} 个光伏板`);
     try {
       const instances: InstanceData[] = [];
-      
-      // 不再应用旋转，让光伏板完全正面朝上
-      const totalRotation = 0; // 移除整体旋转
       
       // 计算总宽度以居中整个布局
       const totalWidthLeft = PANELS_PER_ROW_LEFT * PANEL_SPACING_X;
@@ -55,9 +51,9 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              0, // 完全水平，无X轴旋转
-              0, // 完全正面，无Y轴旋转
-              0  // 完全正面，无Z轴旋转
+              0,                  // X轴旋转保持为0
+              Math.PI/6,          // Y轴旋转30度（π/6弧度 = 30度）
+              0                   // Z轴旋转保持为0
             ],
             scale: [1, 1, 1]
           });
@@ -109,9 +105,9 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              0, // 完全水平，无X轴旋转
-              0, // 完全正面，无Y轴旋转
-              0  // 完全正面，无Z轴旋转
+              0,                  // X轴旋转保持为0
+              Math.PI/6,          // Y轴旋转30度（π/6弧度 = 30度）
+              0                   // Z轴旋转保持为0
             ],
             scale: [1, 1, 1]
           });
@@ -123,7 +119,7 @@ export function usePanelPositions(initialCount: number = 2000) {
       setPanelPositions(instances);
       setInitialPositions(instances);
       setIsInitialized(true);
-      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列且完全正面朝上`);
+      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列且Y轴旋转30度`);
     } catch (error) {
       console.error("初始化面板位置时出错:", error);
     }

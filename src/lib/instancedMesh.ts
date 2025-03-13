@@ -55,7 +55,7 @@ export function generateGridPositions(
     instances.push({
       id: i,
       position: [col * spacing, 0, row * spacing],
-      rotation: [0, 0, 0], // 完全平面，无旋转
+      rotation: [0, Math.PI/6, 0], // Y轴旋转30度
       scale: [1, 1, 1]
     });
   }
@@ -76,16 +76,16 @@ export function optimizeScene(scene: THREE.Scene): void {
   });
 }
 
-// 更新计算阴影逻辑，考虑到面板完全平面的情况
+// 更新计算阴影逻辑，考虑面板Y轴旋转30度的情况
 export function isPanelInShadow(
   panelPosition: [number, number, number],
   panelRotation: [number, number, number],
   sunDirection: THREE.Vector3
 ): boolean {
-  // 对于完全平面的面板，我们需要使用向上的法线
+  // 考虑到Y轴旋转30度，我们需要计算面板的实际法线
   const panelNormal = new THREE.Vector3(0, 1, 0);
   
-  // 应用面板旋转（即使现在是平的，但保留此逻辑以便未来可能的更改）
+  // 应用面板旋转
   const rotation = new THREE.Euler(...panelRotation);
   panelNormal.applyEuler(rotation);
   
@@ -101,10 +101,10 @@ export function getShadowIntensity(
   panelRotation: [number, number, number],
   sunDirection: THREE.Vector3
 ): number {
-  // 对于完全平面的面板，我们需要使用向上的法线
+  // 考虑到Y轴旋转30度，更新面板法线计算
   const panelNormal = new THREE.Vector3(0, 1, 0);
   
-  // 应用面板旋转（即使现在是平的，但保留此逻辑以便未来可能的更改）
+  // 应用面板旋转
   const rotation = new THREE.Euler(...panelRotation);
   panelNormal.applyEuler(rotation);
   
