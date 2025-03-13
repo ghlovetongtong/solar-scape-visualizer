@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -57,7 +58,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return mergedGeometry;
   }, []);
   
-  // Load solar panel texture
+  // Load solar panel texture for the grid pattern
   const panelTexture = useTexture('https://i.imgur.com/mrgxuAD.jpg');
   
   // Configure texture properties
@@ -71,19 +72,19 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const materials = useMemo(() => {
     const panelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#1a1f2c'),
+      color: new THREE.Color('#1a1f2c'),  // Dark blue-black color for the panel
       metalness: 0.8,
       roughness: 0.2,
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#8e9196'), 
+      color: new THREE.Color('#8e9196'),  // Light gray for frame
       roughness: 0.4,
       metalness: 0.6
     });
     
     const bracketMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#565c64'),
+      color: new THREE.Color('#565c64'),  // Darker gray for bracket
       roughness: 0.3,
       metalness: 0.7
     });
@@ -220,6 +221,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           >
             <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
+              map={panelTexture}
               color='#0ea5e9'
               metalness={0.8}
               roughness={0.2}
