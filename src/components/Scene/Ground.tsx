@@ -2,8 +2,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
-// Use the uploaded image as the ground texture
-import groundTextureUrl from '/lovable-uploads/74432eea-98e6-427b-a22c-95c86cacfbfe.png';
 
 interface GroundProps {
   size?: number;
@@ -14,9 +12,18 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Create a larger plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
-  // Load the ground texture from the uploaded file
+  // Load the ground texture using relative URL - this will be handled by Vite's asset handling
+  const textureUrl = new URL('/lovable-uploads/74432eea-98e6-427b-a22c-95c86cacfbfe.png', import.meta.url).href;
+  
+  // Use a safer approach with useTexture
   const textures = useTexture({
-    map: groundTextureUrl,
+    map: textureUrl,
+  }, (textures) => {
+    // When texture loads, make sure it repeats properly
+    if (textures.map) {
+      textures.map.wrapS = textures.map.wrapT = THREE.RepeatWrapping;
+      textures.map.repeat.set(4, 4); // Adjust repetition as needed
+    }
   });
   
   // Apply some gentle elevation to make the terrain more interesting
