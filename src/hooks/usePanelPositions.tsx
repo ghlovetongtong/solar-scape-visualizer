@@ -26,14 +26,20 @@ export function usePanelPositions(initialCount: number = 100) {
       // Calculate the grid dimensions for groups
       const groupGridSize = Math.ceil(Math.sqrt(groupsNeeded));
       
+      // Calculate offset to center the entire grid
+      const totalGridWidth = (groupGridSize - 1) * GROUP_SPACING;
+      const centerOffsetX = totalGridWidth / 2;
+      const centerOffsetZ = totalGridWidth / 2;
+      
       // Generate panels in groups
       for (let g = 0; g < groupsNeeded; g++) {
         // Calculate group position in the larger grid
         const groupRow = Math.floor(g / groupGridSize);
         const groupCol = g % groupGridSize;
         
-        const groupCenterX = groupCol * GROUP_SPACING;
-        const groupCenterZ = groupRow * GROUP_SPACING;
+        // Center the entire grid by subtracting the offset
+        const groupCenterX = groupCol * GROUP_SPACING - centerOffsetX;
+        const groupCenterZ = groupRow * GROUP_SPACING - centerOffsetZ;
         
         // Calculate how many panels to create in this group
         const panelsInThisGroup = Math.min(
