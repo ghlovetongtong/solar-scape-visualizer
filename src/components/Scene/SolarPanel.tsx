@@ -1,9 +1,9 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { createInstancedMesh, updateInstancedMesh, type InstanceData } from '@/lib/instancedMesh';
+import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 interface SolarPanelsProps {
   panelPositions: InstanceData[];
@@ -42,23 +42,17 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     
     // Convert group to buffer geometry
     const bracketBufferGeometry = new THREE.BufferGeometry();
-    const meshes = [];
+    const meshes: THREE.BufferGeometry[] = [];
     
     bracketGroup.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         child.updateMatrix();
-        meshes.push(child);
+        meshes.push(child.geometry.clone().applyMatrix4(child.matrix));
       }
     });
     
     // Merge all geometries into one buffer geometry
-    const mergedGeometry = THREE.BufferGeometryUtils.mergeBufferGeometries(
-      meshes.map((mesh) => {
-        const geo = mesh.geometry.clone();
-        geo.applyMatrix4(mesh.matrix);
-        return geo;
-      })
-    );
+    const mergedGeometry = mergeBufferGeometries(meshes);
     
     return mergedGeometry;
   }, []);
