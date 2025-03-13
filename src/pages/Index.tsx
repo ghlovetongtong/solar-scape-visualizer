@@ -1,12 +1,34 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useEffect, useState } from 'react';
+import SceneContainer from '@/components/Scene/SceneContainer';
+import { toast } from 'sonner';
 
 const Index = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading resources
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      toast.success("Solar Station visualization loaded successfully", {
+        duration: 5000,
+      });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="w-full h-screen overflow-hidden">
+      {isLoading ? (
+        <div className="loading-overlay">
+          <div className="loading-spinner"></div>
+          <div className="text-lg font-medium">Initializing Solar Power Station...</div>
+          <div className="text-sm text-muted-foreground mt-2">Preparing 3D visualization</div>
+        </div>
+      ) : (
+        <SceneContainer />
+      )}
     </div>
   );
 };
