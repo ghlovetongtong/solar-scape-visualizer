@@ -64,7 +64,7 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				solar: {
-					panel: '#1a1f2c',
+					panel: '#0F1F40',  // Updated panel color
 					frame: '#8e9196',
 					inverter: '#403e43',
 					camera: '#333333',

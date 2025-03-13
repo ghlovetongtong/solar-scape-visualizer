@@ -72,7 +72,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const materials = useMemo(() => {
     const panelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#1a1f2c'),  // Dark blue-black color for the panel
+      color: new THREE.Color('#0F1F40'),  // Updated dark blue color for the panel
       metalness: 0.8,
       roughness: 0.2,
     });
