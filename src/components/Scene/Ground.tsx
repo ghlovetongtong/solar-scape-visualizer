@@ -12,15 +12,10 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
   // Create a larger plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
-  // Create a simple material with a sandy color
-  const groundMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({ 
-      color: '#e0cda7', 
-      roughness: 0.95,
-      metalness: 0.05,
-      envMapIntensity: 0.4
-    });
-  }, []);
+  // Load the ground texture from the local public directory
+  const textures = useTexture({
+    map: '/ground-texture.jpg',
+  });
   
   // Apply some gentle elevation to make the terrain more interesting
   useMemo(() => {
@@ -50,7 +45,12 @@ export default function Ground({ size = 1000, resolution = 128 }: GroundProps) {
       receiveShadow
     >
       <primitive object={groundGeometry} />
-      <primitive object={groundMaterial} />
+      <meshStandardMaterial 
+        map={textures.map}
+        roughness={0.95} 
+        metalness={0.05}
+        envMapIntensity={0.4}
+      />
     </mesh>
   );
 }
