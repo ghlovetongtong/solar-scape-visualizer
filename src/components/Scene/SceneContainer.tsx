@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -231,7 +232,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [160, 100, 300], fov: 45 }}
+        camera={{ position: [140, 50, 240], fov: 45 }}
         gl={{ 
           antialias: true,
           alpha: false,
