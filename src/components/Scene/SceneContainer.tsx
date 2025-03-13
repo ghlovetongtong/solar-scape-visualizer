@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, Sky, useProgress } from '@react-three/drei';
@@ -86,7 +85,7 @@ function CustomEnvironment({ timeOfDay = 0.5 }) {
   ];
   
   const lightIntensity = Math.sin(timeOfDay * Math.PI) * 0.8 + 0.7;
-  const ambientIntensity = Math.sin(timeOfDay * Math.PI) * 0.3 + 0.2;
+  const ambientIntensity = Math.sin(timeOfDay * Math.PI) * 0.3 + 0.4;
   
   const sunriseColor = new THREE.Color(0xffb347);
   const noonColor = new THREE.Color(0xffffff);
@@ -102,13 +101,10 @@ function CustomEnvironment({ timeOfDay = 0.5 }) {
     sunColor = noonColor.clone().lerp(sunsetColor, (timeOfDay - 0.75) * 4);
   }
 
-  // Create a helper ref for the directional light
   const directionalLightRef = useRef<THREE.DirectionalLight>(null);
   
-  // Update the helper when the directional light changes
   useEffect(() => {
     if (directionalLightRef.current) {
-      // Adjust camera helper visibility if needed
       if (directionalLightRef.current.shadow.camera.visible) {
         directionalLightRef.current.shadow.camera.updateProjectionMatrix();
       }
@@ -118,27 +114,23 @@ function CustomEnvironment({ timeOfDay = 0.5 }) {
   return (
     <>
       <ambientLight intensity={ambientIntensity} />
-      <hemisphereLight intensity={0.3 * lightIntensity} color="#b1e1ff" groundColor="#000000" />
+      <hemisphereLight intensity={0.4 * lightIntensity} color="#b1e1ff" groundColor="#385a7c" />
       
       <directionalLight 
         ref={directionalLightRef}
         position={sunPosition}
-        intensity={1.5 * lightIntensity} 
+        intensity={1.8 * lightIntensity} 
         castShadow 
         shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-2000}
-        shadow-camera-right={2000}
-        shadow-camera-top={2000}
-        shadow-camera-bottom={-2000}
+        shadow-camera-left={-2500}
+        shadow-camera-right={2500}
+        shadow-camera-top={2500}
+        shadow-camera-bottom={-2500}
         shadow-camera-near={0.1}
-        shadow-camera-far={3000}
+        shadow-camera-far={4000}
         shadow-bias={-0.0001}
         color={sunColor}
       />
-      
-      {/* Uncomment this to debug the shadow camera
-      <cameraHelper args={[directionalLightRef.current?.shadow.camera as THREE.Camera]} /> 
-      */}
     </>
   );
 }

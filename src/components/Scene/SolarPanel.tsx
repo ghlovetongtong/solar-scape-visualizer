@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -97,8 +96,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       color: new THREE.Color('#D3E4FD'),  // Soft blue color for shadowed panels
       metalness: 0.5,
       roughness: 0.4,
-      emissive: new THREE.Color('#D3E4FD'), // Add a subtle glow to shadowed panels
-      emissiveIntensity: 0.15 // Low intensity glow
+      emissive: new THREE.Color('#D3E4FD'), // Add emissive glow to shadowed panels
+      emissiveIntensity: 0.4 // Increased glow intensity for better visibility
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -203,7 +202,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         } else {
           // Calculate shadow intensity based on panel orientation and sun direction
           const shadowIntensity = getShadowIntensity(panel.rotation, sunDirection.current);
-          const isInShadow = shadowIntensity < 0.2;
+          const isInShadow = shadowIntensity < 0.15; // Lower threshold to consider more panels in sunlight
           
           // Set appropriate visibility based on lighting condition
           if (isInShadow) {
