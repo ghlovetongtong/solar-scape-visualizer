@@ -5,8 +5,8 @@ import { getHeightAtPosition } from '@/components/Scene/Ground';
 
 // Define group size and spacing constants
 const PANELS_PER_GROUP = 16; // 4x4 grid per group
-const PANEL_SPACING = 3.1; // Reduced spacing between panels within a group
-const GROUP_SPACING = 15; // Larger spacing between groups
+const PANEL_SPACING = 2.8; // Reduced spacing between panels within a group
+const GROUP_SPACING = 12; // Reduced spacing between groups
 
 export function usePanelPositions(initialCount: number = 100) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);

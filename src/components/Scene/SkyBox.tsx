@@ -51,7 +51,6 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
       mieDirectionalG={0.8}
       rayleigh={rayleigh}
       turbidity={turbidity}
-      exposure={1.5}
     />
   );
 }
