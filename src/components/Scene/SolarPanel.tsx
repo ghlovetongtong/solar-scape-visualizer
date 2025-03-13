@@ -59,7 +59,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, []);
   
   // Load solar panel texture for the grid pattern
-  const panelTexture = useTexture('https://i.imgur.com/mrgxuAD.jpg');
+  const panelTexture = useTexture('https://i.imgur.com/kDucSwd.jpeg');
   
   // Configure texture properties
   useMemo(() => {
