@@ -24,8 +24,8 @@ export function usePanelPositions(initialCount: number = 2000) {
     try {
       const instances: InstanceData[] = [];
       
-      // 根据图片，整体旋转约15度
-      const totalRotation = Math.PI * 0.083; // 约15度的旋转
+      // 不再应用旋转，让光伏板完全正面朝上
+      const totalRotation = 0; // 移除整体旋转
       
       // 计算总宽度以居中整个布局
       const totalWidthLeft = PANELS_PER_ROW_LEFT * PANEL_SPACING_X;
@@ -41,18 +41,11 @@ export function usePanelPositions(initialCount: number = 2000) {
       for (let row = 0; row < ROWS_IN_LEFT_SECTION && panelId < initialCount; row++) {
         for (let col = 0; col < PANELS_PER_ROW_LEFT; col++) {
           // 计算位置，确保面板紧密排列（无重叠，无间隙）
-          const rawX = startX1 + col * PANEL_SPACING_X;
-          const rawZ = startZ1 + row * PANEL_SPACING_Z;
-          
-          // 旋转坐标以匹配图片中的方向
-          const x = rawX * Math.cos(totalRotation) - rawZ * Math.sin(totalRotation);
-          const z = rawX * Math.sin(totalRotation) + rawZ * Math.cos(totalRotation);
+          const x = startX1 + col * PANEL_SPACING_X;
+          const z = startZ1 + row * PANEL_SPACING_Z;
           
           // 获取该位置的地面高度
           const groundHeight = getHeightAtPosition(x, z);
-          
-          // 随机微调角度使排列看起来更自然
-          const rowRotationY = totalRotation + (Math.random() - 0.5) * 0.01;
           
           instances.push({
             id: panelId,
@@ -62,9 +55,9 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              0, // 不再倾斜，改为水平正面摆放
-              rowRotationY,
-              0
+              0, // 完全水平，无X轴旋转
+              0, // 完全正面，无Y轴旋转
+              0  // 完全正面，无Z轴旋转
             ],
             scale: [1, 1, 1]
           });
@@ -102,18 +95,11 @@ export function usePanelPositions(initialCount: number = 2000) {
         
         for (let col = 0; col < rowPanelCount; col++) {
           // 计算位置，确保面板紧密排列（无重叠，无间隙）
-          const rawX = startX2 + (col + startColOffset) * PANEL_SPACING_X;
-          const rawZ = startZ2 + row * PANEL_SPACING_Z;
-          
-          // 旋转坐标
-          const x = rawX * Math.cos(totalRotation) - rawZ * Math.sin(totalRotation);
-          const z = rawX * Math.sin(totalRotation) + rawZ * Math.cos(totalRotation);
+          const x = startX2 + (col + startColOffset) * PANEL_SPACING_X;
+          const z = startZ2 + row * PANEL_SPACING_Z;
           
           // 获取该位置的地面高度
           const groundHeight = getHeightAtPosition(x, z);
-          
-          // 随机微调角度
-          const rowRotationY = totalRotation + (Math.random() - 0.5) * 0.01;
           
           instances.push({
             id: panelId,
@@ -123,9 +109,9 @@ export function usePanelPositions(initialCount: number = 2000) {
               z
             ],
             rotation: [
-              0, // 不再倾斜，改为水平正面摆放
-              rowRotationY,
-              0
+              0, // 完全水平，无X轴旋转
+              0, // 完全正面，无Y轴旋转
+              0  // 完全正面，无Z轴旋转
             ],
             scale: [1, 1, 1]
           });
@@ -137,7 +123,7 @@ export function usePanelPositions(initialCount: number = 2000) {
       setPanelPositions(instances);
       setInitialPositions(instances);
       setIsInitialized(true);
-      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列`);
+      console.log(`成功初始化了 ${instances.length} 个光伏板，按照电站精确布局图排列且完全正面朝上`);
     } catch (error) {
       console.error("初始化面板位置时出错:", error);
     }
