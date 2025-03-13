@@ -186,7 +186,7 @@ export default function SceneContainer() {
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [100, 0, 0]     // Positioned well within terrain bounds (400x400)
+    [60, 0, 40]     // Positioned well within terrain bounds (moved closer to center)
     : [0, 0, 0];    // Default position if panels not initialized
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
