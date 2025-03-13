@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -179,15 +178,15 @@ export default function SceneContainer() {
   ];
 
   const transformerPositions = isInitialized && panelPositions.length > 0 ? [
-    [90, 0, -50],    // Positioned within terrain bounds but outside panel area
-    [90, 0, 50]      // Positioned within terrain bounds but outside panel area
+    [90, 0, -50],    // Positioned within terrain bounds
+    [90, 0, 50]      // Positioned within terrain bounds
   ] : [
     [0, 0, 0],
     [30, 0, 0]
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [130, 0, 0]     // Positioned within terrain bounds but outside panel area
+    [100, 0, 0]     // Positioned well within terrain bounds (400x400)
     : [0, 0, 0];    // Default position if panels not initialized
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
