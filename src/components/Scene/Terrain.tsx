@@ -25,10 +25,31 @@ export default function Terrain() {
       groundGeometry.computeVertexNormals();
     }
   }, [groundGeometry]);
+
+  // Add grass instances for visual detail
+  const grassCount = 1000;
+  const grassInstances = useMemo(() => {
+    const instances = [];
+    for (let i = 0; i < grassCount; i++) {
+      // Generate random positions, avoiding the center solar farm area
+      let x, z;
+      do {
+        x = (Math.random() - 0.5) * 900;
+        z = (Math.random() - 0.5) * 900;
+      } while (Math.sqrt(x * x + z * z) < 210); // Keep grass outside the solar farm
+
+      instances.push({
+        position: [x, 0, z],
+        scale: 0.5 + Math.random() * 1.5,
+        rotation: Math.random() * Math.PI
+      });
+    }
+    return instances;
+  }, []);
   
   return (
     <group>
-      {/* Ground plane */}
+      {/* Ground plane with loess (yellowish-brown soil) color */}
       <mesh 
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]} 
@@ -36,9 +57,28 @@ export default function Terrain() {
       >
         <primitive object={groundGeometry} />
         <meshStandardMaterial 
-          color="#c8c8c9" 
-          roughness={1} 
-          metalness={0}
+          color="#D7C28F" 
+          roughness={0.95} 
+          metalness={0.05}
+          // Create subtle color variations to make the ground look more natural
+          onBeforeCompile={(shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <color_fragment>',
+              `
+              #include <color_fragment>
+              // Add noise to create soil texture variation
+              float noise = sin(vUv.x * 100.0) * sin(vUv.y * 100.0) * 0.2;
+              float largeNoise = sin(vUv.x * 5.0) * sin(vUv.y * 5.0) * 0.1;
+              
+              // Mix between two earth tones
+              vec3 color1 = vec3(0.843, 0.761, 0.561); // Light loess
+              vec3 color2 = vec3(0.761, 0.682, 0.502); // Darker loess
+              vec3 colorMix = mix(color1, color2, noise + largeNoise + 0.5);
+              
+              diffuseColor.rgb = colorMix;
+              `
+            );
+          }}
         />
       </mesh>
       
@@ -68,6 +108,34 @@ export default function Terrain() {
           roughness={0.5}
         />
       </mesh>
+
+      {/* Grass clumps scattered across the terrain */}
+      {grassInstances.map((grass, index) => (
+        <mesh
+          key={`grass-${index}`}
+          position={[grass.position[0], 0.05, grass.position[2]]}
+          rotation={[0, grass.rotation, 0]}
+          castShadow
+        >
+          <group scale={[grass.scale, grass.scale, grass.scale]}>
+            {/* Single grass blade */}
+            <mesh rotation={[0, 0, 0.2]}>
+              <boxGeometry args={[0.2, 1.5, 0.05]} />
+              <meshStandardMaterial color="#568203" />
+            </mesh>
+            {/* Second grass blade */}
+            <mesh rotation={[0, Math.PI / 3, -0.1]}>
+              <boxGeometry args={[0.2, 1.3, 0.05]} />
+              <meshStandardMaterial color="#4A7023" />
+            </mesh>
+            {/* Third grass blade */}
+            <mesh rotation={[0, -Math.PI / 4, 0.3]}>
+              <boxGeometry args={[0.15, 1.7, 0.05]} />
+              <meshStandardMaterial color="#6B8E23" />
+            </mesh>
+          </group>
+        </mesh>
+      ))}
       
       {/* Terrain decoration - rocks */}
       <group position={[100, 0, -100]}>
