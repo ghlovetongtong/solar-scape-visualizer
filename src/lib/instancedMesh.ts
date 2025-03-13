@@ -75,3 +75,23 @@ export function optimizeScene(scene: THREE.Scene): void {
     }
   });
 }
+
+// Add a utility function to calculate if a panel is in shadow
+export function isPanelInShadow(
+  panelPosition: [number, number, number],
+  panelRotation: [number, number, number],
+  sunDirection: THREE.Vector3
+): boolean {
+  // Create a normal vector (pointing up by default)
+  const panelNormal = new THREE.Vector3(0, 1, 0);
+  
+  // Apply the panel's rotation to get its actual normal direction
+  const rotation = new THREE.Euler(...panelRotation);
+  panelNormal.applyEuler(rotation);
+  
+  // Calculate dot product between panel normal and sun direction
+  const dotProduct = panelNormal.dot(sunDirection);
+  
+  // If dot product is negative or very small, panel faces away from sun
+  return dotProduct < 0.2; // Threshold to consider a panel in shadow
+}

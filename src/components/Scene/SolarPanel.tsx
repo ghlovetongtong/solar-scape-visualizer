@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -69,12 +68,55 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     }
   }, [panelTexture]);
   
+  // Create an array to track which panels are in shadow
+  const shadowedPanels = useRef<boolean[]>(new Array(panelPositions.length).fill(true));
+  
+  // Reference to the sunlight direction for shadow calculation
+  const sunDirection = useRef<THREE.Vector3>(new THREE.Vector3(0, 1, 0));
+  
+  // Update the sun direction based on the scene's directional light
+  useFrame(({ scene }) => {
+    // Find the directional light in the scene (simulating the sun)
+    let foundDirectionalLight = false;
+    scene.traverse((object) => {
+      if (object instanceof THREE.DirectionalLight && !foundDirectionalLight) {
+        sunDirection.current.copy(object.position).normalize();
+        foundDirectionalLight = true;
+      }
+    });
+    
+    // Calculate which panels are in shadow based on their position and sun direction
+    // We'll use a simple heuristic for now - panels facing away from the sun are shadowed
+    panelPositions.forEach((panel, index) => {
+      const panelNormal = new THREE.Vector3(0, 1, 0); // Assuming panels face up by default
+      
+      // Apply panel rotation to get its actual normal
+      const rotation = new THREE.Euler(...panel.rotation);
+      panelNormal.applyEuler(rotation);
+      
+      // Dot product between panel normal and sun direction 
+      // If positive, panel faces toward the sun; if negative, panel faces away
+      const dotProduct = panelNormal.dot(sunDirection.current);
+      
+      // Panels with normals pointed somewhat toward the sun are considered in sunlight
+      // We use a threshold to determine this (0.2 means roughly >78° angle to sun)
+      shadowedPanels.current[index] = dotProduct < 0.2;
+    });
+  });
+  
   const materials = useMemo(() => {
-    const panelMaterial = new THREE.MeshStandardMaterial({
+    const sunlitPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#0F1F40'),  // Updated dark blue color for the panel
+      color: new THREE.Color('#0F1F40'),  // Dark blue color for sunlit panels
       metalness: 0.8,
       roughness: 0.2,
+    });
+    
+    const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
+      map: panelTexture,
+      color: new THREE.Color('#D3E4FD'),  // Soft blue color for shadowed panels
+      metalness: 0.5,
+      roughness: 0.4,
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -97,7 +139,13 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       metalness: 0.8
     });
     
-    return { panelMaterial, frameMaterial, bracketMaterial, selectedMaterial };
+    return { 
+      sunlitPanelMaterial, 
+      shadowedPanelMaterial, 
+      frameMaterial, 
+      bracketMaterial, 
+      selectedMaterial 
+    };
   }, [panelTexture]);
   
   // For large numbers of panels, we need to use instanced rendering
@@ -138,17 +186,21 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return panelPositions.find(panel => panel.id === selectedPanelId) || null;
   }, [panelPositions, selectedPanelId]);
   
-  const panelInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
+  // Create separate instanced meshes for sunlit and shadowed panels
+  const sunlitPanelRefs = useRef<THREE.InstancedMesh[]>([]);
+  const shadowedPanelRefs = useRef<THREE.InstancedMesh[]>([]);
   const bracketInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
   
   // Update the matrices for all instances using useEffect
   useEffect(() => {
     panelBatches.forEach((batch, batchIndex) => {
-      const panelMesh = panelInstancedMeshRefs.current[batchIndex];
+      const sunlitPanelMesh = sunlitPanelRefs.current[batchIndex];
+      const shadowedPanelMesh = shadowedPanelRefs.current[batchIndex];
       const bracketMesh = bracketInstancedMeshRefs.current[batchIndex];
       
-      if (!panelMesh || !bracketMesh) return;
+      if (!sunlitPanelMesh || !shadowedPanelMesh || !bracketMesh) return;
       
+      // Create matrices for all panels
       batch.forEach((panel, index) => {
         const matrix = new THREE.Matrix4();
         const position = new THREE.Vector3(...panel.position);
@@ -156,46 +208,71 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         const quaternion = new THREE.Quaternion().setFromEuler(rotation);
         const scale = new THREE.Vector3(...panel.scale);
         
-        // Set matrix for panel
+        // Compose matrix for panel
         matrix.compose(position, quaternion, scale);
         
         // Hide the panel if it's the selected one (we'll render it separately)
         if (panel.id === selectedPanelId) {
-          // Make it invisible by scaling to zero
+          // Make both sunlit and shadowed versions invisible
           const invisibleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
-          panelMesh.setMatrixAt(index, invisibleMatrix);
+          sunlitPanelMesh.setMatrixAt(index, invisibleMatrix);
+          shadowedPanelMesh.setMatrixAt(index, invisibleMatrix);
           bracketMesh.setMatrixAt(index, invisibleMatrix);
         } else {
-          panelMesh.setMatrixAt(index, matrix);
+          // Check if panel is in shadow
+          const isInShadow = shadowedPanels.current[panel.id];
           
-          // Calculate bracket position (slightly below the panel)
-          const bracketPosition = position.clone();
-          const bracketQuaternion = quaternion.clone();
+          // Set appropriate visibility based on lighting condition
+          if (isInShadow) {
+            // Show shadowed panel, hide sunlit panel
+            shadowedPanelMesh.setMatrixAt(index, matrix);
+            sunlitPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
+          } else {
+            // Show sunlit panel, hide shadowed panel
+            sunlitPanelMesh.setMatrixAt(index, matrix);
+            shadowedPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
+          }
           
+          // Bracket is always visible regardless of shadow status
           bracketMesh.setMatrixAt(index, matrix);
         }
       });
       
       // Mark the instance matrices as needing update
-      panelMesh.instanceMatrix.needsUpdate = true;
+      sunlitPanelMesh.instanceMatrix.needsUpdate = true;
+      shadowedPanelMesh.instanceMatrix.needsUpdate = true;
       bracketMesh.instanceMatrix.needsUpdate = true;
     });
-  }, [panelBatches, selectedPanelId]);
+  }, [panelBatches, selectedPanelId, panelPositions]);
   
   return (
     <group onClick={handleClick}>
       {/* Render panel-bracket pairs in batches using instancing for performance */}
       {panelBatches.map((batch, batchIndex) => (
         <group key={`batch-${batchIndex}`}>
+          {/* Sunlit panels */}
           <instancedMesh
             ref={(mesh) => {
-              if (mesh) panelInstancedMeshRefs.current[batchIndex] = mesh;
+              if (mesh) sunlitPanelRefs.current[batchIndex] = mesh;
             }}
-            args={[panelGeometry, materials.panelMaterial, batch.length]}
+            args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
             castShadow
             receiveShadow
             userData={{ batchIndex }}
           />
+          
+          {/* Shadowed panels */}
+          <instancedMesh
+            ref={(mesh) => {
+              if (mesh) shadowedPanelRefs.current[batchIndex] = mesh;
+            }}
+            args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
+            castShadow
+            receiveShadow
+            userData={{ batchIndex }}
+          />
+          
+          {/* Brackets (same for both sunlit and shadowed) */}
           <instancedMesh
             ref={(mesh) => {
               if (mesh) bracketInstancedMeshRefs.current[batchIndex] = mesh;
