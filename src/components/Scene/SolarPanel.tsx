@@ -86,18 +86,18 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const materials = useMemo(() => {
     const sunlitPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#0F1F40'),  // Dark blue color for sunlit panels
+      color: new THREE.Color('#3B82F6'),  // Brighter blue color for sunlit panels
       metalness: 0.8,
       roughness: 0.2,
     });
     
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#D3E4FD'),  // Soft blue color for shadowed panels
+      color: new THREE.Color('#93C5FD'),  // Brighter soft blue for shadowed panels
       metalness: 0.5,
       roughness: 0.4,
-      emissive: new THREE.Color('#D3E4FD'), // Add emissive glow to shadowed panels
-      emissiveIntensity: 0.4 // Increased glow intensity for better visibility
+      emissive: new THREE.Color('#93C5FD'), // Add emissive glow to shadowed panels
+      emissiveIntensity: 0.6 // Increased glow intensity for better visibility
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
@@ -281,11 +281,11 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
               map={panelTexture}
-              color='#0ea5e9'
+              color='#38BDF8'  // Brighter highlight color
               metalness={0.8}
               roughness={0.2}
-              emissive='#0ea5e9'
-              emissiveIntensity={0.5}
+              emissive='#38BDF8'
+              emissiveIntensity={0.6}
             />
           </mesh>
           
@@ -300,8 +300,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             <primitive object={bracketGeometry} />
             <meshStandardMaterial 
               color='#565c64' 
-              emissive='#0ea5e9'
-              emissiveIntensity={0.2}
+              emissive='#38BDF8'
+              emissiveIntensity={0.3}
               metalness={0.7}
               roughness={0.3}
             />

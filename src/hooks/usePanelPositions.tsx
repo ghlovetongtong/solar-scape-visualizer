@@ -3,74 +3,88 @@ import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
 
+// Define group size and spacing constants
+const PANELS_PER_GROUP = 16; // 4x4 grid per group
+const PANEL_SPACING = 3.1; // Reduced spacing between panels within a group
+const GROUP_SPACING = 15; // Larger spacing between groups
+
 export function usePanelPositions(initialCount: number = 100) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
   const [selectedPanelId, setSelectedPanelId] = useState<number | null>(null);
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize panel positions in a grid layout
+  // Initialize panel positions in groups
   useEffect(() => {
     console.log(`Initializing ${initialCount} panels`);
     try {
-      const spacing = 5;
-      const rowSize = Math.ceil(Math.sqrt(initialCount));
-      
       const instances: InstanceData[] = [];
       
-      // Create a more efficient loop for a large number of panels
-      let currentId = 0;
+      // Calculate number of groups needed
+      const groupsNeeded = Math.ceil(initialCount / PANELS_PER_GROUP);
       
-      // Calculate the grid size needed to fit all panels
-      const gridSize = Math.ceil(Math.sqrt(initialCount));
-      const halfGrid = Math.floor(gridSize / 2);
+      // Calculate the grid dimensions for groups
+      const groupGridSize = Math.ceil(Math.sqrt(groupsNeeded));
       
-      // Generate in batches to not block the main thread
-      const generateBatch = (startIndex: number, batchSize: number) => {
-        const endIndex = Math.min(startIndex + batchSize, initialCount);
-        const batchInstances: InstanceData[] = [];
+      // Generate panels in groups
+      for (let g = 0; g < groupsNeeded; g++) {
+        // Calculate group position in the larger grid
+        const groupRow = Math.floor(g / groupGridSize);
+        const groupCol = g % groupGridSize;
         
-        for (let i = startIndex; i < endIndex; i++) {
-          const row = Math.floor(i / gridSize) - halfGrid;
-          const col = (i % gridSize) - halfGrid;
+        const groupCenterX = groupCol * GROUP_SPACING;
+        const groupCenterZ = groupRow * GROUP_SPACING;
+        
+        // Calculate how many panels to create in this group
+        const panelsInThisGroup = Math.min(
+          PANELS_PER_GROUP, 
+          initialCount - g * PANELS_PER_GROUP
+        );
+        
+        if (panelsInThisGroup <= 0) break;
+        
+        // Create panels in a smaller grid within the group
+        const panelsPerRow = 4; // 4x4 grid within each group
+        
+        for (let p = 0; p < panelsInThisGroup; p++) {
+          const panelRow = Math.floor(p / panelsPerRow);
+          const panelCol = p % panelsPerRow;
           
-          // Add some variation to make it look more natural
-          const xOffset = (Math.random() - 0.5) * 0.5;
-          const zOffset = (Math.random() - 0.5) * 0.5;
-          const yRotation = (Math.random() - 0.5) * 0.1;
+          // Calculate panel position within the group
+          const x = groupCenterX + (panelCol - 1.5) * PANEL_SPACING;
+          const z = groupCenterZ + (panelRow - 1.5) * PANEL_SPACING;
           
-          // Calculate position and consider ground height
-          const x = col * spacing + xOffset;
-          const z = row * spacing + zOffset;
+          // Get ground height at this position
           const groundHeight = getHeightAtPosition(x, z);
           
-          batchInstances.push({
-            id: i,
+          // Calculate global panel ID
+          const panelId = g * PANELS_PER_GROUP + p;
+          
+          // Create panel instance with consistent rotation within group
+          // All panels in a group have same rotation for a uniform appearance
+          const groupRotationY = (Math.random() - 0.5) * 0.1; // Slight variation between groups
+          
+          instances.push({
+            id: panelId,
             position: [
               x, 
-              1.0 + groundHeight, // Increased y value to make room for tracking brackets
+              1.0 + groundHeight,
               z
             ],
             rotation: [
-              -Math.PI / 8 + (Math.random() - 0.5) * 0.05, // Slight random variation in tilt
-              yRotation,
+              -Math.PI / 8, // Fixed tilt for all panels in group
+              groupRotationY,
               0
             ],
             scale: [1, 1, 1]
           });
         }
-        
-        return batchInstances;
-      };
+      }
       
-      // Generate all panels in a single batch for now
-      // For even more panels, we could split this into multiple batches
-      const allPanels = generateBatch(0, initialCount);
-      
-      setPanelPositions(allPanels);
-      setInitialPositions(allPanels);
+      setPanelPositions(instances);
+      setInitialPositions(instances);
       setIsInitialized(true);
-      console.log("Panel positions initialized successfully");
+      console.log("Panel positions initialized successfully in groups");
     } catch (error) {
       console.error("Error initializing panel positions:", error);
     }

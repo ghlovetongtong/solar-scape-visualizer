@@ -93,7 +93,7 @@ export function isPanelInShadow(
   const dotProduct = panelNormal.dot(sunDirection);
   
   // If dot product is negative or very small, panel faces away from sun
-  return dotProduct < 0.15; // Lowered threshold to consider more panels in sunlight
+  return dotProduct < 0.1; // Further lowered threshold to consider more panels in sunlight
 }
 
 // Enhanced function to get shadow intensity based on panel orientation
