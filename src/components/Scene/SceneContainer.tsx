@@ -160,13 +160,13 @@ export default function SceneContainer() {
   }, []);
 
   const inverterPositions = isInitialized && panelPositions.length > 0 ? [
-    [-100, 0, -60],  // 左侧区域左上角
-    [-50, 0, -60],   // 左侧区域右上角
-    [-100, 0, 20],   // 左侧区域左下角
-    [-50, 0, 20],    // 左侧区域右下角
-    [0, 0, -40],     // 中间区域上方
-    [0, 0, 40],      // 中间区域下方
-    [60, 0, 100]     // 右侧区域下方
+    [-85, 0, -55],   // 左侧区域左上角
+    [-50, 0, -55],   // 左侧区域右上角
+    [-85, 0, 5],     // 左侧区域左下角
+    [-50, 0, 5],     // 左侧区域右下角
+    [-10, 0, -60],   // 中间通道上方
+    [-10, 0, 20],    // 中间通道下方
+    [40, 0, -40]     // 右侧区域内部
   ] : [
     [0, 0, 0],       // 默认位置如果面板未初始化
     [30, 0, 0],
@@ -178,29 +178,29 @@ export default function SceneContainer() {
   ];
 
   const transformerPositions = isInitialized && panelPositions.length > 0 ? [
-    [90, 0, -80],    // 右侧上方区域
-    [120, 0, 60]     // 右侧下方区域
+    [70, 0, -70],    // 右侧上方区域
+    [90, 0, 40]      // 右侧下方区域
   ] : [
     [0, 0, 0],
     [30, 0, 0]
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [-120, 0, 60]    // 放置在左侧区域外，与变压器对角
+    [-120, 0, 60]    // 放在左侧区域外，与变压器对角
     : [0, 0, 0];     // 默认位置如果面板未初始化
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
     [-120, 8, -80],  // 左上角
     [0, 8, -80],     // 上方中间
     [120, 8, -80],   // 右上角
-    [-120, 8, 30],   // 左侧中间
-    [120, 8, 30],    // 右侧中间
-    [-120, 8, 100],  // 左下角
-    [0, 8, 100],     // 下方中间
-    [120, 8, 100],   // 右下角
-    [-60, 8, -40],   // 左侧区域内部
-    [60, 8, 0],      // 中间区域
-    [60, 8, 60]      // 右侧区域内部
+    [-120, 8, 10],   // 左侧中间
+    [120, 8, 10],    // 右侧中间
+    [-120, 8, 80],   // 左下角
+    [0, 8, 80],      // 下方中间
+    [120, 8, 80],    // 右下角
+    [-70, 8, -25],   // 左侧区域内部监控点
+    [0, 8, -20],     // 中间通道监控点
+    [60, 8, 30]      // 右侧区域内部监控点
   ] : [
     [0, 8, 0],       // 默认位置
     [30, 8, 0],
@@ -229,7 +229,7 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [160, 90, 260], fov: 45 }}
+        camera={{ position: [140, 70, 220], fov: 45 }}
         gl={{ 
           antialias: true,
           alpha: false,
@@ -282,7 +282,7 @@ export default function SceneContainer() {
           <OrbitControls 
             enableDamping 
             dampingFactor={0.05} 
-            maxDistance={800}
+            maxDistance={600}
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
           />
