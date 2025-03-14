@@ -74,30 +74,30 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const materials = useMemo(() => {
     const sunlitPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#60A5FA'),  // Brightened blue color for sunlit panels
+      color: new THREE.Color('#60A5FA'),
       metalness: 0.8,
       roughness: 0.2,
-      emissive: new THREE.Color('#333333'), // Darker emissive color for a more subtle glow
-      emissiveIntensity: 0.2 // Reduced intensity for a more subdued glow
+      emissive: new THREE.Color('#60A5FA'),
+      emissiveIntensity: 0.2
     });
     
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#F1F5FD'),  // Much lighter blue for non-irradiated panels
+      color: new THREE.Color('#F1F5FD'),
       metalness: 0.5,
       roughness: 0.4,
-      emissive: new THREE.Color('#F1F1F1'), // Much lighter emissive color for shadowed panels
-      emissiveIntensity: 0.05 // Even lower intensity for non-irradiated panels
+      emissive: new THREE.Color('#F1F1F1'),
+      emissiveIntensity: 0.05
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#8e9196'),  // Light gray for frame
+      color: new THREE.Color('#8e9196'),
       roughness: 0.4,
       metalness: 0.6
     });
     
     const bracketMaterial = new THREE.MeshStandardMaterial({
-      color: new THREE.Color('#565c64'),  // Darker gray for bracket
+      color: new THREE.Color('#565c64'),
       roughness: 0.3,
       metalness: 0.7
     });
