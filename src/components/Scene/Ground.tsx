@@ -53,26 +53,36 @@ export default function Ground({
     }
   }, [groundGeometry]);
 
-  // Create geometries for saved boundaries
-  const boundaryGeometries = useMemo(() => {
-    return savedBoundaries.map((boundaryPoints) => {
-      if (boundaryPoints.length < 2) return null;
+  // Create boundary line geometries
+  const boundaryLineSegments = useMemo(() => {
+    return savedBoundaries.map((boundary, boundaryIndex) => {
+      if (boundary.length < 3) return null;
       
-      const geometry = new THREE.BufferGeometry();
-      
-      // Create vertices with a slight y-offset
-      const vertices = boundaryPoints.flatMap(([x, z]) => [x, 0.1, z]);
+      // Create points for the boundary with elevation
+      const points = boundary.map(([x, z]) => new THREE.Vector3(x, 0.1, z));
       
       // Add the first point again to close the loop
-      if (boundaryPoints.length > 2) {
-        vertices.push(boundaryPoints[0][0], 0.1, boundaryPoints[0][1]);
-      }
+      points.push(new THREE.Vector3(boundary[0][0], 0.1, boundary[0][1]));
       
-      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-      return geometry;
+      // Create positions array for buffer geometry
+      const positions = new Float32Array(points.flatMap(p => [p.x, p.y, p.z]));
+      
+      return (
+        <lineSegments key={`boundary-${boundaryIndex}`}>
+          <bufferGeometry>
+            <bufferAttribute
+              attach="attributes-position"
+              count={points.length}
+              array={positions}
+              itemSize={3}
+            />
+          </bufferGeometry>
+          <lineBasicMaterial color="#00ff00" linewidth={2} />
+        </lineSegments>
+      );
     }).filter(Boolean);
   }, [savedBoundaries]);
-  
+
   return (
     <>
       <mesh 
@@ -90,19 +100,7 @@ export default function Ground({
       </mesh>
 
       {/* Render saved boundaries */}
-      {boundaryGeometries.map((geometry, index) => (
-        geometry && (
-          <line key={`boundary-${index}`}>
-            <primitive object={geometry} />
-            <lineBasicMaterial
-              color="#00ff00"
-              linewidth={2}
-              opacity={1}
-              transparent={true}
-            />
-          </line>
-        )
-      ))}
+      <group>{boundaryLineSegments}</group>
     </>
   );
 }

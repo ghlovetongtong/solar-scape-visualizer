@@ -2,7 +2,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useDrawBoundary, type BoundaryPoint } from '@/hooks/useDrawBoundary';
-import { Line } from '@react-three/drei';
 
 interface BoundaryDrawingProps {
   enabled: boolean;
@@ -39,11 +38,21 @@ export default function BoundaryDrawing({
 
   if (linePoints.length < 2) return null;
 
+  // Using plain Three.js objects instead of drei's Line component
+  // This should avoid the "Cannot read properties of undefined (reading 'lov')" error
   return (
-    <Line
-      points={linePoints}
-      color={color}
-      lineWidth={lineWidth}
-    />
+    <group>
+      <lineSegments>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={linePoints.length}
+            array={new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]))}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <lineBasicMaterial color={color} linewidth={lineWidth} />
+      </lineSegments>
+    </group>
   );
 }
