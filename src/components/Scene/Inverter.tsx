@@ -218,11 +218,11 @@ export default function Inverter({
       <Text
         position={[0, 2.7, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.5}
+        fontSize={0.8}
         color={isSelected ? "#9b87f5" : "#ffffff"}
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.06}
+        outlineWidth={0.08}
         outlineColor="#000000"
       >
         {`Inverter ${inverterIndex + 1}`}

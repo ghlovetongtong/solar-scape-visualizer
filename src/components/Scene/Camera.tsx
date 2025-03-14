@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -155,11 +156,11 @@ export default function Camera({
       <Text
         position={[0, 0.5, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.2}
+        fontSize={0.3}  // Increased from 0.2 to 0.3
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.02}
+        outlineWidth={0.03}  // Increased from 0.02 to 0.03
         outlineColor="#000000"
       >
         {`Camera ${cameraIndex + 1}`}

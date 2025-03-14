@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -25,7 +24,6 @@ export default function TransformerStation({
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
   
-  // Setup scene-level event listeners for dragging
   useEffect(() => {
     if (!isDragging) return;
     
@@ -60,7 +58,6 @@ export default function TransformerStation({
       }
     };
     
-    // Add event listeners to the canvas
     const domElement = gl.domElement;
     domElement.addEventListener('mousemove', handleGlobalMouseMove);
     domElement.addEventListener('mouseup', handleGlobalMouseUp);
@@ -175,11 +172,11 @@ export default function TransformerStation({
       <Text
         position={[0, 5, 2.5]}
         rotation={[0, 0, 0]}
-        fontSize={0.5}
+        fontSize={0.8}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.04}
+        outlineWidth={0.06}
         outlineColor="#000000"
       >
         {`Transformer ${transformerIndex + 1}`}

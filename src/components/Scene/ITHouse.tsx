@@ -173,10 +173,12 @@ export default function ITHouse({
       <Text
         position={[0, 5, 3.5]}
         rotation={[0, 0, 0]}
-        fontSize={0.5}
+        fontSize={0.8}  // Increased from 0.5 to 0.8
         color="#333333"
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.04}  // Added outline to make it more visible
+        outlineColor="#ffffff"
       >
         IT House
       </Text>
