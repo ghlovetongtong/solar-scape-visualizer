@@ -16,7 +16,6 @@ import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
-// New interface for draggable object state management
 interface DraggableObjectState {
   type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
   index?: number;
@@ -414,21 +413,97 @@ export default function SceneContainer() {
 
     const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
 
-    const cameraPositions: [number, number, number][] = [
-      [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
-      [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
-      [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
-      [minX, 8, centerZ - depth * 0.3], [minX, 8, centerZ + depth * 0.3],
-      [maxX, 8, centerZ - depth * 0.3], [maxX, 8, centerZ + depth * 0.3]
-    ];
+    // Generate camera positions surrounding the panel array with more strategic placement
+    const cameraPositions: [number, number, number][] = [];
+    
+    // Calculate perimeter for camera placement
+    const perimeter = 2 * (width + depth) + 40; // Add some extra length for corners
+    const camerasCount = 12; // Maximum number of cameras
+    const segmentLength = perimeter / camerasCount;
+    
+    // Elevation for cameras (higher than the panels)
+    const cameraElevation = 12;
+    
+    // Place cameras at specific boundary points with strategic coverage
+    // We'll place them at corners and along the edges
+    
+    // First - place at corners
+    cameraPositions.push([boundaryMinX - 10, cameraElevation, boundaryMinZ - 10]); // Northwest corner
+    cameraPositions.push([boundaryMaxX + 10, cameraElevation, boundaryMinZ - 10]); // Northeast corner
+    cameraPositions.push([boundaryMaxX + 10, cameraElevation, boundaryMaxZ + 10]); // Southeast corner
+    cameraPositions.push([boundaryMinX - 10, cameraElevation, boundaryMaxZ + 10]); // Southwest corner
+    
+    // Now place cameras evenly along each edge for better coverage
+    
+    // North edge (incremental positions from west to east)
+    const northCamerasCount = Math.min(2, Math.floor(width / 100) + 1);
+    for (let i = 1; i <= northCamerasCount; i++) {
+      if (cameraPositions.length >= camerasCount) break;
+      const x = boundaryMinX + (width * i) / (northCamerasCount + 1);
+      cameraPositions.push([x, cameraElevation, boundaryMinZ - 15]);
+    }
+    
+    // East edge (incremental positions from north to south)
+    const eastCamerasCount = Math.min(2, Math.floor(depth / 100) + 1);
+    for (let i = 1; i <= eastCamerasCount; i++) {
+      if (cameraPositions.length >= camerasCount) break;
+      const z = boundaryMinZ + (depth * i) / (eastCamerasCount + 1);
+      cameraPositions.push([boundaryMaxX + 15, cameraElevation, z]);
+    }
+    
+    // South edge (incremental positions from east to west)
+    const southCamerasCount = Math.min(2, Math.floor(width / 100) + 1);
+    for (let i = 1; i <= southCamerasCount; i++) {
+      if (cameraPositions.length >= camerasCount) break;
+      const x = boundaryMaxX - (width * i) / (southCamerasCount + 1);
+      cameraPositions.push([x, cameraElevation, boundaryMaxZ + 15]);
+    }
+    
+    // West edge (incremental positions from south to north)
+    const westCamerasCount = Math.min(2, Math.floor(depth / 100) + 1);
+    for (let i = 1; i <= westCamerasCount; i++) {
+      if (cameraPositions.length >= camerasCount) break;
+      const z = boundaryMaxZ - (depth * i) / (westCamerasCount + 1);
+      cameraPositions.push([boundaryMinX - 15, cameraElevation, z]);
+    }
+    
+    // If we still need more cameras, place them at midpoints
+    while (cameraPositions.length < camerasCount) {
+      // Calculate random positions outside the panels but within a reasonable distance
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 20 + Math.random() * 20; // 20-40 units away from center
+      const x = centerX + Math.cos(angle) * distance;
+      const z = centerZ + Math.sin(angle) * distance;
+      
+      // Check that this camera position is not too close to existing ones
+      let tooClose = false;
+      for (const pos of cameraPositions) {
+        const dx = pos[0] - x;
+        const dz = pos[2] - z;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist < 30) { // Ensure cameras are at least 30 units apart
+          tooClose = true;
+          break;
+        }
+      }
+      
+      if (!tooClose) {
+        cameraPositions.push([x, cameraElevation, z]);
+      }
+    }
+    
+    // Limit to maximum number of cameras
+    while (cameraPositions.length > camerasCount) {
+      cameraPositions.pop();
+    }
 
     return {
-      inverters: inverterPositions,
-      transformers: transformerPositions,
-      itHouse: itHousePosition,
+      inverters: calculatedInverterPositions.length > 0 ? calculatedInverterPositions : defaultPositions.inverters,
+      transformers: calculatedTransformerPositions.length > 0 ? calculatedTransformerPositions : defaultPositions.transformers,
+      itHouse: calculatedItHousePosition[0] !== 0 ? calculatedItHousePosition : defaultPositions.itHouse,
       cameras: cameraPositions
     };
-  }, [isInitialized, panelPositions]);
+  }, [isInitialized, panelPositions, calculatedInverterPositions, calculatedTransformerPositions, calculatedItHousePosition]);
 
   const positions = calculateSecondaryPositions();
   const calculatedInverterPositions = positions.inverters;

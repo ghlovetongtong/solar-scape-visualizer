@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -47,8 +48,14 @@ export default function Camera({
           onDrag(cameraIndex, newPosition);
         }
       } else {
-        // Rotate the camera back and forth when not dragging
-        cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
+        // Rotate the camera to face inward toward the panels
+        const targetPosition = new THREE.Vector3(0, 0, 0); // Center of the scene
+        const cameraPosition = cameraRef.current.position;
+        const direction = new THREE.Vector3().subVectors(targetPosition, cameraPosition).normalize();
+        
+        // Set camera rotation to face inward, with a slight oscillation
+        const angle = Math.atan2(direction.x, direction.z);
+        cameraRef.current.rotation.y = angle + Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.1;
       }
     }
   });
