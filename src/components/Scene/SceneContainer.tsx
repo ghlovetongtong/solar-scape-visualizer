@@ -542,7 +542,8 @@ export default function SceneContainer() {
   }, [positions, inverterRotations.length, transformerRotations.length, cameraRotations.length, 
       inverterPositionsState.length, transformerPositionsState.length, cameraPositionsState.length]);
 
-  const handleSelectInverter = (index: number | null) => {
+  const handleSelectInverter = useCallback((index: number) => {
+    console.log("Selecting inverter:", index);
     if (index === selectedInverterId && selectedComponentType === 'inverter') {
       setSelectedInverterId(null);
       setSelectedComponentType(null);
@@ -551,10 +552,12 @@ export default function SceneContainer() {
       setSelectedComponentType('inverter');
       setSelectedTransformerId(null);
       setSelectedCameraId(null);
-      selectPanel(null);
+      if (selectPanel) {
+        selectPanel(null);
+      }
     }
-  };
-  
+  }, [selectedInverterId, selectedComponentType, selectPanel]);
+
   const handleSelectTransformer = (index: number | null) => {
     if (index === selectedTransformerId && selectedComponentType === 'transformer') {
       setSelectedTransformerId(null);
@@ -695,13 +698,16 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
-        onClick={() => {
-          if (selectedComponentType) {
+        onClick={(e) => {
+          if (!e.object || e.object.userData?.type !== 'selectable') {
+            console.log("Deselecting all components");
             setSelectedComponentType(null);
             setSelectedInverterId(null);
             setSelectedTransformerId(null);
             setSelectedCameraId(null);
-            selectPanel(null);
+            if (selectPanel) {
+              selectPanel(null);
+            }
           }
         }}
       >
@@ -722,7 +728,7 @@ export default function SceneContainer() {
             onSelectPanel={selectPanel}
           />
           
-          {inverterPositions.map((position, index) => (
+          {inverterPositionsState.map((position, index) => (
             <Inverter 
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}

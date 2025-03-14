@@ -19,7 +19,7 @@ export default function Inverter({
   onSelect 
 }: InverterProps) {
   
-  const handleClick = (e: any) => {
+  const handleClick = (e: THREE.Event) => {
     e.stopPropagation();
     if (onSelect) {
       onSelect();
