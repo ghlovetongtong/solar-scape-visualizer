@@ -1,158 +1,79 @@
 
-import React, { useCallback } from 'react';
-import * as THREE from 'three';
-import { Text } from '@react-three/drei';
-import { useDraggable } from '@/hooks/useDraggable';
+import React, { useRef } from 'react';
+import { useGLTF } from '@react-three/drei';
 import { ThreeEvent } from '@react-three/fiber';
+import * as THREE from 'three';
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface InverterProps {
-  position: THREE.Vector3;
-  rotation?: THREE.Euler;
-  inverterIndex?: number;
+  id: number;
+  position: [number, number, number];
+  rotation: [number, number, number];
   isSelected?: boolean;
-  onSelect?: () => void;
-  onPositionChange?: (position: THREE.Vector3) => void;
-  onRotationChange?: (rotation: THREE.Euler) => void;
+  onSelect?: (id: number) => void;
+  onPositionChange?: (id: number, position: THREE.Vector3) => void;
+  onDragStart?: () => void;
 }
 
-export default function Inverter({ 
-  position, 
-  rotation = new THREE.Euler(), 
-  inverterIndex = 0, 
-  isSelected = false, 
+export default function Inverter({
+  id,
+  position,
+  rotation,
+  isSelected = false,
   onSelect,
   onPositionChange,
-  onRotationChange
+  onDragStart
 }: InverterProps) {
+  const groupRef = useRef<THREE.Group>(null);
   
-  const handleDragStart = useCallback(() => {
-    console.log("Inverter drag start:", inverterIndex);
-  }, [inverterIndex]);
+  // Convert position array to Vector3 for proper handling
+  const positionVector = new THREE.Vector3(position[0], position[1], position[2]);
+  const eulerRotation = new THREE.Euler(rotation[0], rotation[1], rotation[2]);
   
-  const { 
-    groupRef, 
-    handlePointerDown, 
-    handlePointerMove, 
-    handlePointerUp,
-    handlePointerCancel,
-    isDragging 
-  } = useDraggable(position, {
+  const { bind } = useDraggable({
     enabled: isSelected,
-    onDragStart: handleDragStart,
+    onDragStart,
     onDragEnd: (newPosition) => {
-      console.log("Inverter drag end:", newPosition);
       if (onPositionChange) {
-        onPositionChange(newPosition);
+        onPositionChange(id, newPosition);
       }
     }
   });
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    e.preventDefault(); // Prevent orbit controls from taking over
-    console.log("Inverter clicked:", inverterIndex);
+    if (e.nativeEvent) {
+      e.nativeEvent.stopPropagation();
+    }
     if (onSelect) {
-      onSelect();
+      onSelect(id);
     }
   };
   
   return (
     <group 
-      ref={groupRef}
-      rotation={rotation} 
+      ref={bind.ref}
+      position={positionVector}
+      rotation={eulerRotation}
       onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      userData={{ type: 'selectable', componentType: 'inverter', draggable: true }}
+      onPointerDown={bind.onPointerDown}
+      userData={{ type: 'selectable', id, category: 'inverter' }}
     >
-      {/* Main inverter box */}
-      <mesh 
-        castShadow 
-        receiveShadow
-        position={[0, 1, 0]}
-      >
-        <boxGeometry args={[3.0, 2.2, 1.8]} />
-        <meshPhysicalMaterial 
-          color={isDragging ? "#60cdff" : isSelected ? "#38BDF8" : "#2b2d42"} 
-          roughness={0.6} 
-          metalness={0.4}
-          emissive={isSelected ? "#38BDF8" : "#000000"}
-          emissiveIntensity={isSelected ? 0.4 : 0}
-        />
-      </mesh>
-      
-      {/* Cooling fins */}
-      <mesh 
-        castShadow 
-        position={[0, 1, 0.95]}
-      >
-        <boxGeometry args={[2.7, 2.0, 0.15]} />
-        <meshPhysicalMaterial 
-          color={isSelected ? "#60a5fa" : "#4a4e69"} 
-          roughness={0.3} 
-          metalness={0.7}
-        />
-      </mesh>
-      
-      {/* Connection box */}
-      <mesh 
-        castShadow 
-        position={[0, 0, 0]}
-      >
-        <boxGeometry args={[2.4, 0.6, 1.2]} />
-        <meshPhysicalMaterial 
-          color={isSelected ? "#3b82f6" : "#222222"} 
-          roughness={0.5} 
-          metalness={0.5}
-        />
-      </mesh>
-      
-      {/* Status indicator light */}
-      <mesh
-        position={[1.1, 1.6, 0.95]}
-      >
-        <sphereGeometry args={[0.2, 16, 16]} />
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[2, 1.5, 1]} />
         <meshStandardMaterial 
-          color={isDragging ? "#ffffff" : isSelected ? "#ffffff" : "#00ff00"} 
-          emissive={isDragging ? "#ffffff" : isSelected ? "#ffffff" : "#00ff00"}
-          emissiveIntensity={isDragging ? 2.0 : isSelected ? 1.5 : 1.0}
-        />
-      </mesh>
-
-      {/* Ventilation grille */}
-      <mesh
-        position={[-1.0, 1.6, 0.95]}
-      >
-        <boxGeometry args={[1.0, 1.0, 0.08]} />
-        <meshStandardMaterial 
-          color="#333333"
+          color={isSelected ? '#88ccff' : '#444444'} 
+          metalness={0.8} 
           roughness={0.2}
         />
       </mesh>
-
-      {/* Cables */}
-      <mesh
-        position={[0, 0.3, 0.9]}
-      >
-        <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
-        <meshStandardMaterial color="#111111" />
-      </mesh>
-
-      {/* Inverter label */}
-      <Text
-        position={[0, 2.7, 0]}
-        rotation={[0, 0, 0]}
-        fontSize={0.5}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.06}
-        outlineColor="#000000"
-      >
-        {`Inverter ${inverterIndex + 1}`}
-      </Text>
+      
+      {isSelected && (
+        <mesh position={[0, 2, 0]}>
+          <sphereGeometry args={[0.3, 16, 16]} />
+          <meshBasicMaterial color="#ffaa00" wireframe />
+        </mesh>
+      )}
     </group>
   );
 }

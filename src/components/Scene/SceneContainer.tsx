@@ -831,7 +831,7 @@ export default function SceneContainer() {
             target={new THREE.Vector3(...panelCenter)}
           />
           
-          <SkyBox />
+          <SkyBox timeOfDay={timeOfDay} />
           
           <Terrain />
           
@@ -852,7 +852,7 @@ export default function SceneContainer() {
               position={position} 
               rotation={inverterRotations[index] || [0, 0, 0]}
               isSelected={selectedComponentType === 'inverter' && selectedInverterId === index}
-              onSelect={() => handleSelectInverter(index)}
+              onSelect={handleSelectInverter}
               onPositionChange={handleInverterPositionChange}
               onDragStart={handleComponentDragStart}
             />
@@ -865,7 +865,7 @@ export default function SceneContainer() {
               position={position} 
               rotation={transformerRotations[index] || [0, 0, 0]}
               isSelected={selectedComponentType === 'transformer' && selectedTransformerId === index}
-              onSelect={() => handleSelectTransformer(index)}
+              onSelect={handleSelectTransformer}
               onPositionChange={handleTransformerPositionChange}
               onDragStart={handleComponentDragStart}
             />
@@ -878,7 +878,7 @@ export default function SceneContainer() {
               position={position} 
               rotation={cameraRotations[index] || [0, 0, 0]}
               isSelected={selectedComponentType === 'camera' && selectedCameraId === index}
-              onSelect={() => handleSelectCamera(index)}
+              onSelect={handleSelectCamera}
               onPositionChange={handleCameraPositionChange}
               onDragStart={handleComponentDragStart}
             />
@@ -901,7 +901,7 @@ export default function SceneContainer() {
       <Controls 
         setTimeOfDay={setTimeOfDay}
         timeOfDay={timeOfDay}
-        isDrawingMode={drawingMode}
+        drawingMode={drawingMode}
         setDrawingMode={setDrawingMode}
         currentBoundary={currentBoundary}
         onBoundaryComplete={handleBoundaryComplete}

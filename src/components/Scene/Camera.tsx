@@ -1,142 +1,84 @@
 
 import React, { useRef } from 'react';
-import * as THREE from 'three';
-import { useFrame } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
-import { useDraggable } from '@/hooks/useDraggable';
+import { useGLTF } from '@react-three/drei';
 import { ThreeEvent } from '@react-three/fiber';
+import * as THREE from 'three';
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface CameraProps {
-  position: THREE.Vector3;
-  rotation?: THREE.Euler;
-  cameraIndex?: number;
+  id: number;
+  position: [number, number, number];
+  rotation: [number, number, number];
   isSelected?: boolean;
-  onSelect?: () => void;
-  onPositionChange?: (position: THREE.Vector3) => void;
-  onRotationChange?: (rotation: THREE.Euler) => void;
+  onSelect?: (id: number) => void;
+  onPositionChange?: (id: number, position: THREE.Vector3) => void;
+  onDragStart?: () => void;
 }
 
-export default function Camera({ 
-  position, 
-  rotation = new THREE.Euler(), 
-  cameraIndex = 0, 
-  isSelected = false, 
+export default function Camera({
+  id,
+  position,
+  rotation,
+  isSelected = false,
   onSelect,
   onPositionChange,
-  onRotationChange
+  onDragStart
 }: CameraProps) {
-  const cameraRef = useRef<THREE.Group>(null);
+  const groupRef = useRef<THREE.Group>(null);
   
-  const { 
-    groupRef, 
-    handlePointerDown, 
-    handlePointerMove, 
-    handlePointerUp,
-    handlePointerCancel,
-    isDragging 
-  } = useDraggable(position, {
+  // Convert position array to Vector3 for proper handling
+  const positionVector = new THREE.Vector3(position[0], position[1], position[2]);
+  const eulerRotation = new THREE.Euler(rotation[0], rotation[1], rotation[2]);
+  
+  const { bind } = useDraggable({
     enabled: isSelected,
+    onDragStart,
     onDragEnd: (newPosition) => {
-      console.log("Camera drag end:", newPosition);
       if (onPositionChange) {
-        onPositionChange(newPosition);
+        onPositionChange(id, newPosition);
       }
     }
   });
   
-  // Rotate camera slightly over time - only if not selected
-  useFrame((state) => {
-    if (cameraRef.current && !isSelected && !isDragging) {
-      // Rotate the camera back and forth
-      cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
-    }
-  });
-
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
-    console.log("Camera clicked:", cameraIndex);
+    if (e.nativeEvent) {
+      e.nativeEvent.stopPropagation();
+    }
     if (onSelect) {
-      onSelect();
+      onSelect(id);
     }
   };
-
+  
   return (
     <group 
-      rotation={rotation} 
-      ref={(group) => {
-        // Assign to both refs
-        if (group) {
-          groupRef.current = group;
-          cameraRef.current = group;
-        }
-      }}
+      ref={bind.ref}
+      position={positionVector}
+      rotation={eulerRotation}
       onClick={handleClick}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerCancel}
-      userData={{ type: 'selectable', componentType: 'camera', draggable: true }}
+      onPointerDown={bind.onPointerDown}
+      userData={{ type: 'selectable', id, category: 'camera' }}
     >
-      {/* Camera mount/pole */}
-      <mesh castShadow position={[0, -5, 0]}>
-        <cylinderGeometry args={[0.1, 0.1, 10, 8]} />
+      <mesh castShadow receiveShadow>
+        <boxGeometry args={[0.5, 0.5, 1]} />
         <meshStandardMaterial 
-          color={isDragging ? "#bae6ff" : isSelected ? "#93c5fd" : "#888888"} 
-          roughness={0.6}
-          emissive={isSelected ? "#93c5fd" : "#000000"}
-          emissiveIntensity={isSelected ? 0.3 : 0}
+          color={isSelected ? '#88ccff' : '#333333'} 
+          metalness={0.7} 
+          roughness={0.3}
         />
       </mesh>
       
-      {/* Camera housing */}
-      <group rotation={[0, 0, 0]}>
-        {/* Main camera body */}
-        <mesh castShadow position={[0, 0, 0.2]}>
-          <boxGeometry args={[0.3, 0.3, 0.8]} />
-          <meshStandardMaterial 
-            color={isDragging ? "#60cdff" : isSelected ? "#3b82f6" : "#333333"} 
-            roughness={0.5} 
-            metalness={0.7}
-            emissive={isSelected ? "#3b82f6" : "#000000"}
-            emissiveIntensity={isSelected ? 0.5 : 0}
-          />
-        </mesh>
-        
-        {/* Camera lens */}
-        <mesh castShadow position={[0, 0, 0.6]} rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[0.12, 0.15, 0.1, 16]} />
-          <meshPhysicalMaterial 
-            color="#111111" 
-            roughness={0.1} 
-            clearcoat={1} 
-            clearcoatRoughness={0.1}
-          />
-        </mesh>
-        
-        {/* Indicator light */}
-        <mesh position={[0, 0.12, 0.2]}>
-          <sphereGeometry args={[0.03, 8, 8]} />
-          <meshStandardMaterial 
-            color={isDragging ? "#60cdff" : isSelected ? "#ffffff" : "#ff0000"} 
-            emissive={isDragging ? "#60cdff" : isSelected ? "#ffffff" : "#ff0000"} 
-            emissiveIntensity={isDragging ? 5 : isSelected ? 3 : 2} 
-          />
-        </mesh>
-      </group>
+      <mesh position={[0, 0, -0.7]} rotation={[0, 0, 0]}>
+        <cylinderGeometry args={[0.2, 0.3, 0.5, 8]} />
+        <meshStandardMaterial color={isSelected ? '#aaddff' : '#222222'} />
+      </mesh>
       
-      {/* Camera label */}
-      <Text
-        position={[0, 0.5, 0]}
-        rotation={[0, 0, 0]}
-        fontSize={0.2}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.02}
-        outlineColor="#000000"
-      >
-        {`Camera ${cameraIndex + 1}`}
-      </Text>
+      {isSelected && (
+        <mesh position={[0, 1, 0]}>
+          <sphereGeometry args={[0.2, 16, 16]} />
+          <meshBasicMaterial color="#ffaa00" wireframe />
+        </mesh>
+      )}
     </group>
   );
 }
