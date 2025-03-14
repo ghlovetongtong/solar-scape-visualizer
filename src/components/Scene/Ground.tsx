@@ -2,13 +2,19 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
+import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 interface GroundProps {
   size?: number;
   resolution?: number;
+  savedBoundaries?: BoundaryPoint[][];
 }
 
-export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
+export default function Ground({ 
+  size = 400, 
+  resolution = 128,
+  savedBoundaries = [] 
+}: GroundProps) {
   // Create a more appropriately sized plane for the ground
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
@@ -46,21 +52,58 @@ export default function Ground({ size = 400, resolution = 128 }: GroundProps) {
       groundGeometry.computeVertexNormals();
     }
   }, [groundGeometry]);
+
+  // Create geometries for saved boundaries
+  const boundaryGeometries = useMemo(() => {
+    return savedBoundaries.map((boundaryPoints) => {
+      if (boundaryPoints.length < 2) return null;
+      
+      const geometry = new THREE.BufferGeometry();
+      
+      // Create vertices with a slight y-offset
+      const vertices = boundaryPoints.flatMap(([x, z]) => [x, 0.1, z]);
+      
+      // Add the first point again to close the loop
+      if (boundaryPoints.length > 2) {
+        vertices.push(boundaryPoints[0][0], 0.1, boundaryPoints[0][1]);
+      }
+      
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+      return geometry;
+    }).filter(Boolean);
+  }, [savedBoundaries]);
   
   return (
-    <mesh 
-      rotation={[-Math.PI / 2, 0, 0]} 
-      position={[0, 0, 0]} 
-      receiveShadow
-    >
-      <primitive object={groundGeometry} />
-      <meshStandardMaterial 
-        map={texture}
-        roughness={0.95} 
-        metalness={0.05}
-        envMapIntensity={0.4}
-      />
-    </mesh>
+    <>
+      <mesh 
+        rotation={[-Math.PI / 2, 0, 0]} 
+        position={[0, 0, 0]} 
+        receiveShadow
+      >
+        <primitive object={groundGeometry} />
+        <meshStandardMaterial 
+          map={texture}
+          roughness={0.95} 
+          metalness={0.05}
+          envMapIntensity={0.4}
+        />
+      </mesh>
+
+      {/* Render saved boundaries */}
+      {boundaryGeometries.map((geometry, index) => (
+        geometry && (
+          <line key={`boundary-${index}`}>
+            <primitive object={geometry} />
+            <lineBasicMaterial
+              color="#00ff00"
+              linewidth={2}
+              opacity={1}
+              transparent={true}
+            />
+          </line>
+        )
+      ))}
+    </>
   );
 }
 

@@ -1,8 +1,9 @@
-import React, { useRef, useState, useEffect, Suspense } from 'react';
+import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { toast } from 'sonner';
+import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
@@ -140,6 +141,10 @@ export default function SceneContainer() {
   const [showStats, setShowStats] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState(0.5);
   const [sceneReady, setSceneReady] = useState(false);
+  const [drawingMode, setDrawingMode] = useState(false);
+  const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
+  const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
+  
   const {
     panelPositions,
     selectedPanelId,
@@ -227,6 +232,43 @@ export default function SceneContainer() {
     toast.error(`3D rendering error: ${error.message || 'Unknown error'}`);
   };
 
+  const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
+    setCurrentBoundary(points);
+    toast.success(`Boundary captured with ${points.length} points`);
+  }, []);
+
+  const handleSaveBoundary = useCallback(() => {
+    if (currentBoundary.length > 2) {
+      setSavedBoundaries(prev => [...prev, currentBoundary]);
+      toast.success('Boundary saved successfully');
+      
+      const savedData = JSON.stringify([...savedBoundaries, currentBoundary]);
+      localStorage.setItem('solar-station-boundaries', savedData);
+      
+      setCurrentBoundary([]);
+    } else {
+      toast.error('Draw a boundary first (at least 3 points needed)');
+    }
+  }, [currentBoundary, savedBoundaries]);
+
+  const handleClearBoundary = useCallback(() => {
+    setCurrentBoundary([]);
+    toast.info('Current boundary cleared');
+  }, []);
+
+  useEffect(() => {
+    const savedData = localStorage.getItem('solar-station-boundaries');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData) as BoundaryPoint[][];
+        setSavedBoundaries(parsedData);
+        toast.success(`Loaded ${parsedData.length} saved boundaries`);
+      } catch (error) {
+        console.error('Error loading saved boundaries:', error);
+      }
+    }
+  }, []);
+
   return (
     <div className="h-full w-full relative">
       <Canvas
@@ -247,7 +289,11 @@ export default function SceneContainer() {
         <SkyBox timeOfDay={timeOfDay} />
         
         <Suspense fallback={null}>
-          <Terrain />
+          <Terrain 
+            drawingEnabled={drawingMode}
+            onBoundaryComplete={handleBoundaryComplete}
+            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
+          />
           
           <SolarPanels 
             panelPositions={panelPositions} 
@@ -302,6 +348,10 @@ export default function SceneContainer() {
         selectedPanelId={selectedPanelId}
         onUpdatePanelPosition={updatePanelPosition}
         onUpdatePanelRotation={updatePanelRotation}
+        drawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+        onSaveBoundary={handleSaveBoundary}
+        onClearBoundary={handleClearBoundary}
       />
       
       <Loader />

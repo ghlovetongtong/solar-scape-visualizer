@@ -1,13 +1,11 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { toast } from 'sonner';
+import { ChevronDown, ChevronUp, RotateCw, Settings, Sun } from 'lucide-react';
 
 interface ControlsProps {
   showStats: boolean;
@@ -18,228 +16,293 @@ interface ControlsProps {
   selectedPanelId: number | null;
   onUpdatePanelPosition: (id: number, position: [number, number, number]) => void;
   onUpdatePanelRotation: (id: number, rotation: [number, number, number]) => void;
+  drawingMode: boolean;
+  setDrawingMode: (enabled: boolean) => void;
+  onSaveBoundary: () => void;
+  onClearBoundary: () => void;
 }
 
-export default function Controls({
-  showStats,
-  setShowStats,
-  timeOfDay,
+export default function Controls({ 
+  showStats, 
+  setShowStats, 
+  timeOfDay, 
   setTimeOfDay,
   onResetPanels,
   selectedPanelId,
   onUpdatePanelPosition,
-  onUpdatePanelRotation
+  onUpdatePanelRotation,
+  drawingMode, 
+  setDrawingMode,
+  onSaveBoundary,
+  onClearBoundary,
 }: ControlsProps) {
-  const [panelX, setPanelX] = useState(0);
-  const [panelY, setPanelY] = useState(0.5);
-  const [panelZ, setPanelZ] = useState(0);
-  const [rotX, setRotX] = useState(-Math.PI / 8);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [activeTab, setActiveTab] = useState('time');
+  
+  // Panel position and rotation state
+  const [posX, setPosX] = useState(0);
+  const [posY, setPosY] = useState(0);
+  const [posZ, setPosZ] = useState(0);
+  const [rotX, setRotX] = useState(0);
   const [rotY, setRotY] = useState(0);
   const [rotZ, setRotZ] = useState(0);
   
-  const handleApplyChanges = () => {
-    if (selectedPanelId !== null) {
-      onUpdatePanelPosition(selectedPanelId, [panelX, panelY, panelZ]);
-      onUpdatePanelRotation(selectedPanelId, [rotX, rotY, rotZ]);
-      toast.success(`Updated panel #${selectedPanelId+1} position and rotation`);
+  // Update panel position when slider changes
+  const handlePositionChange = (axis: 'x' | 'y' | 'z', value: number) => {
+    if (selectedPanelId === null) return;
+    
+    let newPos: [number, number, number] = [posX, posY, posZ];
+    
+    if (axis === 'x') {
+      setPosX(value);
+      newPos[0] = value;
+    } else if (axis === 'y') {
+      setPosY(value);
+      newPos[1] = value;
+    } else {
+      setPosZ(value);
+      newPos[2] = value;
     }
+    
+    onUpdatePanelPosition(selectedPanelId, newPos);
   };
   
-  const handleResetAll = () => {
-    onResetPanels();
-    toast.success("Reset all panels to original positions");
+  // Update panel rotation when slider changes
+  const handleRotationChange = (axis: 'x' | 'y' | 'z', value: number) => {
+    if (selectedPanelId === null) return;
+    
+    let newRot: [number, number, number] = [rotX, rotY, rotZ];
+    
+    if (axis === 'x') {
+      setRotX(value);
+      newRot[0] = value;
+    } else if (axis === 'y') {
+      setRotY(value);
+      newRot[1] = value;
+    } else {
+      setRotZ(value);
+      newRot[2] = value;
+    }
+    
+    onUpdatePanelRotation(selectedPanelId, newRot);
   };
-  
+
   return (
-    <div className="controls-panel w-80">
-      <Card className="border-none shadow-none bg-transparent">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-lg">Solar Power Station Controls</CardTitle>
-          <CardDescription>Manage and control the 3D visualization</CardDescription>
-        </CardHeader>
-        
-        <CardContent className="px-2">
-          <Tabs defaultValue="scene">
-            <TabsList className="grid grid-cols-2 mb-4">
-              <TabsTrigger value="scene">Scene</TabsTrigger>
-              <TabsTrigger value="panel">Panel Editor</TabsTrigger>
+    <div className="absolute bottom-4 left-4 p-4 bg-black/80 text-white rounded-lg shadow-lg max-w-xs">
+      <div className="flex justify-between items-center mb-2">
+        <h2 className="text-sm font-medium">Solar Station Controls</h2>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6" 
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+        </Button>
+      </div>
+      
+      {isExpanded && (
+        <>
+          <Tabs defaultValue="time" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-3 mb-2">
+              <TabsTrigger value="time" className="text-xs">
+                <Sun className="h-3 w-3 mr-1" />
+                Time
+              </TabsTrigger>
+              <TabsTrigger value="panels" className="text-xs">
+                <RotateCw className="h-3 w-3 mr-1" />
+                Panels
+              </TabsTrigger>
+              <TabsTrigger value="settings" className="text-xs">
+                <Settings className="h-3 w-3 mr-1" />
+                Settings
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="scene">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="time-slider">Time of Day</Label>
-                    <span className="text-sm text-muted-foreground">
-                      {timeOfDay < 0.25 ? "Dawn" : 
-                       timeOfDay < 0.5 ? "Morning" : 
-                       timeOfDay < 0.75 ? "Afternoon" : "Dusk"}
-                    </span>
-                  </div>
-                  <Slider 
-                    id="time-slider"
-                    min={0} 
-                    max={1} 
-                    step={0.01} 
-                    value={[timeOfDay]} 
-                    onValueChange={(values) => setTimeOfDay(values[0])} 
-                  />
+            <TabsContent value="time" className="mt-0">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Time of Day</span>
+                  <span className="text-xs">
+                    {timeOfDay < 0.25 ? 'Sunrise' : 
+                     timeOfDay < 0.5 ? 'Morning' : 
+                     timeOfDay < 0.75 ? 'Afternoon' : 'Sunset'}
+                  </span>
                 </div>
-                
-                <div className="flex items-center space-x-2 pt-2">
-                  <Button 
-                    variant={showStats ? "default" : "outline"} 
-                    onClick={() => setShowStats(!showStats)}
-                    className="button"
-                  >
-                    {showStats ? "Hide Stats" : "Show Stats"}
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={handleResetAll}
-                    className="button"
-                  >
-                    Reset All Panels
-                  </Button>
-                </div>
-                
-                <div className="pt-2">
-                  <p className="text-sm text-muted-foreground">
-                    Click on any panel to select it, then use the Panel Editor tab to adjust its position.
-                  </p>
-                </div>
+                <Slider 
+                  value={[timeOfDay]} 
+                  min={0} 
+                  max={1} 
+                  step={0.01} 
+                  onValueChange={([value]) => setTimeOfDay(value)} 
+                />
               </div>
             </TabsContent>
             
-            <TabsContent value="panel">
-              {selectedPanelId !== null ? (
-                <div className="space-y-4">
-                  <div className="mb-2">
-                    <Label className="font-medium">Panel #{selectedPanelId + 1} Selected</Label>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="panel-x">Position X</Label>
-                    <Slider 
-                      id="panel-x"
-                      min={-200} 
-                      max={200} 
-                      step={1} 
-                      value={[panelX]} 
-                      onValueChange={(values) => setPanelX(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>-200</span>
-                      <span>{panelX}</span>
-                      <span>200</span>
+            <TabsContent value="panels" className="mt-0">
+              <div className="space-y-3">
+                {selectedPanelId !== null ? (
+                  <>
+                    <div className="text-xs mb-1">Panel #{selectedPanelId} Selected</div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs">Position</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">X</span>
+                            <span className="text-xs">{posX.toFixed(1)}</span>
+                          </div>
+                          <Slider 
+                            value={[posX]} 
+                            min={-100} 
+                            max={100} 
+                            step={0.5} 
+                            onValueChange={([value]) => handlePositionChange('x', value)} 
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">Y</span>
+                            <span className="text-xs">{posY.toFixed(1)}</span>
+                          </div>
+                          <Slider 
+                            value={[posY]} 
+                            min={0} 
+                            max={10} 
+                            step={0.1} 
+                            onValueChange={([value]) => handlePositionChange('y', value)} 
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">Z</span>
+                            <span className="text-xs">{posZ.toFixed(1)}</span>
+                          </div>
+                          <Slider 
+                            value={[posZ]} 
+                            min={-100} 
+                            max={100} 
+                            step={0.5} 
+                            onValueChange={([value]) => handlePositionChange('z', value)} 
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="panel-y">Position Y (Height)</Label>
-                    <Slider 
-                      id="panel-y"
-                      min={0} 
-                      max={10} 
-                      step={0.1} 
-                      value={[panelY]} 
-                      onValueChange={(values) => setPanelY(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>0</span>
-                      <span>{panelY.toFixed(1)}</span>
-                      <span>10</span>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs">Rotation</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">X</span>
+                            <span className="text-xs">{(rotX * 180 / Math.PI).toFixed(0)}°</span>
+                          </div>
+                          <Slider 
+                            value={[rotX]} 
+                            min={-Math.PI/2} 
+                            max={Math.PI/2} 
+                            step={0.01} 
+                            onValueChange={([value]) => handleRotationChange('x', value)} 
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">Y</span>
+                            <span className="text-xs">{(rotY * 180 / Math.PI).toFixed(0)}°</span>
+                          </div>
+                          <Slider 
+                            value={[rotY]} 
+                            min={-Math.PI} 
+                            max={Math.PI} 
+                            step={0.01} 
+                            onValueChange={([value]) => handleRotationChange('y', value)} 
+                          />
+                        </div>
+                        <div>
+                          <div className="flex justify-between">
+                            <span className="text-xs">Z</span>
+                            <span className="text-xs">{(rotZ * 180 / Math.PI).toFixed(0)}°</span>
+                          </div>
+                          <Slider 
+                            value={[rotZ]} 
+                            min={-Math.PI} 
+                            max={Math.PI} 
+                            step={0.01} 
+                            onValueChange={([value]) => handleRotationChange('z', value)} 
+                          />
+                        </div>
+                      </div>
                     </div>
+                  </>
+                ) : (
+                  <div className="text-xs text-center py-2">
+                    Click on a panel to select it
                   </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="panel-z">Position Z</Label>
-                    <Slider 
-                      id="panel-z"
-                      min={-200} 
-                      max={200} 
-                      step={1} 
-                      value={[panelZ]} 
-                      onValueChange={(values) => setPanelZ(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>-200</span>
-                      <span>{panelZ}</span>
-                      <span>200</span>
-                    </div>
-                  </div>
-                  
-                  <Separator />
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rot-x">Rotation X (Tilt)</Label>
-                    <Slider 
-                      id="rot-x"
-                      min={-Math.PI} 
-                      max={Math.PI} 
-                      step={0.01} 
-                      value={[rotX]} 
-                      onValueChange={(values) => setRotX(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>-180°</span>
-                      <span>{Math.round(rotX * 180 / Math.PI)}°</span>
-                      <span>180°</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rot-y">Rotation Y (Yaw)</Label>
-                    <Slider 
-                      id="rot-y"
-                      min={-Math.PI} 
-                      max={Math.PI} 
-                      step={0.01} 
-                      value={[rotY]} 
-                      onValueChange={(values) => setRotY(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>-180°</span>
-                      <span>{Math.round(rotY * 180 / Math.PI)}°</span>
-                      <span>180°</span>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="rot-z">Rotation Z (Roll)</Label>
-                    <Slider 
-                      id="rot-z"
-                      min={-Math.PI} 
-                      max={Math.PI} 
-                      step={0.01} 
-                      value={[rotZ]} 
-                      onValueChange={(values) => setRotZ(values[0])} 
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>-180°</span>
-                      <span>{Math.round(rotZ * 180 / Math.PI)}°</span>
-                      <span>180°</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    className="w-full button" 
-                    onClick={handleApplyChanges}
-                  >
-                    Apply Changes
-                  </Button>
+                )}
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full text-xs mt-2"
+                  onClick={onResetPanels}
+                >
+                  Reset All Panels
+                </Button>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="settings" className="mt-0">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs">Show FPS Stats</span>
+                  <Switch
+                    checked={showStats}
+                    onCheckedChange={setShowStats}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
                 </div>
-              ) : (
-                <div className="py-8 text-center">
-                  <p className="text-muted-foreground">No panel selected</p>
-                  <p className="text-sm text-muted-foreground mt-2">Click on a panel in the scene to edit its position</p>
-                </div>
-              )}
+              </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+          
+          {/* Drawing controls section */}
+          <div className="mt-4 border-t border-gray-700 pt-4">
+            <h3 className="text-sm font-medium mb-2">Boundary Drawing</h3>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs">Drawing Mode</span>
+                <Switch
+                  checked={drawingMode}
+                  onCheckedChange={setDrawingMode}
+                  className="data-[state=checked]:bg-green-600"
+                />
+              </div>
+              
+              <div className="flex gap-2 mt-2">
+                <Button 
+                  onClick={onSaveBoundary} 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-8"
+                  disabled={!drawingMode}
+                >
+                  Save Boundary
+                </Button>
+                <Button 
+                  onClick={onClearBoundary} 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs h-8"
+                  disabled={!drawingMode}
+                >
+                  Clear
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
