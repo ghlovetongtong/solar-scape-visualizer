@@ -1,3 +1,4 @@
+
 import React, { useCallback, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -26,7 +27,7 @@ export default function Inverter({
 }: InverterProps) {
   
   const groupRef = useRef<THREE.Group>(null);
-  const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
+  const dragOffsetRef = useRef<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse } = useThree();
   
   // Define materials based on selection and dragging state
@@ -42,24 +43,19 @@ export default function Inverter({
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
-  // Set up drag handling
+  // Improved drag handling for smoother movement
   useFrame(() => {
-    if (isDragging && dragOffset && groupRef.current && onDrag) {
+    if (isDragging && groupRef.current && onDrag) {
       // Create a plane parallel to the ground at the object's height
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
       
       // Cast ray from mouse position
       raycaster.setFromCamera(mouse, camera);
       
       // Find intersection with drag plane
       const intersection = new THREE.Vector3();
-      raycaster.ray.intersectPlane(dragPlane, intersection);
-      
-      if (intersection) {
-        // Apply the drag offset to maintain relative position
-        intersection.sub(dragOffset);
-        
-        // Only update X and Z positions (keep Y constant)
+      if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+        // Calculate new position directly from mouse position
         const newPosition: [number, number, number] = [
           intersection.x,
           position.y, // Keep Y position constant
@@ -91,23 +87,8 @@ export default function Inverter({
   
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
-    
     if (onDragStart) {
       onDragStart(inverterIndex);
-      
-      // Calculate and store the offset between the object position and the intersection point
-      if (groupRef.current) {
-        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
-        raycaster.setFromCamera(mouse, camera);
-        
-        const intersection = new THREE.Vector3();
-        raycaster.ray.intersectPlane(dragPlane, intersection);
-        
-        if (intersection) {
-          // Store the offset from intersection to object position
-          setDragOffset(intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z)));
-        }
-      }
     }
   };
   
@@ -115,11 +96,8 @@ export default function Inverter({
     e.stopPropagation();
     
     if (isDragging && onDragEnd) {
-      if (groupRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(inverterIndex, newPosition);
-      }
-      setDragOffset(null);
+      const newPosition: [number, number, number] = [position.x, position.y, position.z];
+      onDragEnd(inverterIndex, newPosition);
     }
   };
 

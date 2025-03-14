@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -19,27 +19,27 @@ export default function ITHouse({
   onDrag
 }: ITHouseProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse } = useThree();
   
   useFrame(() => {
-    if (isDragging && dragOffset && groupRef.current && onDrag) {
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+    if (isDragging && groupRef.current && onDrag) {
+      // Create a plane parallel to the ground at y=0
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
       
+      // Cast ray from mouse position
       raycaster.setFromCamera(mouse, camera);
       
+      // Find intersection with drag plane
       const intersection = new THREE.Vector3();
-      raycaster.ray.intersectPlane(dragPlane, intersection);
-      
-      if (intersection) {
-        intersection.sub(dragOffset);
-        
+      if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
+        // Only update X and Z positions (keep Y constant)
         const newPosition: [number, number, number] = [
           intersection.x,
-          position.y,
+          position.y, // Keep Y position constant
           intersection.z
         ];
         
+        // Call the drag callback with the new position
         onDrag(newPosition);
       }
     }
@@ -50,18 +50,6 @@ export default function ITHouse({
     
     if (onDragStart) {
       onDragStart();
-      
-      if (groupRef.current) {
-        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
-        raycaster.setFromCamera(mouse, camera);
-        
-        const intersection = new THREE.Vector3();
-        raycaster.ray.intersectPlane(dragPlane, intersection);
-        
-        if (intersection) {
-          setDragOffset(intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z)));
-        }
-      }
     }
   };
   
@@ -69,11 +57,8 @@ export default function ITHouse({
     e.stopPropagation();
     
     if (isDragging && onDragEnd) {
-      if (groupRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(newPosition);
-      }
-      setDragOffset(null);
+      const newPosition: [number, number, number] = [position.x, position.y, position.z];
+      onDragEnd(newPosition);
     }
   };
 

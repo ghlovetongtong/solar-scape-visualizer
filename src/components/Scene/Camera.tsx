@@ -21,27 +21,21 @@ export default function Camera({
   onDrag
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
-  const dragOffsetRef = useRef<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse } = useThree();
   
   // Rotate camera slightly over time (only if not being dragged)
   useFrame((state) => {
     if (cameraRef.current) {
       if (isDragging && onDrag) {
-        // Create a plane parallel to the ground at the object's height
-        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+        // Create a plane parallel to the ground at y=0
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         
         // Cast ray from mouse position
         raycaster.setFromCamera(mouse, camera);
         
         // Find intersection with drag plane
         const intersection = new THREE.Vector3();
-        raycaster.ray.intersectPlane(dragPlane, intersection);
-        
-        if (intersection && dragOffsetRef.current) {
-          // Apply the drag offset to maintain relative position
-          intersection.sub(dragOffsetRef.current);
-          
+        if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
           // Only update X and Z positions (keep Y constant)
           const newPosition: [number, number, number] = [
             intersection.x,
@@ -64,20 +58,6 @@ export default function Camera({
     
     if (onDragStart) {
       onDragStart(cameraIndex);
-      
-      // Calculate and store the offset between the object position and the intersection point
-      if (cameraRef.current) {
-        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
-        raycaster.setFromCamera(mouse, camera);
-        
-        const intersection = new THREE.Vector3();
-        raycaster.ray.intersectPlane(dragPlane, intersection);
-        
-        if (intersection) {
-          // Store the offset from intersection to object position
-          dragOffsetRef.current = intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z));
-        }
-      }
     }
   };
   
@@ -85,11 +65,8 @@ export default function Camera({
     e.stopPropagation();
     
     if (isDragging && onDragEnd) {
-      if (cameraRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(cameraIndex, newPosition);
-      }
-      dragOffsetRef.current = null;
+      const newPosition: [number, number, number] = [position.x, position.y, position.z];
+      onDragEnd(cameraIndex, newPosition);
     }
   };
 
