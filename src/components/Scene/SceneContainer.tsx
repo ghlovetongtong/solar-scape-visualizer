@@ -5,6 +5,7 @@ import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { toast } from 'sonner';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+import { ThreeEvent } from '@react-three/fiber/dist/declarations/src/core/events';
 
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
@@ -699,7 +700,7 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
-        onClick={(event) => {
+        onClick={(event: ThreeEvent<MouseEvent>) => {
           // Check if the event has an intersection with a 3D object
           if (!event.intersections || event.intersections.length === 0 || 
               !event.intersections[0].object || 
