@@ -3,6 +3,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useDraggable } from '@/hooks/useDraggable';
+import { ThreeEvent } from '@react-three/fiber';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
@@ -24,7 +25,7 @@ export default function TransformerStation({
   onRotationChange
 }: TransformerStationProps) {
   
-  const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
+  const { groupRef, handlePointerDown, handlePointerMove, handlePointerUp, isDragging } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
       if (onPositionChange) {
@@ -33,7 +34,7 @@ export default function TransformerStation({
     }
   });
   
-  const handleClick = (e: THREE.Event) => {
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     if (onSelect) {
       onSelect();
@@ -46,6 +47,8 @@ export default function TransformerStation({
       rotation={rotation} 
       onClick={handleClick}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       userData={{ type: 'selectable', componentType: 'transformer', draggable: true }}
     >
       {/* Platform/base */}

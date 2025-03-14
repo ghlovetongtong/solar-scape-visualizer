@@ -68,6 +68,7 @@ export default function Road({
           geometry={tubeGeometry} 
           material={roadMaterial} 
           receiveShadow 
+          userData={{ type: 'road', interactable: false }}
         />
       );
     }
@@ -82,16 +83,16 @@ export default function Road({
       // Close the loop by connecting back to the start
       path.closed = true;
 
-      // Create the road geometry - increase segments for smoother appearance
+      // Create the road geometry
       const tubeGeometry = new THREE.TubeGeometry(
         path,
-        boundary.length * 8, // Further increased segments for smoother curve
-        width / 2, // radius - half the desired road width
-        18, // Increased radial segments for smoother tube
-        true // closed path
+        boundary.length * 8,
+        width / 2,
+        18,
+        true
       );
 
-      // Create road material with better visibility
+      // Create road material
       const roadMaterial = new THREE.MeshStandardMaterial({
         color: color,
         roughness: 0.7,
@@ -104,6 +105,7 @@ export default function Road({
           geometry={tubeGeometry} 
           material={roadMaterial} 
           receiveShadow 
+          userData={{ type: 'road', interactable: false }}
         />
       );
     }

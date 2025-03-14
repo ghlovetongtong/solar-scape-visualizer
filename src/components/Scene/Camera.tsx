@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
 import { useDraggable } from '@/hooks/useDraggable';
+import { ThreeEvent } from '@react-three/fiber';
 
 interface CameraProps {
   position: THREE.Vector3;
@@ -26,7 +27,7 @@ export default function Camera({
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   
-  const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
+  const { groupRef, handlePointerDown, handlePointerMove, handlePointerUp, isDragging } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
       if (onPositionChange) {
@@ -43,7 +44,7 @@ export default function Camera({
     }
   });
 
-  const handleClick = (e: any) => {
+  const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
     if (onSelect) {
       onSelect();
@@ -62,6 +63,8 @@ export default function Camera({
       }}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
       userData={{ type: 'selectable', componentType: 'camera', draggable: true }}
     >
       {/* Camera mount/pole */}

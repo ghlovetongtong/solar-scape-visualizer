@@ -28,7 +28,7 @@ export function useDraggable(
   const dragStartPoint = useRef<THREE.Vector3 | null>(null);
   const originalPosition = useRef<THREE.Vector3 | null>(null);
   const { camera, raycaster, gl } = useThree();
-  const plane = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
+  const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
 
   // Set initial position
   useEffect(() => {
@@ -46,29 +46,36 @@ export function useDraggable(
     
     // Save the original position for reference during dragging
     originalPosition.current = groupRef.current.position.clone();
-    dragStartPoint.current = new THREE.Vector3(e.point.x, e.point.y, e.point.z);
+    
+    // Create intersection point where the user clicked
+    const intersectionPoint = new THREE.Vector3().copy(e.point);
+    dragStartPoint.current = intersectionPoint;
     
     if (onDragStart) {
       onDragStart(groupRef.current.position.clone());
     }
+    
+    // This is crucial: capture the pointer to ensure we get all pointer events even outside the canvas
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  const handlePointerMove = (e: PointerEvent) => {
+  const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
     if (!isDragging || !groupRef.current || !originalPosition.current || !dragStartPoint.current) return;
     
-    // Get screen coordinates
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    // Update the raycaster with current pointer position
+    const coords = {
+      x: (e.clientX / window.innerWidth) * 2 - 1,
+      y: -(e.clientY / window.innerHeight) * 2 + 1,
+    };
     
-    // Set up raycaster with screen coordinates
-    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+    raycaster.setFromCamera(new THREE.Vector2(coords.x, coords.y), camera);
     
     // Find intersection with the horizontal plane
     const intersection = new THREE.Vector3();
     raycaster.ray.intersectPlane(plane.current, intersection);
     
     if (intersection) {
-      // Calculate the movement delta from the original position
+      // Calculate the movement delta from the drag start point
       const deltaX = intersection.x - dragStartPoint.current.x;
       const deltaZ = intersection.z - dragStartPoint.current.z;
       
@@ -85,8 +92,11 @@ export function useDraggable(
     }
   };
 
-  const handlePointerUp = () => {
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     if (!isDragging || !groupRef.current) return;
+    
+    // Release the pointer capture
+    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     
     setIsDragging(false);
     gl.domElement.style.cursor = 'auto';
@@ -99,27 +109,11 @@ export function useDraggable(
     originalPosition.current = null;
   };
 
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
-      
-      // Add these to make sure dragging stops if we leave the window
-      window.addEventListener('pointerleave', handlePointerUp);
-      window.addEventListener('pointercancel', handlePointerUp);
-    }
-    
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointerleave', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
-    };
-  }, [isDragging]);
-
   return {
     isDragging,
     groupRef,
-    handlePointerDown
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp
   };
 }
