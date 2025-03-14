@@ -1,4 +1,5 @@
-import React, { useRef, useState } from 'react';
+
+import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -22,30 +23,55 @@ export default function TransformerStation({
 }: TransformerStationProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
-  const { raycaster, camera, mouse, scene } = useThree();
+  const { raycaster, camera, mouse, gl } = useThree();
   
-  useFrame(() => {
-    if (isDragging && dragOffset && groupRef.current && onDrag) {
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
-      
-      raycaster.setFromCamera(mouse, camera);
-      
-      const intersection = new THREE.Vector3();
-      raycaster.ray.intersectPlane(dragPlane, intersection);
-      
-      if (intersection) {
-        intersection.sub(dragOffset);
+  // Setup scene-level event listeners for dragging
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleGlobalMouseMove = () => {
+      if (isDragging && onDrag && dragOffset) {
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
         
-        const newPosition: [number, number, number] = [
-          intersection.x,
-          position.y,
-          intersection.z
-        ];
+        raycaster.setFromCamera(mouse, camera);
         
-        onDrag(transformerIndex, newPosition);
+        const intersection = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+        
+        if (intersection) {
+          intersection.sub(dragOffset);
+          
+          const newPosition: [number, number, number] = [
+            intersection.x,
+            position.y,
+            intersection.z
+          ];
+          
+          onDrag(transformerIndex, newPosition);
+        }
       }
-    }
-  });
+    };
+    
+    const handleGlobalMouseUp = () => {
+      if (isDragging && onDragEnd) {
+        const newPosition: [number, number, number] = [position.x, position.y, position.z];
+        onDragEnd(transformerIndex, newPosition);
+        setDragOffset(null);
+      }
+    };
+    
+    // Add event listeners to the canvas
+    const domElement = gl.domElement;
+    domElement.addEventListener('mousemove', handleGlobalMouseMove);
+    domElement.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      domElement.removeEventListener('mousemove', handleGlobalMouseMove);
+      domElement.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, transformerIndex, dragOffset, gl.domElement]);
   
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
@@ -66,26 +92,12 @@ export default function TransformerStation({
       }
     }
   };
-  
-  const handlePointerUp = (e: THREE.Event) => {
-    e.stopPropagation();
-    
-    if (isDragging && onDragEnd) {
-      if (groupRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(transformerIndex, newPosition);
-      }
-      setDragOffset(null);
-    }
-  };
 
   return (
     <group 
       position={position} 
       ref={groupRef}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerOut={handlePointerUp}
     >
       <mesh 
         receiveShadow 

@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -27,7 +27,7 @@ export default function Inverter({
   
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
-  const { raycaster, camera, mouse } = useThree();
+  const { raycaster, camera, mouse, gl } = useThree();
   
   // Define materials based on selection and dragging state
   const baseMaterial = isSelected
@@ -42,35 +42,59 @@ export default function Inverter({
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
-  // Set up drag handling
-  useFrame(() => {
-    if (isDragging && dragOffset && groupRef.current && onDrag) {
-      // Create a plane parallel to the ground at the object's height
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
-      
-      // Cast ray from mouse position
-      raycaster.setFromCamera(mouse, camera);
-      
-      // Find intersection with drag plane
-      const intersection = new THREE.Vector3();
-      raycaster.ray.intersectPlane(dragPlane, intersection);
-      
-      if (intersection) {
-        // Apply the drag offset to maintain relative position
-        intersection.sub(dragOffset);
+  // Setup scene-level event listeners for dragging
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleGlobalMouseMove = () => {
+      if (isDragging && onDrag && dragOffset) {
+        // Create a plane parallel to the ground at the object's height
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
         
-        // Only update X and Z positions (keep Y constant)
-        const newPosition: [number, number, number] = [
-          intersection.x,
-          position.y, // Keep Y position constant
-          intersection.z
-        ];
+        // Cast ray from mouse position
+        raycaster.setFromCamera(mouse, camera);
         
-        // Call the drag callback with the new position
-        onDrag(inverterIndex, newPosition);
+        // Find intersection with drag plane
+        const intersection = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+        
+        if (intersection) {
+          // Apply the drag offset to maintain relative position
+          intersection.sub(dragOffset);
+          
+          // Only update X and Z positions (keep Y constant)
+          const newPosition: [number, number, number] = [
+            intersection.x,
+            position.y, // Keep Y position constant
+            intersection.z
+          ];
+          
+          // Call the drag callback with the new position
+          onDrag(inverterIndex, newPosition);
+        }
       }
-    }
-  });
+    };
+    
+    const handleGlobalMouseUp = () => {
+      if (isDragging && onDragEnd) {
+        const newPosition: [number, number, number] = [position.x, position.y, position.z];
+        onDragEnd(inverterIndex, newPosition);
+        setDragOffset(null);
+      }
+    };
+    
+    // Add event listeners to the canvas
+    const domElement = gl.domElement;
+    domElement.addEventListener('mousemove', handleGlobalMouseMove);
+    domElement.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      domElement.removeEventListener('mousemove', handleGlobalMouseMove);
+      domElement.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, inverterIndex, dragOffset, gl.domElement]);
 
   // Improved click handler to ensure event propagation is stopped correctly
   const handleClick = useCallback((event: any) => {
@@ -110,18 +134,6 @@ export default function Inverter({
       }
     }
   };
-  
-  const handlePointerUp = (e: THREE.Event) => {
-    e.stopPropagation();
-    
-    if (isDragging && onDragEnd) {
-      if (groupRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(inverterIndex, newPosition);
-      }
-      setDragOffset(null);
-    }
-  };
 
   return (
     <group 
@@ -130,8 +142,6 @@ export default function Inverter({
       userData={{ type: 'inverter', inverterIndex }}
       ref={groupRef}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerOut={handlePointerUp}
     >
       {/* Main inverter box */}
       <mesh 

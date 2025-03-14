@@ -1,5 +1,4 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -23,11 +22,13 @@ export default function Camera({
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   const dragOffsetRef = useRef<THREE.Vector3 | null>(null);
-  const { raycaster, camera, mouse } = useThree();
+  const { raycaster, camera, mouse, gl } = useThree();
   
-  // Rotate camera slightly over time (only if not being dragged)
-  useFrame((state) => {
-    if (cameraRef.current) {
+  // Setup scene-level event listeners for dragging
+  useEffect(() => {
+    if (!isDragging) return;
+    
+    const handleGlobalMouseMove = () => {
       if (isDragging && onDrag) {
         // Create a plane parallel to the ground at the object's height
         const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
@@ -53,10 +54,35 @@ export default function Camera({
           // Call the drag callback with the new position
           onDrag(cameraIndex, newPosition);
         }
-      } else {
-        // Rotate the camera back and forth when not dragging
-        cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
       }
+    };
+    
+    const handleGlobalMouseUp = () => {
+      if (isDragging && onDragEnd) {
+        const newPosition: [number, number, number] = [position.x, position.y, position.z];
+        onDragEnd(cameraIndex, newPosition);
+        dragOffsetRef.current = null;
+      }
+    };
+    
+    // Add event listeners to the canvas
+    const domElement = gl.domElement;
+    domElement.addEventListener('mousemove', handleGlobalMouseMove);
+    domElement.addEventListener('mouseup', handleGlobalMouseUp);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      domElement.removeEventListener('mousemove', handleGlobalMouseMove);
+      domElement.removeEventListener('mouseup', handleGlobalMouseUp);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, cameraIndex, gl.domElement]);
+  
+  // Rotate camera slightly over time (only if not being dragged)
+  useFrame((state) => {
+    if (cameraRef.current && !isDragging) {
+      // Rotate the camera back and forth when not dragging
+      cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
     }
   });
   
@@ -81,26 +107,12 @@ export default function Camera({
       }
     }
   };
-  
-  const handlePointerUp = (e: THREE.Event) => {
-    e.stopPropagation();
-    
-    if (isDragging && onDragEnd) {
-      if (cameraRef.current) {
-        const newPosition: [number, number, number] = [position.x, position.y, position.z];
-        onDragEnd(cameraIndex, newPosition);
-      }
-      dragOffsetRef.current = null;
-    }
-  };
 
   return (
     <group 
       position={position} 
       ref={cameraRef}
       onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerOut={handlePointerUp}
       scale={[2.2, 2.2, 2.2]} // Increase the scale of the entire camera
     >
       {/* Camera mount/pole */}
