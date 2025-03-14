@@ -69,6 +69,7 @@ export default function Road({
           material={roadMaterial} 
           receiveShadow 
           userData={{ type: 'road', interactable: false }}
+          raycast={() => null} // Disable raycasting for this mesh
         />
       );
     }
@@ -106,6 +107,7 @@ export default function Road({
           material={roadMaterial} 
           receiveShadow 
           userData={{ type: 'road', interactable: false }}
+          raycast={() => null} // Disable raycasting for this mesh
         />
       );
     }

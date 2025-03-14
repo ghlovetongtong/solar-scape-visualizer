@@ -27,7 +27,14 @@ export default function Camera({
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   
-  const { groupRef, handlePointerDown, handlePointerMove, handlePointerUp, isDragging } = useDraggable(position, {
+  const { 
+    groupRef, 
+    handlePointerDown, 
+    handlePointerMove, 
+    handlePointerUp,
+    handlePointerCancel,
+    isDragging 
+  } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
       if (onPositionChange) {
@@ -65,6 +72,7 @@ export default function Camera({
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       userData={{ type: 'selectable', componentType: 'camera', draggable: true }}
     >
       {/* Camera mount/pole */}

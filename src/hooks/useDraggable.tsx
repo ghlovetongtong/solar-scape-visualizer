@@ -27,8 +27,11 @@ export function useDraggable(
   const groupRef = useRef<THREE.Group>(null);
   const dragStartPoint = useRef<THREE.Vector3 | null>(null);
   const originalPosition = useRef<THREE.Vector3 | null>(null);
-  const { camera, raycaster, gl } = useThree();
+  const { camera, gl } = useThree();
   const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
+  const planeNormal = new THREE.Vector3(0, 1, 0);
+  const startPoint = new THREE.Vector3();
+  const pointerId = useRef<number | null>(null);
 
   // Set initial position
   useEffect(() => {
@@ -40,27 +43,46 @@ export function useDraggable(
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!enabled || !groupRef.current) return;
     
+    // Prevent event from propagating to parent elements
     e.stopPropagation();
     setIsDragging(true);
     gl.domElement.style.cursor = 'grabbing';
     
+    // Store pointer ID for tracking
+    pointerId.current = e.pointerId;
+    
     // Save the original position for reference during dragging
     originalPosition.current = groupRef.current.position.clone();
     
-    // Create intersection point where the user clicked
-    const intersectionPoint = new THREE.Vector3().copy(e.point);
-    dragStartPoint.current = intersectionPoint;
+    // Calculate the plane's position (at the current object's y position)
+    const planePosition = new THREE.Vector3(0, groupRef.current.position.y, 0);
+    plane.current.setFromNormalAndCoplanarPoint(planeNormal, planePosition);
+    
+    // Cast a ray from the camera to the pointer position
+    const coords = {
+      x: (e.clientX / window.innerWidth) * 2 - 1,
+      y: -(e.clientY / window.innerHeight) * 2 + 1,
+    };
+    
+    // Create a raycaster
+    const raycaster = new THREE.Raycaster();
+    raycaster.setFromCamera(new THREE.Vector2(coords.x, coords.y), camera);
+    
+    // Find intersection with the horizontal plane
+    if (raycaster.ray.intersectPlane(plane.current, startPoint)) {
+      dragStartPoint.current = startPoint.clone();
+    }
     
     if (onDragStart) {
       onDragStart(groupRef.current.position.clone());
     }
     
-    // This is crucial: capture the pointer to ensure we get all pointer events even outside the canvas
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    // Capture pointer to ensure we get all events
+    e.target.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
-    if (!isDragging || !groupRef.current || !originalPosition.current || !dragStartPoint.current) return;
+    if (!isDragging || !groupRef.current || !originalPosition.current || !dragStartPoint.current || pointerId.current !== e.pointerId) return;
     
     // Update the raycaster with current pointer position
     const coords = {
@@ -68,13 +90,13 @@ export function useDraggable(
       y: -(e.clientY / window.innerHeight) * 2 + 1,
     };
     
+    // Create a raycaster
+    const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(coords.x, coords.y), camera);
     
     // Find intersection with the horizontal plane
     const intersection = new THREE.Vector3();
-    raycaster.ray.intersectPlane(plane.current, intersection);
-    
-    if (intersection) {
+    if (raycaster.ray.intersectPlane(plane.current, intersection)) {
       // Calculate the movement delta from the drag start point
       const deltaX = intersection.x - dragStartPoint.current.x;
       const deltaZ = intersection.z - dragStartPoint.current.z;
@@ -93,16 +115,40 @@ export function useDraggable(
   };
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
-    if (!isDragging || !groupRef.current) return;
+    if (!isDragging || pointerId.current !== e.pointerId) return;
     
-    // Release the pointer capture
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    // Release pointer capture
+    if (e.target.hasPointerCapture(e.pointerId)) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
     
     setIsDragging(false);
     gl.domElement.style.cursor = 'auto';
+    pointerId.current = null;
     
     if (onDragEnd && groupRef.current) {
       onDragEnd(groupRef.current.position.clone());
+    }
+    
+    dragStartPoint.current = null;
+    originalPosition.current = null;
+  };
+
+  const handlePointerCancel = (e: ThreeEvent<PointerEvent>) => {
+    if (pointerId.current !== e.pointerId) return;
+    
+    // Release pointer capture
+    if (e.target.hasPointerCapture(e.pointerId)) {
+      e.target.releasePointerCapture(e.pointerId);
+    }
+    
+    setIsDragging(false);
+    gl.domElement.style.cursor = 'auto';
+    pointerId.current = null;
+    
+    // Reset to original position if available
+    if (groupRef.current && originalPosition.current) {
+      groupRef.current.position.copy(originalPosition.current);
     }
     
     dragStartPoint.current = null;
@@ -114,6 +160,7 @@ export function useDraggable(
     groupRef,
     handlePointerDown,
     handlePointerMove,
-    handlePointerUp
+    handlePointerUp,
+    handlePointerCancel
   };
 }
