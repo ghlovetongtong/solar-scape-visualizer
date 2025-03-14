@@ -51,13 +51,43 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
     try {
       const savedLayout = localStorage.getItem('solar-station-panel-layout');
       if (savedLayout) {
-        const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
-        setPanelPositions(parsedLayout);
-        setInitialPositions(parsedLayout);
-        console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
-        toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+        try {
+          const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
+          
+          // Validate parsed data structure to ensure it's compatible
+          const isValidData = Array.isArray(parsedLayout) && 
+            parsedLayout.every(item => 
+              typeof item === 'object' && 
+              'id' in item && 
+              'position' in item && 
+              'rotation' in item && 
+              'scale' in item
+            );
+            
+          if (isValidData) {
+            setPanelPositions(parsedLayout);
+            setInitialPositions(parsedLayout);
+            console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
+            toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+          } else {
+            console.warn("Invalid panel layout data structure, starting with empty array");
+            setPanelPositions([]);
+            setInitialPositions([]);
+            // Clear invalid data
+            localStorage.removeItem('solar-station-panel-layout');
+            toast.error("Invalid saved panel data, starting fresh");
+          }
+        } catch (parseError) {
+          console.error("Error parsing saved layout:", parseError);
+          setPanelPositions([]);
+          setInitialPositions([]);
+          // Clear invalid data
+          localStorage.removeItem('solar-station-panel-layout');
+          toast.error("Couldn't load saved panels, starting fresh");
+        }
       } else {
         // Start with empty array if no saved layout
+        console.log("No saved panel layout found");
         setPanelPositions([]);
         setInitialPositions([]);
       }
@@ -68,6 +98,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       setPanelPositions([]);
       setInitialPositions([]);
       setIsInitialized(true);
+      toast.error("Error loading panels, starting fresh");
     }
   }, []);
 
@@ -178,6 +209,9 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const clearAllPanels = useCallback(() => {
     setPanelPositions([]);
     setSelectedPanelId(null);
+    // Also clear localStorage to prevent future issues
+    localStorage.removeItem('solar-station-panel-layout');
+    toast.success("All panels cleared and saved data removed");
   }, []);
 
   // Function to update a single panel's position

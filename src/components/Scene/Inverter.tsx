@@ -27,7 +27,12 @@ export default function Inverter({
   };
   
   return (
-    <group position={position} rotation={rotation} onClick={handleClick} userData={{ type: 'selectable', componentType: 'inverter' }}>
+    <group 
+      position={position} 
+      rotation={rotation} 
+      onClick={handleClick} 
+      userData={{ type: 'selectable', componentType: 'inverter' }}
+    >
       {/* Main inverter box */}
       <mesh 
         castShadow 

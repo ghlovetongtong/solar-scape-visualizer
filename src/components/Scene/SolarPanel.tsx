@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -130,7 +129,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelPositions, batchSize]);
   
   const handleClick = (event: any) => {
-    event.stopPropagation(); // Prevent event from bubbling up to the Canvas
+    event.stopPropagation();
     
     if (event.intersections.length > 0) {
       const intersection = event.intersections[0];
@@ -153,9 +152,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         } else {
           onSelectPanel(intersection.object.userData.panelId);
         }
-      } else {
-        // Clicked on part of the panel component but not a specific panel
-        // Do nothing and let event propagate
       }
     }
   };

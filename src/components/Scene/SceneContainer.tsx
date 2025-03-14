@@ -703,7 +703,6 @@ export default function SceneContainer() {
           const threeEvent = event as unknown as ThreeEvent<MouseEvent>;
           
           if (!threeEvent.intersections || threeEvent.intersections.length === 0) {
-            console.log("Deselecting all components - no intersections");
             setSelectedComponentType(null);
             setSelectedInverterId(null);
             setSelectedTransformerId(null);
@@ -714,13 +713,11 @@ export default function SceneContainer() {
             return;
           }
           
-          const hitNonSelectable = threeEvent.intersections.every(
-            intersection => !intersection.object.userData?.type || 
-                           intersection.object.userData?.type !== 'selectable'
+          const hitSelectable = threeEvent.intersections.some(
+            intersection => intersection.object.userData?.type === 'selectable'
           );
           
-          if (hitNonSelectable) {
-            console.log("Deselecting all components - hit non-selectable");
+          if (!hitSelectable) {
             setSelectedComponentType(null);
             setSelectedInverterId(null);
             setSelectedTransformerId(null);
