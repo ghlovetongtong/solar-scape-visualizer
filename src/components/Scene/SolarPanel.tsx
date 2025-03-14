@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -13,35 +12,29 @@ interface SolarPanelsProps {
 }
 
 export default function SolarPanels({ panelPositions, selectedPanelId, onSelectPanel }: SolarPanelsProps) {
-  // Create panel geometry with exact dimensions - fixed to 3x2 units
   const panelGeometry = useMemo(() => {
     const baseGeometry = new THREE.BoxGeometry(3, 0.1, 2);
     return baseGeometry;
   }, []);
   
-  // Create bracket geometry
   const bracketGeometry = useMemo(() => {
     const bracketGroup = new THREE.Group();
     
-    // Main support pole
     const pole = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 8);
     const poleMesh = new THREE.Mesh(pole);
     poleMesh.position.y = -0.75;
     bracketGroup.add(poleMesh);
     
-    // Horizontal support beam
     const beam = new THREE.BoxGeometry(2.8, 0.1, 0.1);
     const beamMesh = new THREE.Mesh(beam);
     beamMesh.position.y = -0.05;
     bracketGroup.add(beamMesh);
     
-    // Bottom base plate
     const base = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 16);
     const baseMesh = new THREE.Mesh(base);
     baseMesh.position.y = -1.5;
     bracketGroup.add(baseMesh);
     
-    // Convert group to buffer geometry
     const bracketBufferGeometry = new THREE.BufferGeometry();
     const meshes: THREE.BufferGeometry[] = [];
     
@@ -52,16 +45,13 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       }
     });
     
-    // Merge all geometries into one buffer geometry
     const mergedGeometry = mergeGeometries(meshes);
     
     return mergedGeometry;
   }, []);
   
-  // Load solar panel texture for the grid pattern
   const panelTexture = useTexture('https://i.imgur.com/kDucSwd.jpeg');
   
-  // Configure texture properties
   useMemo(() => {
     if (panelTexture) {
       panelTexture.wrapS = panelTexture.wrapT = THREE.RepeatWrapping;
@@ -69,12 +59,9 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     }
   }, [panelTexture]);
   
-  // Reference to the sunlight direction for shadow calculation
   const sunDirection = useRef<THREE.Vector3>(new THREE.Vector3(0, 1, 0));
   
-  // Update the sun direction based on the scene's directional light
   useFrame(({ scene }) => {
-    // Find the directional light in the scene (simulating the sun)
     let foundDirectionalLight = false;
     scene.traverse((object) => {
       if (object instanceof THREE.DirectionalLight && !foundDirectionalLight) {
@@ -94,13 +81,12 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       emissiveIntensity: 0.2 // Reduced intensity for a more subdued glow
     });
     
-    // Using an even lighter color for shadowed panels - very pale blue
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
       color: new THREE.Color('#F1F5FD'),  // Much lighter blue for non-irradiated panels
       metalness: 0.5,
       roughness: 0.4,
-      emissive: new THREE.Color('#111111'), // Darker emissive color for shadowed panels
+      emissive: new THREE.Color('#F1F1F1'), // Much lighter emissive color for shadowed panels
       emissiveIntensity: 0.05 // Even lower intensity for non-irradiated panels
     });
     
@@ -133,9 +119,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     };
   }, [panelTexture]);
   
-  // For large numbers of panels, we need to use instanced rendering
-  // Group panels into batches to avoid performance issues
-  const batchSize = 500; // Render panels in batches of 500
+  const batchSize = 500;
   const panelBatches = useMemo(() => {
     const batches = [];
     for (let i = 0; i < panelPositions.length; i += batchSize) {
@@ -144,7 +128,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return batches;
   }, [panelPositions, batchSize]);
   
-  // For selection, we need a custom raycaster function
   const handleClick = (event: any) => {
     if (event.intersections.length > 0) {
       const intersection = event.intersections[0];
@@ -162,21 +145,15 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     event.stopPropagation();
   };
   
-  // For performance reasons with 3000 panels, use a combination approach:
-  // - Use instancing for most panels
-  // - Render the selected panel individually for highlighting
-  
   const selectedPanel = useMemo(() => {
     if (selectedPanelId === null) return null;
     return panelPositions.find(panel => panel.id === selectedPanelId) || null;
   }, [panelPositions, selectedPanelId]);
   
-  // Create separate instanced meshes for sunlit and shadowed panels
   const sunlitPanelRefs = useRef<THREE.InstancedMesh[]>([]);
   const shadowedPanelRefs = useRef<THREE.InstancedMesh[]>([]);
   const bracketInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
   
-  // Update the matrices for all instances using useEffect
   useEffect(() => {
     panelBatches.forEach((batch, batchIndex) => {
       const sunlitPanelMesh = sunlitPanelRefs.current[batchIndex];
@@ -185,50 +162,36 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       
       if (!sunlitPanelMesh || !shadowedPanelMesh || !bracketMesh) return;
       
-      // Create matrices for all panels
       batch.forEach((panel, index) => {
-        // Use a consistent matrix transformation to avoid distortion
         const matrix = new THREE.Matrix4();
-        // Get position directly from panel data
         const position = new THREE.Vector3(...panel.position);
-        // Convert rotation values to quaternion, ensuring correct orientation
         const rotation = new THREE.Euler(...panel.rotation);
         const quaternion = new THREE.Quaternion().setFromEuler(rotation);
-        // Explicitly set scale to [1,1,1] to prevent any scaling issues
         const scale = new THREE.Vector3(1, 1, 1);
         
-        // Compose matrix with exact values to ensure consistent rendering
         matrix.compose(position, quaternion, scale);
         
-        // Hide the panel if it's the selected one (we'll render it separately)
         if (panel.id === selectedPanelId) {
-          // Make both sunlit and shadowed versions invisible
           const invisibleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
           sunlitPanelMesh.setMatrixAt(index, invisibleMatrix);
           shadowedPanelMesh.setMatrixAt(index, invisibleMatrix);
           bracketMesh.setMatrixAt(index, invisibleMatrix);
         } else {
-          // Calculate shadow intensity based on panel orientation and sun direction
           const shadowIntensity = getShadowIntensity(panel.rotation, sunDirection.current);
-          const isInShadow = shadowIntensity < 0.15; // Lower threshold to consider more panels in sunlight
+          const isInShadow = shadowIntensity < 0.15;
           
-          // Set appropriate visibility based on lighting condition
           if (isInShadow) {
-            // Show shadowed panel, hide sunlit panel
             shadowedPanelMesh.setMatrixAt(index, matrix);
             sunlitPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
           } else {
-            // Show sunlit panel, hide shadowed panel
             sunlitPanelMesh.setMatrixAt(index, matrix);
             shadowedPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
           }
           
-          // Bracket is always visible regardless of shadow status
           bracketMesh.setMatrixAt(index, matrix);
         }
       });
       
-      // Mark the instance matrices as needing update
       sunlitPanelMesh.instanceMatrix.needsUpdate = true;
       shadowedPanelMesh.instanceMatrix.needsUpdate = true;
       bracketMesh.instanceMatrix.needsUpdate = true;
@@ -237,10 +200,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   
   return (
     <group onClick={handleClick}>
-      {/* Render panel-bracket pairs in batches using instancing for performance */}
       {panelBatches.map((batch, batchIndex) => (
         <group key={`batch-${batchIndex}`}>
-          {/* Sunlit panels */}
           <instancedMesh
             ref={(mesh) => {
               if (mesh) sunlitPanelRefs.current[batchIndex] = mesh;
@@ -251,7 +212,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             userData={{ batchIndex }}
           />
           
-          {/* Shadowed panels */}
           <instancedMesh
             ref={(mesh) => {
               if (mesh) shadowedPanelRefs.current[batchIndex] = mesh;
@@ -262,7 +222,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             userData={{ batchIndex }}
           />
           
-          {/* Brackets (same for both sunlit and shadowed) */}
           <instancedMesh
             ref={(mesh) => {
               if (mesh) bracketInstancedMeshRefs.current[batchIndex] = mesh;
@@ -275,29 +234,27 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         </group>
       ))}
       
-      {/* Render selected panel separately with highlight material */}
       {selectedPanel && (
         <group>
           <mesh
             position={new THREE.Vector3(...selectedPanel.position)}
             rotation={new THREE.Euler(...selectedPanel.rotation)}
-            scale={new THREE.Vector3(1, 1, 1)} // Ensure consistent scale
+            scale={new THREE.Vector3(1, 1, 1)}
             castShadow
             receiveShadow
             userData={{ panelId: selectedPanel.id }}
           >
-            <boxGeometry args={[3, 0.1, 2]} /> {/* Exact dimensions matching instanced panels */}
+            <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
               map={panelTexture}
-              color='#38BDF8'  // Brighter highlight color
+              color='#38BDF8'
               metalness={0.8}
               roughness={0.2}
               emissive='#38BDF8'
-              emissiveIntensity={0.6}  // Slightly reduced glow intensity
+              emissiveIntensity={0.6}
             />
           </mesh>
           
-          {/* Selected bracket */}
           <mesh
             position={[selectedPanel.position[0], selectedPanel.position[1] - 0.75, selectedPanel.position[2]]}
             rotation={new THREE.Euler(...selectedPanel.rotation)}
@@ -307,9 +264,9 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           >
             <primitive object={bracketGeometry} />
             <meshStandardMaterial 
-              color='#565c64' 
-              emissive='#222222'  // Darker emissive for selected bracket
-              emissiveIntensity={0.3}  // Reduced intensity
+              color='#565c64'
+              emissive='#222222'
+              emissiveIntensity={0.3}
               metalness={0.7}
               roughness={0.3}
             />
