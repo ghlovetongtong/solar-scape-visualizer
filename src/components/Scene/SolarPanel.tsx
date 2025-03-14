@@ -69,6 +69,7 @@ function PanelInstance({
       userData={{ type: 'selectable', id, category: 'panel' }}
       ref={bind.ref}
     >
+      {/* Fixed the color prop to use a string color value instead of object */}
       <Instance 
         scale={scale} 
         color={isSelected ? '#88ccff' : '#3388cc'} 
