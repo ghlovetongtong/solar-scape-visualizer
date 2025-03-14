@@ -145,6 +145,7 @@ export default function SceneContainer() {
   const [drawingMode, setDrawingMode] = useState(false);
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
+  const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
   const orbitControlsRef = useRef<any>(null);
   
   const {
@@ -523,6 +524,24 @@ export default function SceneContainer() {
     }
   }, []);
 
+  const handleSceneObjectClick = useCallback((event: any) => {
+    if (event.object && event.object.userData) {
+      if (event.object.userData.type === 'inverter') {
+        setSelectedInverterIndex(event.object.userData.inverterIndex);
+        selectPanel(null);
+        event.stopPropagation();
+      } else if (event.object.userData.type === 'panel') {
+        setSelectedInverterIndex(null);
+      } else {
+        setSelectedInverterIndex(null);
+        selectPanel(null);
+      }
+    } else {
+      setSelectedInverterIndex(null);
+      selectPanel(null);
+    }
+  }, [selectPanel]);
+
   return (
     <div className="h-full w-full relative">
       <Canvas
@@ -542,6 +561,7 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
+        onClick={handleSceneObjectClick}
       >
         <CustomEnvironment timeOfDay={timeOfDay} />
         
@@ -565,6 +585,12 @@ export default function SceneContainer() {
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}
               inverterIndex={index}
+              isSelected={selectedInverterIndex === index}
+              onClick={(e) => {
+                setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
+                selectPanel(null);
+                e.stopPropagation();
+              }}
             />
           ))}
           
@@ -618,6 +644,8 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
+        selectedInverterIndex={selectedInverterIndex}
+        onDeselectInverter={() => setSelectedInverterIndex(null)}
       />
       
       <Loader />

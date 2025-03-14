@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -200,7 +199,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelBatches, selectedPanelId, panelPositions]);
   
   return (
-    <group onClick={handleClick}>
+    <group onClick={handleClick} userData={{ type: 'panel' }}>
       {panelBatches.map((batch, batchIndex) => (
         <group key={`batch-${batchIndex}`}>
           <instancedMesh
@@ -243,7 +242,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             scale={new THREE.Vector3(1, 1, 1)}
             castShadow
             receiveShadow
-            userData={{ panelId: selectedPanel.id }}
+            userData={{ type: 'panel', panelId: selectedPanel.id }}
           >
             <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
@@ -259,7 +258,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           <mesh
             position={[selectedPanel.position[0], selectedPanel.position[1] - 0.75, selectedPanel.position[2]]}
             rotation={new THREE.Euler(...selectedPanel.rotation)}
-            userData={{ panelId: selectedPanel.id }}
+            userData={{ type: 'panel', panelId: selectedPanel.id }}
             castShadow
             receiveShadow
           >
