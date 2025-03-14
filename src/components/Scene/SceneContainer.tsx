@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -700,11 +699,12 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
-        onClick={(event: ThreeEvent<MouseEvent>) => {
-          // Check if the event has an intersection with a 3D object
-          if (!event.intersections || event.intersections.length === 0 || 
-              !event.intersections[0].object || 
-              event.intersections[0].object.userData?.type !== 'selectable') {
+        onClick={(event) => {
+          const threeEvent = event as unknown as ThreeEvent<MouseEvent>;
+          
+          if (!threeEvent.intersections || threeEvent.intersections.length === 0 || 
+              !threeEvent.intersections[0].object || 
+              threeEvent.intersections[0].object.userData?.type !== 'selectable') {
             console.log("Deselecting all components");
             setSelectedComponentType(null);
             setSelectedInverterId(null);
