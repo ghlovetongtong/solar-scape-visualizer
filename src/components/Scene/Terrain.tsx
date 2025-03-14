@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
 import BoundaryDrawing from './BoundaryDrawing';
@@ -17,7 +17,7 @@ export default function Terrain({
   savedBoundaries = []
 }: TerrainProps) {
   // Create a safe callback wrapper that won't cause "lov" errors
-  const handleBoundaryComplete = (points: BoundaryPoint[]) => {
+  const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
     if (onBoundaryComplete && points.length > 2) {
       // Ensure we're dealing with a valid boundary before calling the callback
       try {
@@ -26,7 +26,7 @@ export default function Terrain({
         console.error("Error in boundary completion callback:", error);
       }
     }
-  };
+  }, [onBoundaryComplete]);
 
   return (
     <group>

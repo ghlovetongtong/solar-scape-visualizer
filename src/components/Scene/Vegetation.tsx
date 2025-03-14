@@ -66,7 +66,10 @@ export default function Vegetation({
         instancedGrass.current.setMatrixAt(i, dummy.matrix);
       });
       
-      instancedGrass.current.instanceMatrix.needsUpdate = true;
+      // Only update if needed - prevents unnecessary renders
+      if (instancedGrass.current.instanceMatrix) {
+        instancedGrass.current.instanceMatrix.needsUpdate = true;
+      }
     }
   }, [grassPositions]);
   

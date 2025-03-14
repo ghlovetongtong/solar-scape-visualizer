@@ -48,9 +48,7 @@ export default function TransformerStation({ position, transformerIndex }: Trans
       </mesh>
       
       {/* High voltage warning signs */}
-      <mesh 
-        position={[0, 2.5, 2.01]}
-      >
+      <mesh position={[0, 2.5, 2.01]}>
         <planeGeometry args={[2, 1.5]} />
         <meshBasicMaterial 
           color="#ffff00"
@@ -58,9 +56,7 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         />
       </mesh>
       
-      <mesh 
-        position={[0, 3.3, 2.02]}
-      >
+      <mesh position={[0, 3.3, 2.02]}>
         <planeGeometry args={[1, 0.5]} />
         <meshBasicMaterial 
           color="#000000"

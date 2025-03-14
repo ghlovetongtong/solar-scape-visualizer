@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useDrawBoundary, type BoundaryPoint } from '@/hooks/useDrawBoundary';
 
@@ -20,6 +20,9 @@ export default function BoundaryDrawing({
     enabled, 
     onComplete 
   });
+  
+  // Create a ref for the line to avoid recreating it
+  const lineRef = useRef<THREE.Line>(null);
 
   // Create points for the line with a slight y-offset to position above the ground
   const linePoints = useMemo(() => {
@@ -36,19 +39,32 @@ export default function BoundaryDrawing({
     return vertices;
   }, [points, isDrawing]);
 
-  if (linePoints.length < 2) return null;
+  // Update the line geometry when points change
+  useMemo(() => {
+    if (lineRef.current && linePoints.length >= 2) {
+      const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
+      
+      if (lineRef.current.geometry) {
+        // Update the existing geometry
+        lineRef.current.geometry.setAttribute(
+          'position', 
+          new THREE.BufferAttribute(positions, 3)
+        );
+        lineRef.current.geometry.attributes.position.needsUpdate = true;
+      }
+    }
+  }, [linePoints]);
 
-  // Create a line geometry from the points array
-  const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
+  if (linePoints.length < 2) return null;
 
   return (
     <group>
-      <line>
+      <line ref={lineRef}>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
             count={linePoints.length}
-            array={positions}
+            array={new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]))}
             itemSize={3}
           />
         </bufferGeometry>
