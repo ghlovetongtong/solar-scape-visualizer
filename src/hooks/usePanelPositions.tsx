@@ -94,11 +94,22 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const saveCurrentLayout = useCallback((completeLayout?: CompleteLayoutData) => {
     try {
       if (completeLayout) {
+        // Ensure all array data is properly formatted
+        const sanitizedLayout: CompleteLayoutData = {
+          panels: completeLayout.panels || [],
+          inverters: completeLayout.inverters || [],
+          transformers: completeLayout.transformers || [],
+          cameras: completeLayout.cameras || [],
+          itHouse: completeLayout.itHouse || [0, 0, 0]
+        };
+        
+        console.log("Saving complete layout:", sanitizedLayout);
+        
         // Save complete layout with all components
-        localStorage.setItem('solar-station-complete-layout', JSON.stringify(completeLayout));
-        toast.success(`Saved complete layout with ${completeLayout.panels.length} panels and all equipment`);
+        localStorage.setItem('solar-station-complete-layout', JSON.stringify(sanitizedLayout));
+        toast.success(`Saved complete layout with ${sanitizedLayout.panels.length} panels and all equipment`);
         setInitialPositions(completeLayout.panels);
-        console.log(`Saved complete layout with ${completeLayout.panels.length} panels`);
+        console.log(`Saved complete layout with ${completeLayout.panels.length} panels and ${sanitizedLayout.cameras.length} cameras`);
       } else {
         // Legacy save (panels only)
         localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
