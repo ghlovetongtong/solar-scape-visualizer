@@ -538,18 +538,29 @@ export default function SceneContainer() {
     
     if (userData.type === 'inverter') {
       console.log(`Inverter ${userData.inverterIndex} selected`);
-      setSelectedInverterIndex(userData.inverterIndex);
-      selectPanel(null);
+      
+      // Toggle selection - if already selected, deselect it
+      if (selectedInverterIndex === userData.inverterIndex) {
+        setSelectedInverterIndex(null);
+      } else {
+        setSelectedInverterIndex(userData.inverterIndex);
+        // Deselect any panels when selecting an inverter
+        selectPanel(null);
+      }
+      
+      // Prevent propagation
       event.stopPropagation();
     } 
     else if (userData.type === 'panel' || userData.type === 'panel-instance') {
+      // Deselect inverter when selecting a panel
       setSelectedInverterIndex(null);
     }
     else {
+      // For other objects, clear selections
       setSelectedInverterIndex(null);
       selectPanel(null);
     }
-  }, [selectPanel]);
+  }, [selectPanel, selectedInverterIndex]);
 
   return (
     <div className="h-full w-full relative">
@@ -596,9 +607,14 @@ export default function SceneContainer() {
               inverterIndex={index}
               isSelected={selectedInverterIndex === index}
               onClick={(e) => {
+                console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
+                // Toggle selection state
                 setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
+                // Deselect any panels when selecting an inverter
                 selectPanel(null);
+                // Prevent propagation
                 e.stopPropagation();
+                if (e.nativeEvent) e.nativeEvent.stopPropagation();
               }}
             />
           ))}

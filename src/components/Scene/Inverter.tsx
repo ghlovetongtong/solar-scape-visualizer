@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 
@@ -30,14 +30,22 @@ export default function Inverter({
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
-  const handleClick = (event: any) => {
-    // Stop event propagation to prevent scene click event
+  // Improved click handler to ensure event propagation is stopped correctly
+  const handleClick = useCallback((event: any) => {
+    // Stop propagation at all levels to prevent scene click
     event.stopPropagation();
+    if (event.nativeEvent) {
+      event.nativeEvent.stopPropagation();
+    }
+    
+    // Log the click for debugging
+    console.log(`Inverter ${inverterIndex + 1} clicked with isSelected=${isSelected}`);
+    
+    // Call the parent's onClick if provided
     if (onClick) {
       onClick(event);
     }
-    console.log(`Inverter ${inverterIndex + 1} clicked`);
-  };
+  }, [inverterIndex, isSelected, onClick]);
 
   return (
     <group 
@@ -51,7 +59,7 @@ export default function Inverter({
         receiveShadow
         position={[0, 1, 0]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         {baseMaterial}
@@ -62,7 +70,7 @@ export default function Inverter({
         castShadow 
         position={[0, 1, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
         {finsMaterial}
@@ -73,7 +81,7 @@ export default function Inverter({
         castShadow 
         position={[0, 0, 0]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
         {connectionMaterial}
@@ -83,7 +91,7 @@ export default function Inverter({
       <mesh
         position={[1.1, 1.6, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
@@ -97,7 +105,7 @@ export default function Inverter({
       <mesh
         position={[-1.0, 1.6, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <boxGeometry args={[1.0, 1.0, 0.08]} />
         <meshStandardMaterial 
@@ -110,13 +118,13 @@ export default function Inverter({
       <mesh
         position={[0, 0.3, 0.9]}
         userData={{ type: 'inverter', inverterIndex }}
-        onClick={handleClick} // Add onClick to each mesh
+        onClick={handleClick}
       >
         <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
         <meshStandardMaterial color="#111111" />
       </mesh>
 
-      {/* Inverter label */}
+      {/* Inverter label - make it more visible when selected */}
       <Text
         position={[0, 2.7, 0]}
         rotation={[0, 0, 0]}
