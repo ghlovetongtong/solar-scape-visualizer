@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -8,6 +9,7 @@ import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
 import Inverter from './Inverter';
+import InverterContainer from './InverterContainer';
 import Camera from './Camera';
 import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
