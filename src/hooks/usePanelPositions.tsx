@@ -195,6 +195,94 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     }
   };
 
+  // Function to add new panels within a specific boundary
+  const addNewPanelsInBoundary = useCallback((boundary: BoundaryPoint[]) => {
+    if (boundary.length < 3) {
+      console.warn("Cannot add panels - boundary has less than 3 points");
+      return;
+    }
+
+    try {
+      // Find the bounding box of the boundary
+      let minX = Number.POSITIVE_INFINITY;
+      let maxX = Number.NEGATIVE_INFINITY;
+      let minZ = Number.POSITIVE_INFINITY;
+      let maxZ = Number.NEGATIVE_INFINITY;
+      
+      boundary.forEach(([x, z]) => {
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minZ = Math.min(minZ, z);
+        maxZ = Math.max(maxZ, z);
+      });
+      
+      // Calculate grid dimensions based on boundary size
+      const boundaryWidth = maxX - minX;
+      const boundaryDepth = maxZ - minZ;
+      
+      // Determine spacing based on boundary size
+      const spacing = Math.min(PANEL_SPACING * 1.5, boundaryWidth / 10, boundaryDepth / 10);
+      
+      // Calculate grid size
+      const gridSizeX = Math.floor(boundaryWidth / spacing);
+      const gridSizeZ = Math.floor(boundaryDepth / spacing);
+      
+      const newPanels: InstanceData[] = [];
+      const nextPanelId = panelPositions.length > 0 
+        ? Math.max(...panelPositions.map(panel => panel.id)) + 1 
+        : 0;
+      
+      let panelCount = 0;
+      
+      // Create panels within the grid, but only if they're inside the boundary
+      for (let i = 0; i < gridSizeX; i++) {
+        for (let j = 0; j < gridSizeZ; j++) {
+          const x = minX + (i + 0.5) * spacing;
+          const z = minZ + (j + 0.5) * spacing;
+          
+          // Check if this position is inside the boundary
+          if (isPointInPolygon([x, z], boundary)) {
+            // Check if there's already a panel at this position (within a small tolerance)
+            const tolerance = spacing / 2;
+            const existingPanel = panelPositions.find(panel => {
+              const dx = panel.position[0] - x;
+              const dz = panel.position[2] - z;
+              return Math.sqrt(dx * dx + dz * dz) < tolerance;
+            });
+            
+            // Only place a new panel if there isn't already one here
+            if (!existingPanel) {
+              // Get ground height at this position
+              const groundHeight = getHeightAtPosition(x, z);
+              
+              // Create the panel with a slight randomization to rotation
+              const rotationY = (Math.random() - 0.5) * 0.2;
+              
+              newPanels.push({
+                id: nextPanelId + panelCount,
+                position: [x, 1.0 + groundHeight, z],
+                rotation: [-Math.PI / 8, rotationY, 0],
+                scale: [1, 1, 1]
+              });
+              
+              panelCount++;
+            }
+          }
+        }
+      }
+      
+      console.log(`Generated ${newPanels.length} new panels in boundary`);
+      
+      // Add the new panels to the existing ones
+      setPanelPositions(prev => [...prev, ...newPanels]);
+      
+      return newPanels.length;
+    } catch (error) {
+      console.error("Error adding new panels in boundary:", error);
+      return 0;
+    }
+  }, [panelPositions]);
+
   // Function to update a single panel's position
   const updatePanelPosition = useCallback((id: number, position: [number, number, number]) => {
     setPanelPositions(prev => 
@@ -234,6 +322,7 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     updatePanelRotation,
     selectPanel,
     resetPanelPositions,
-    isInitialized
+    isInitialized,
+    addNewPanelsInBoundary  // Added this new function to the returned object
   };
 }

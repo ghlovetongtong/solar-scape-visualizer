@@ -153,7 +153,8 @@ export default function SceneContainer() {
     updatePanelRotation,
     selectPanel,
     resetPanelPositions,
-    isInitialized
+    isInitialized,
+    addNewPanelsInBoundary
   } = usePanelPositions({ initialCount: 2000, boundaries: savedBoundaries });
   
   useEffect(() => {
@@ -269,6 +270,30 @@ export default function SceneContainer() {
     toast.info('Current boundary cleared');
   }, []);
 
+  const handleGenerateNewPanelsInBoundary = useCallback(() => {
+    const allBoundaries = [...savedBoundaries];
+    
+    if (allBoundaries.length === 0) {
+      toast.error('No saved boundaries available. Draw and save a boundary first.');
+      return;
+    }
+    
+    const latestBoundary = allBoundaries[allBoundaries.length - 1];
+    
+    if (latestBoundary.length < 3) {
+      toast.error('The latest boundary is invalid. Create a new boundary.');
+      return;
+    }
+    
+    const panelsAdded = addNewPanelsInBoundary(latestBoundary);
+    
+    if (panelsAdded > 0) {
+      toast.success(`Generated ${panelsAdded} new solar panels within boundary`);
+    } else {
+      toast.info('No new panels could be added. The boundary may already be filled or too small.');
+    }
+  }, [savedBoundaries, addNewPanelsInBoundary]);
+
   useEffect(() => {
     const savedData = localStorage.getItem('solar-station-boundaries');
     if (savedData) {
@@ -366,6 +391,7 @@ export default function SceneContainer() {
         setDrawingMode={setDrawingMode}
         onSaveBoundary={handleSaveBoundary}
         onClearBoundary={handleClearBoundary}
+        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
       />
       
       <Loader />
