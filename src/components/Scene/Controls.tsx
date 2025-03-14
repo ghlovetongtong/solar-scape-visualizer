@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ interface ControlsProps {
   onClearAllBoundaries?: () => void;
   onClearAllPanels?: () => void;
   onGenerateNewPanelsInBoundary?: () => void;
+  onSaveLayout?: () => void;
 }
 
 export default function Controls({
@@ -38,7 +40,8 @@ export default function Controls({
   onClearBoundary,
   onClearAllBoundaries,
   onClearAllPanels,
-  onGenerateNewPanelsInBoundary
+  onGenerateNewPanelsInBoundary,
+  onSaveLayout
 }: ControlsProps) {
   const [adjustValue, setAdjustValue] = useState(0.5);
   
@@ -125,32 +128,34 @@ export default function Controls({
         </div>
         
         {drawingMode && (
-          <div className="grid grid-cols-2 gap-1">
-            <Button size="sm" onClick={onSaveBoundary}>Save Boundary</Button>
-            <Button size="sm" variant="outline" onClick={onClearBoundary}>Clear Drawing</Button>
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-1">
+              <Button size="sm" onClick={onSaveBoundary}>Save Boundary</Button>
+              <Button size="sm" variant="outline" onClick={onClearBoundary}>Clear Drawing</Button>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-1 mt-2">
+              {onGenerateNewPanelsInBoundary && (
+                <Button 
+                  className="w-full" 
+                  onClick={onGenerateNewPanelsInBoundary}
+                  variant="default"
+                >
+                  Generate Panels in All Boundaries
+                </Button>
+              )}
+              {onClearAllBoundaries && (
+                <Button 
+                  className="w-full" 
+                  variant="outline" 
+                  onClick={onClearAllBoundaries}
+                >
+                  Clear All Boundaries
+                </Button>
+              )}
+            </div>
+          </>
         )}
-        
-        <div className="grid grid-cols-1 gap-1 mt-2">
-          {onGenerateNewPanelsInBoundary && (
-            <Button 
-              className="w-full" 
-              onClick={onGenerateNewPanelsInBoundary}
-              variant="default"
-            >
-              Generate Panels in All Boundaries
-            </Button>
-          )}
-          {onClearAllBoundaries && (
-            <Button 
-              className="w-full" 
-              variant="outline" 
-              onClick={onClearAllBoundaries}
-            >
-              Clear All Boundaries
-            </Button>
-          )}
-        </div>
       </div>
       
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
@@ -167,6 +172,17 @@ export default function Controls({
             </Button>
           )}
         </div>
+        
+        {/* Add the Save Layout button */}
+        {onSaveLayout && (
+          <Button 
+            className="w-full mt-2" 
+            variant="default"
+            onClick={onSaveLayout}
+          >
+            Save Current Layout
+          </Button>
+        )}
       </div>
       
       <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">

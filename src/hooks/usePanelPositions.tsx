@@ -1,8 +1,10 @@
+
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
 import * as THREE from 'three';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+import { toast } from 'sonner';
 
 // Define group size and spacing constants
 const PANELS_PER_GROUP = 16; // 4x4 grid per group
@@ -35,99 +37,52 @@ export interface UsePanelPositionsProps {
   boundaries?: BoundaryPoint[][];
 }
 
-export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePanelPositionsProps = {}) {
+export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePanelPositionsProps = {}) {
   const [panelPositions, setPanelPositions] = useState<InstanceData[]>([]);
   const [selectedPanelId, setSelectedPanelId] = useState<number | null>(null);
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize panel positions with default panel groups, not using boundaries
+  // Initialize panel positions - now starts with empty array by default
   useEffect(() => {
-    console.log(`Initializing panels with default layout`);
+    console.log(`Initializing panels with empty layout`);
+    
+    // Try to load saved panel layout from localStorage
     try {
-      const instances: InstanceData[] = [];
-      
-      // Create default panels in a grid pattern
-      createDefaultPanels(instances, initialCount);
-      
-      console.log(`Placed ${instances.length} panels`);
-      setPanelPositions(instances);
-      setInitialPositions(instances);
+      const savedLayout = localStorage.getItem('solar-station-panel-layout');
+      if (savedLayout) {
+        const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
+        setPanelPositions(parsedLayout);
+        setInitialPositions(parsedLayout);
+        console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
+        toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+      } else {
+        // Start with empty array if no saved layout
+        setPanelPositions([]);
+        setInitialPositions([]);
+      }
       setIsInitialized(true);
     } catch (error) {
       console.error("Error initializing panel positions:", error);
+      // Fallback to empty array
+      setPanelPositions([]);
+      setInitialPositions([]);
+      setIsInitialized(true);
     }
-  }, [initialCount]);
+  }, []);
 
-  // Helper function to create default panels in groups
-  const createDefaultPanels = (instances: InstanceData[], count: number) => {
-    // Calculate number of groups needed
-    const groupsNeeded = Math.ceil(count / PANELS_PER_GROUP);
-    
-    // Calculate the grid dimensions for groups
-    const groupGridSize = Math.ceil(Math.sqrt(groupsNeeded));
-    
-    // Calculate offset to center the entire grid
-    const totalGridWidth = (groupGridSize - 1) * GROUP_SPACING;
-    const centerOffsetX = totalGridWidth / 2;
-    const centerOffsetZ = totalGridWidth / 2;
-    
-    // Generate panels in groups
-    for (let g = 0; g < groupsNeeded; g++) {
-      // Calculate group position in the larger grid
-      const groupRow = Math.floor(g / groupGridSize);
-      const groupCol = g % groupGridSize;
-      
-      // Center the entire grid by subtracting the offset
-      const groupCenterX = groupCol * GROUP_SPACING - centerOffsetX;
-      const groupCenterZ = groupRow * GROUP_SPACING - centerOffsetZ;
-      
-      // Calculate how many panels to create in this group
-      const panelsInThisGroup = Math.min(
-        PANELS_PER_GROUP, 
-        count - g * PANELS_PER_GROUP
-      );
-      
-      if (panelsInThisGroup <= 0) break;
-      
-      // Create panels in a smaller grid within the group
-      const panelsPerRow = 4; // 4x4 grid within each group
-      
-      for (let p = 0; p < panelsInThisGroup; p++) {
-        const panelRow = Math.floor(p / panelsPerRow);
-        const panelCol = p % panelsPerRow;
-        
-        // Calculate panel position within the group
-        const x = groupCenterX + (panelCol - 1.5) * PANEL_SPACING;
-        const z = groupCenterZ + (panelRow - 1.5) * PANEL_SPACING;
-        
-        // Get ground height at this position
-        const groundHeight = getHeightAtPosition(x, z);
-        
-        // Calculate global panel ID
-        const panelId = g * PANELS_PER_GROUP + p;
-        
-        // Create panel instance with consistent rotation within group
-        // All panels in a group have same rotation for a uniform appearance
-        const groupRotationY = (Math.random() - 0.5) * 0.1; // Slight variation between groups
-        
-        instances.push({
-          id: panelId,
-          position: [
-            x, 
-            1.0 + groundHeight,
-            z
-          ],
-          rotation: [
-            -Math.PI / 8, // Fixed tilt for all panels in group
-            groupRotationY,
-            0
-          ],
-          scale: [1, 1, 1]
-        });
-      }
+  // Function to save the current panel layout
+  const saveCurrentLayout = useCallback(() => {
+    try {
+      localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
+      toast.success(`Saved ${panelPositions.length} panels to layout`);
+      setInitialPositions(panelPositions);
+      console.log(`Saved ${panelPositions.length} panels to layout`);
+    } catch (error) {
+      console.error("Error saving panel layout:", error);
+      toast.error("Failed to save panel layout");
     }
-  };
+  }, [panelPositions]);
 
   // Function to add new panels within a specific boundary
   const addNewPanelsInBoundary = useCallback((boundary: BoundaryPoint[]) => {
@@ -228,7 +183,14 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     setPanelPositions(prev => 
       prev.map(panel => 
         panel.id === id 
-          ? { ...panel, position } 
+          ? { 
+              ...panel, 
+              position: [
+                panel.position[0] + position[0], 
+                panel.position[1] + position[1], 
+                panel.position[2] + position[2]
+              ] 
+            } 
           : panel
       )
     );
@@ -239,7 +201,14 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     setPanelPositions(prev => 
       prev.map(panel => 
         panel.id === id 
-          ? { ...panel, rotation } 
+          ? { 
+              ...panel, 
+              rotation: [
+                panel.rotation[0] + rotation[0], 
+                panel.rotation[1] + rotation[1], 
+                panel.rotation[2] + rotation[2]
+              ] 
+            } 
           : panel
       )
     );
@@ -264,6 +233,7 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     resetPanelPositions,
     isInitialized,
     addNewPanelsInBoundary,
-    clearAllPanels
+    clearAllPanels,
+    saveCurrentLayout
   };
 }
