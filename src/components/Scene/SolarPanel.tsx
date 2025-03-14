@@ -122,10 +122,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const batchSize = 500;
   const panelBatches = useMemo(() => {
     const batches = [];
-    if (panelPositions && panelPositions.length > 0) {
-      for (let i = 0; i < panelPositions.length; i += batchSize) {
-        batches.push(panelPositions.slice(i, i + batchSize));
-      }
+    for (let i = 0; i < panelPositions.length; i += batchSize) {
+      batches.push(panelPositions.slice(i, i + batchSize));
     }
     return batches;
   }, [panelPositions, batchSize]);
@@ -133,33 +131,34 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const handleClick = (event: any) => {
     event.stopPropagation();
     
-    if (event.intersections && event.intersections.length > 0) {
+    if (event.intersections.length > 0) {
       const intersection = event.intersections[0];
-      
-      if (intersection.instanceId !== undefined && intersection.object.userData.batchIndex !== undefined) {
-        const batchIndex = Math.floor(intersection.object.userData.batchIndex);
+      if (intersection.instanceId !== undefined) {
+        const batchIndex = Math.floor(intersection.object.userData.batchIndex || 0);
         const panelId = batchIndex * batchSize + intersection.instanceId;
         
-        if (panelId < panelPositions.length) {
-          const actualPanelId = panelPositions[panelId].id;
-          console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
-          onSelectPanel(actualPanelId);
-          event.nativeEvent.stopPropagation();
+        console.log("Panel clicked:", panelId, "Selected panel:", selectedPanelId);
+        
+        if (selectedPanelId === panelId) {
+          onSelectPanel(null);
+        } else {
+          onSelectPanel(panelId);
         }
       } else if (intersection.object.userData.panelId !== undefined) {
-        const panelId = intersection.object.userData.panelId;
-        console.log(`Selected panel clicked: panelId=${panelId}`);
-        onSelectPanel(panelId);
-        event.nativeEvent.stopPropagation();
-      } else {
-        console.log('Clicked on panel group but not a specific panel');
+        console.log("Individual panel clicked:", intersection.object.userData.panelId);
+        
+        if (selectedPanelId === intersection.object.userData.panelId) {
+          onSelectPanel(null);
+        } else {
+          onSelectPanel(intersection.object.userData.panelId);
+        }
       }
     }
   };
   
   const selectedPanel = useMemo(() => {
     if (selectedPanelId === null) return null;
-    return panelPositions?.find(panel => panel.id === selectedPanelId) || null;
+    return panelPositions.find(panel => panel.id === selectedPanelId) || null;
   }, [panelPositions, selectedPanelId]);
   
   const sunlitPanelRefs = useRef<THREE.InstancedMesh[]>([]);
@@ -167,8 +166,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const bracketInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
   
   useEffect(() => {
-    if (!panelBatches.length) return;
-    
     panelBatches.forEach((batch, batchIndex) => {
       const sunlitPanelMesh = sunlitPanelRefs.current[batchIndex];
       const shadowedPanelMesh = shadowedPanelRefs.current[batchIndex];
@@ -212,12 +209,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     });
   }, [panelBatches, selectedPanelId, panelPositions]);
   
-  if (!panelPositions || panelPositions.length === 0) {
-    return null;
-  }
-  
   return (
-    <group onClick={handleClick} userData={{ type: 'panel-group' }}>
+    <group onClick={handleClick}>
       {panelBatches.map((batch, batchIndex) => (
         <group key={`batch-${batchIndex}`}>
           <instancedMesh
@@ -227,8 +220,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick} // Add explicit onClick handler
+            userData={{ type: 'selectable', componentType: 'panel', batchIndex }}
           />
           
           <instancedMesh
@@ -238,8 +230,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick} // Add explicit onClick handler
+            userData={{ type: 'selectable', componentType: 'panel', batchIndex }}
           />
           
           <instancedMesh
@@ -249,8 +240,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[bracketGeometry, materials.bracketMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick} // Add explicit onClick handler
+            userData={{ type: 'selectable', componentType: 'panel', batchIndex }}
           />
         </group>
       ))}
@@ -263,11 +253,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             scale={new THREE.Vector3(1, 1, 1)}
             castShadow
             receiveShadow
-            userData={{ type: 'panel', panelId: selectedPanel.id }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectPanel(selectedPanel.id);
-            }}
+            userData={{ type: 'selectable', componentType: 'panel', panelId: selectedPanel.id }}
           >
             <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
@@ -283,13 +269,9 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           <mesh
             position={[selectedPanel.position[0], selectedPanel.position[1] - 0.75, selectedPanel.position[2]]}
             rotation={new THREE.Euler(...selectedPanel.rotation)}
-            userData={{ type: 'panel', panelId: selectedPanel.id }}
+            userData={{ type: 'selectable', componentType: 'panel', panelId: selectedPanel.id }}
             castShadow
             receiveShadow
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectPanel(selectedPanel.id);
-            }}
           >
             <primitive object={bracketGeometry} />
             <meshStandardMaterial 

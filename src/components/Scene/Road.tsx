@@ -8,15 +8,13 @@ interface RoadProps {
   width?: number;
   color?: string;
   elevation?: number;
-  position?: [number, number, number]; // Added position prop
 }
 
 export default function Road({ 
   boundary = [], 
   width = 10, 
   color = '#2a2a2a',
-  elevation = 0.1,
-  position = [0, 0, 0] // Default position
+  elevation = 0.1
 }: RoadProps) {
   // Only render if we have at least 3 points to form a valid path
   const roadMesh = useMemo(() => {
@@ -48,22 +46,16 @@ export default function Road({
     });
 
     return (
-      <group>
-        <mesh 
-          geometry={tubeGeometry} 
-          material={roadMaterial} 
-          receiveShadow 
-          position={[0, 0, 0]}
-        />
-      </group>
+      <mesh 
+        geometry={tubeGeometry} 
+        material={roadMaterial} 
+        receiveShadow 
+        position={[0, 0, 0]}
+      />
     );
   }, [boundary, width, color, elevation]);
 
   if (!roadMesh) return null;
 
-  return (
-    <group position={position}>
-      {roadMesh}
-    </group>
-  );
+  return roadMesh;
 }

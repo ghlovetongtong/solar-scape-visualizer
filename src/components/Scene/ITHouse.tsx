@@ -1,92 +1,35 @@
-import React, { useRef } from 'react';
+
+import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
-import { useThree, useFrame } from '@react-three/fiber';
 
 interface ITHouseProps {
   position: THREE.Vector3;
-  isDragging?: boolean;
-  onDragStart?: () => void;
-  onDragEnd?: (position: [number, number, number]) => void;
-  onDrag?: (position: [number, number, number]) => void;
 }
 
-export default function ITHouse({ 
-  position,
-  isDragging = false,
-  onDragStart,
-  onDragEnd,
-  onDrag
-}: ITHouseProps) {
-  const groupRef = useRef<THREE.Group>(null);
-  const { raycaster, camera, mouse } = useThree();
-  
-  useFrame(() => {
-    if (isDragging && groupRef.current && onDrag) {
-      // Create a plane parallel to the ground at y=0
-      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
-      
-      // Cast ray from mouse position
-      raycaster.setFromCamera(mouse, camera);
-      
-      // Find intersection with drag plane
-      const intersection = new THREE.Vector3();
-      if (raycaster.ray.intersectPlane(dragPlane, intersection)) {
-        // Only update X and Z positions (keep Y constant)
-        const newPosition: [number, number, number] = [
-          intersection.x,
-          position.y, // Keep Y position constant
-          intersection.z
-        ];
-        
-        // Call the drag callback with the new position
-        onDrag(newPosition);
-      }
-    }
-  });
-  
-  const handlePointerDown = (e: THREE.Event) => {
-    e.stopPropagation();
-    
-    if (onDragStart) {
-      onDragStart();
-    }
-  };
-  
-  const handlePointerUp = (e: THREE.Event) => {
-    e.stopPropagation();
-    
-    if (isDragging && onDragEnd) {
-      const newPosition: [number, number, number] = [position.x, position.y, position.z];
-      onDragEnd(newPosition);
-    }
-  };
-
+export default function ITHouse({ position }: ITHouseProps) {
   return (
-    <group 
-      position={position}
-      ref={groupRef}
-      onPointerDown={handlePointerDown}
-      onPointerUp={handlePointerUp}
-      onPointerOut={handlePointerUp}
-    >
+    <group position={position}>
+      {/* Main building */}
       <mesh 
         castShadow 
         receiveShadow 
         position={[0, 2, 0]}
       >
         <boxGeometry args={[10, 4, 6]} />
-        <meshStandardMaterial color={isDragging ? "#f8f8f8" : "#f1f1f1"} roughness={0.7} />
+        <meshStandardMaterial color="#f1f1f1" roughness={0.7} />
       </mesh>
       
+      {/* Roof */}
       <mesh 
         castShadow 
         position={[0, 4.5, 0]}
       >
         <boxGeometry args={[11, 1, 7]} />
-        <meshStandardMaterial color={isDragging ? "#777777" : "#555555"} roughness={0.6} />
+        <meshStandardMaterial color="#555555" roughness={0.6} />
       </mesh>
       
+      {/* Door */}
       <mesh 
         position={[0, 1.2, 3.01]}
       >
@@ -94,6 +37,7 @@ export default function ITHouse({
         <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.3} />
       </mesh>
       
+      {/* Windows */}
       <mesh 
         position={[-3, 2.5, 3.01]}
       >
@@ -120,6 +64,7 @@ export default function ITHouse({
         />
       </mesh>
       
+      {/* AC unit */}
       <mesh 
         castShadow 
         position={[5.5, 2, 0]}
@@ -128,6 +73,7 @@ export default function ITHouse({
         <meshStandardMaterial color="#888888" roughness={0.5} />
       </mesh>
       
+      {/* Antenna */}
       <mesh 
         position={[4, 5.5, 2]}
       >
@@ -135,6 +81,7 @@ export default function ITHouse({
         <meshStandardMaterial color="#333333" roughness={0.5} />
       </mesh>
       
+      {/* Antenna dish */}
       <mesh 
         position={[4, 6.5, 2]}
         rotation={[0, 0, Math.PI / 2]}
@@ -143,6 +90,7 @@ export default function ITHouse({
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
+      {/* Building Label */}
       <Text
         position={[0, 5, 3.5]}
         rotation={[0, 0, 0]}
