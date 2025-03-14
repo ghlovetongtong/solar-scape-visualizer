@@ -171,7 +171,8 @@ export default function SceneContainer() {
     isInitialized,
     addNewPanelsInBoundary,
     clearAllPanels,
-    saveCurrentLayout
+    saveCurrentLayout,
+    saveAsDefaultLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
   
   useEffect(() => {
@@ -501,6 +502,12 @@ export default function SceneContainer() {
     }
   }, [saveCurrentLayout]);
 
+  const handleSaveAsDefaultLayout = useCallback(() => {
+    if (saveAsDefaultLayout) {
+      saveAsDefaultLayout();
+    }
+  }, [saveAsDefaultLayout]);
+
   useEffect(() => {
     const savedData = localStorage.getItem('solar-station-boundaries');
     if (savedData) {
@@ -827,6 +834,7 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
+        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
       />
       
       <Loader />

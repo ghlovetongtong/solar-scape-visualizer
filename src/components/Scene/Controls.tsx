@@ -38,6 +38,7 @@ interface ControlsProps {
   onClearAllPanels?: () => void;
   onGenerateNewPanelsInBoundary?: () => void;
   onSaveLayout?: () => void;
+  onSaveAsDefaultLayout?: () => void; // 新增保存为默认布局的回调
 }
 
 export default function Controls({
@@ -72,7 +73,8 @@ export default function Controls({
   onClearAllBoundaries,
   onClearAllPanels,
   onGenerateNewPanelsInBoundary,
-  onSaveLayout
+  onSaveLayout,
+  onSaveAsDefaultLayout  // 新增
 }: ControlsProps) {
   const [adjustValue, setAdjustValue] = useState(0.5);
   
@@ -255,15 +257,27 @@ export default function Controls({
           )}
         </div>
         
-        {onSaveLayout && (
-          <Button 
-            className="w-full mt-2" 
-            variant="default"
-            onClick={onSaveLayout}
-          >
-            Save Current Layout
-          </Button>
-        )}
+        <div className="grid grid-cols-1 gap-1 mt-2">
+          {onSaveLayout && (
+            <Button 
+              className="w-full" 
+              variant="default"
+              onClick={onSaveLayout}
+            >
+              Save Current Layout
+            </Button>
+          )}
+          
+          {onSaveAsDefaultLayout && (
+            <Button 
+              className="w-full mt-1" 
+              variant="secondary"
+              onClick={onSaveAsDefaultLayout}
+            >
+              Save As Default Layout
+            </Button>
+          )}
+        </div>
       </div>
       
       <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">
