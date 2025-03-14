@@ -24,7 +24,7 @@ export default function Camera({
   const cameraRef = useRef<THREE.Group>(null);
   const { raycaster, camera, mouse } = useThree();
   
-  // Rotate camera slightly over time (only if not being dragged)
+  // Rotate camera to face center and add subtle animation
   useFrame((state) => {
     if (cameraRef.current) {
       if (isDragging && onDrag) {
@@ -48,14 +48,19 @@ export default function Camera({
           onDrag(cameraIndex, newPosition);
         }
       } else {
-        // Rotate the camera to face inward toward the panels
+        // Rotate the camera to face inward toward the center
         const targetPosition = new THREE.Vector3(0, 0, 0); // Center of the scene
         const cameraPosition = cameraRef.current.position;
         const direction = new THREE.Vector3().subVectors(targetPosition, cameraPosition).normalize();
         
-        // Set camera rotation to face inward, with a slight oscillation
+        // Calculate angle to face center
         const angle = Math.atan2(direction.x, direction.z);
-        cameraRef.current.rotation.y = angle + Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.1;
+        
+        // Add subtle oscillation based on time and camera index for visual variety
+        const oscillation = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.1;
+        
+        // Set the rotation to face center with slight movement
+        cameraRef.current.rotation.y = angle + oscillation;
       }
     }
   });

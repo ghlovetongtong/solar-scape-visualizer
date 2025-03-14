@@ -498,18 +498,19 @@ export default function SceneContainer() {
     }
 
     return {
-      inverters: calculatedInverterPositions.length > 0 ? calculatedInverterPositions : defaultPositions.inverters,
-      transformers: calculatedTransformerPositions.length > 0 ? calculatedTransformerPositions : defaultPositions.transformers,
-      itHouse: calculatedItHousePosition[0] !== 0 ? calculatedItHousePosition : defaultPositions.itHouse,
+      inverters: inverterPositions.length > 0 ? inverterPositions : defaultPositions.inverters,
+      transformers: transformerPositions,
+      itHouse: itHousePosition,
       cameras: cameraPositions
     };
-  }, [isInitialized, panelPositions, calculatedInverterPositions, calculatedTransformerPositions, calculatedItHousePosition]);
+  }, [isInitialized, panelPositions]);
 
+  // Get calculated positions from the callback
   const positions = calculateSecondaryPositions();
   const calculatedInverterPositions = positions.inverters;
+  const calculatedCameraPositions = positions.cameras;
   const calculatedTransformerPositions = positions.transformers;
   const calculatedItHousePosition = positions.itHouse;
-  const calculatedCameraPositions = positions.cameras;
 
   useEffect(() => {
     if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
@@ -792,108 +793,4 @@ export default function SceneContainer() {
           <Terrain 
             drawingEnabled={drawingMode}
             onBoundaryComplete={handleBoundaryComplete}
-            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
-          />
-          
-          <SolarPanels 
-            panelPositions={panelPositions} 
-            selectedPanelId={selectedPanelId}
-            onSelectPanel={selectPanel}
-          />
-          
-          {inverterPositions.map((position, index) => (
-            <Inverter 
-              key={`inverter-${index}`}
-              position={new THREE.Vector3(...position)}
-              inverterIndex={index}
-              isSelected={selectedInverterIndex === index}
-              isDragging={draggingObject?.type === 'inverter' && draggingObject.index === index}
-              onClick={(e) => {
-                console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
-                // Toggle selection state
-                setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
-                // Deselect any panels when selecting an inverter
-                selectPanel(null);
-                // Prevent propagation
-                e.stopPropagation();
-                if (e.nativeEvent) e.nativeEvent.stopPropagation();
-              }}
-              onDragStart={() => handleStartDrag('inverter', index)}
-              onDragEnd={() => handleEndDrag()}
-              onDrag={handleDragInverter}
-            />
-          ))}
-          
-          {cameraPositions.map((position, index) => (
-            <Camera 
-              key={`camera-${index}`}
-              position={new THREE.Vector3(...position)}
-              cameraIndex={index}
-              isDragging={draggingObject?.type === 'camera' && draggingObject.index === index}
-              onDragStart={() => handleStartDrag('camera', index)}
-              onDragEnd={() => handleEndDrag()}
-              onDrag={handleDragCamera}
-            />
-          ))}
-          
-          {transformerPositions.map((position, index) => (
-            <TransformerStation 
-              key={`transformer-${index}`}
-              position={new THREE.Vector3(...position)}
-              transformerIndex={index}
-              isDragging={draggingObject?.type === 'transformer' && draggingObject.index === index}
-              onDragStart={() => handleStartDrag('transformer', index)}
-              onDragEnd={() => handleEndDrag()}
-              onDrag={handleDragTransformer}
-            />
-          ))}
-          
-          <ITHouse 
-            position={new THREE.Vector3(...itHousePosition)} 
-            isDragging={draggingObject?.type === 'itHouse'}
-            onDragStart={() => handleStartDrag('itHouse')}
-            onDragEnd={() => handleEndDrag()}
-            onDrag={handleDragITHouse}
-          />
-          
-          <OrbitControls 
-            ref={orbitControlsRef}
-            enableDamping 
-            dampingFactor={0.05} 
-            maxDistance={800}
-            minDistance={10}
-            maxPolarAngle={Math.PI / 2 - 0.1}
-            minPolarAngle={0.1}
-            target={new THREE.Vector3(...panelCenter)}
-          />
-          
-          {showStats && <Stats />}
-        </Suspense>
-      </Canvas>
-      
-      <Controls 
-        showStats={showStats}
-        setShowStats={setShowStats}
-        timeOfDay={timeOfDay}
-        setTimeOfDay={setTimeOfDay}
-        onResetPanels={resetPanelPositions}
-        selectedPanelId={selectedPanelId}
-        onUpdatePanelPosition={updatePanelPosition}
-        onUpdatePanelRotation={updatePanelRotation}
-        drawingMode={drawingMode}
-        setDrawingMode={setDrawingMode}
-        onSaveBoundary={handleSaveBoundary}
-        onClearBoundary={handleClearBoundary}
-        onClearAllBoundaries={handleClearAllBoundaries}
-        onClearAllPanels={handleClearAllPanels}
-        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
-        onSaveLayout={handleSaveLayout}
-        selectedInverterIndex={selectedInverterIndex}
-        onDeselectInverter={() => setSelectedInverterIndex(null)}
-        onUpdateInverterPosition={handleUpdateInverterPosition}
-      />
-      
-      <Loader />
-    </div>
-  );
-}
+            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])
