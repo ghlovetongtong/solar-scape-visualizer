@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -174,7 +175,7 @@ export default function SceneContainer() {
     }
   }, [drawingMode]);
 
-  const calculatePanelCenter = useCallback(() => {
+  const calculatePanelCenter = useCallback((): [number, number, number] => {
     if (!panelPositions || panelPositions.length === 0) {
       return [0, 0, 0];
     }
@@ -191,7 +192,7 @@ export default function SceneContainer() {
     const centerY = sumY / panelPositions.length;
     const centerZ = sumZ / panelPositions.length;
     
-    return [centerX, centerY, centerZ];
+    return [centerX, centerY, centerZ] as [number, number, number];
   }, [panelPositions]);
   
   const panelCenter = calculatePanelCenter();
@@ -444,7 +445,7 @@ export default function SceneContainer() {
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
-            target={panelCenter}
+            target={new THREE.Vector3(...panelCenter)}
           />
           
           {showStats && <Stats />}
