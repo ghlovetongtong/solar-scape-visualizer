@@ -148,14 +148,16 @@ export default function SceneContainer() {
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const orbitControlsRef = useRef<any>(null);
   
-  const [selectedComponentType, setSelectedComponentType] = useState<'panel' | 'inverter' | 'transformer' | 'camera' | null>(null);
+  const [selectedComponentType, setSelectedComponentType] = useState<'panel' | 'inverter' | 'transformer' | 'camera' | 'itHouse' | null>(null);
   const [selectedInverterId, setSelectedInverterId] = useState<number | null>(null);
   const [selectedTransformerId, setSelectedTransformerId] = useState<number | null>(null);
   const [selectedCameraId, setSelectedCameraId] = useState<number | null>(null);
+  const [isITHouseSelected, setIsITHouseSelected] = useState<boolean>(false);
   
   const [inverterPositionsState, setInverterPositionsState] = useState<Array<[number, number, number]>>([]);
   const [transformerPositionsState, setTransformerPositionsState] = useState<Array<[number, number, number]>>([]);
   const [cameraPositionsState, setCameraPositionsState] = useState<Array<[number, number, number]>>([]);
+  const [itHousePositionState, setITHousePositionState] = useState<[number, number, number]>([0, 0, 0]);
   
   const [inverterRotations, setInverterRotations] = useState<Array<[number, number, number]>>([]);
   const [transformerRotations, setTransformerRotations] = useState<Array<[number, number, number]>>([]);
@@ -546,9 +548,13 @@ export default function SceneContainer() {
       if (cameraPositionsState.length === 0) {
         setCameraPositionsState([...positions.cameras]);
       }
+      
+      if (itHousePositionState[0] === 0 && itHousePositionState[1] === 0 && itHousePositionState[2] === 0) {
+        setITHousePositionState([...positions.itHouse]);
+      }
     }
   }, [positions, inverterRotations.length, transformerRotations.length, cameraRotations.length, 
-      inverterPositionsState.length, transformerPositionsState.length, cameraPositionsState.length]);
+      inverterPositionsState.length, transformerPositionsState.length, cameraPositionsState.length, itHousePositionState]);
 
   const handleSelectInverter = useCallback((index: number) => {
     console.log("Selecting inverter:", index);
@@ -560,6 +566,7 @@ export default function SceneContainer() {
       setSelectedComponentType('inverter');
       setSelectedTransformerId(null);
       setSelectedCameraId(null);
+      setIsITHouseSelected(false);
       if (selectPanel) {
         selectPanel(null);
       }
@@ -575,6 +582,7 @@ export default function SceneContainer() {
       setSelectedComponentType('transformer');
       setSelectedInverterId(null);
       setSelectedCameraId(null);
+      setIsITHouseSelected(false);
       selectPanel(null);
     }
   };
@@ -588,6 +596,21 @@ export default function SceneContainer() {
       setSelectedComponentType('camera');
       setSelectedInverterId(null);
       setSelectedTransformerId(null);
+      setIsITHouseSelected(false);
+      selectPanel(null);
+    }
+  };
+  
+  const handleSelectITHouse = () => {
+    if (isITHouseSelected && selectedComponentType === 'itHouse') {
+      setIsITHouseSelected(false);
+      setSelectedComponentType(null);
+    } else {
+      setIsITHouseSelected(true);
+      setSelectedComponentType('itHouse');
+      setSelectedInverterId(null);
+      setSelectedTransformerId(null);
+      setSelectedCameraId(null);
       selectPanel(null);
     }
   };
@@ -598,6 +621,7 @@ export default function SceneContainer() {
       setSelectedInverterId(null);
       setSelectedTransformerId(null);
       setSelectedCameraId(null);
+      setIsITHouseSelected(false);
     } else if (selectedComponentType === 'panel') {
       setSelectedComponentType(null);
     }
@@ -617,6 +641,38 @@ export default function SceneContainer() {
     );
   };
   
+  const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setInverterPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Inverter ${id + 1} to new position`);
+  };
+  
+  const handleTransformerPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setTransformerPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Transformer ${id + 1} to new position`);
+  };
+  
+  const handleCameraPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setCameraPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Camera ${id + 1} to new position`);
+  };
+  
+  const handleITHousePositionChange = (newPosition: THREE.Vector3) => {
+    setITHousePositionState([newPosition.x, newPosition.y, newPosition.z]);
+    toast.success('Moved IT House to new position');
+  };
+  
   const updateInverterRotation = (id: number, rotation: [number, number, number]) => {
     setInverterRotations(prev => 
       prev.map((rot, index) => 
@@ -631,20 +687,6 @@ export default function SceneContainer() {
     );
   };
   
-  const updateTransformerPosition = (id: number, position: [number, number, number]) => {
-    setTransformerPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
   const updateTransformerRotation = (id: number, rotation: [number, number, number]) => {
     setTransformerRotations(prev => 
       prev.map((rot, index) => 
@@ -655,20 +697,6 @@ export default function SceneContainer() {
               rot[2] + rotation[2]
             ] as [number, number, number]
           : rot
-      )
-    );
-  };
-  
-  const updateCameraPosition = (id: number, position: [number, number, number]) => {
-    setCameraPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
       )
     );
   };
@@ -714,6 +742,7 @@ export default function SceneContainer() {
             setSelectedInverterId(null);
             setSelectedTransformerId(null);
             setSelectedCameraId(null);
+            setIsITHouseSelected(false);
             if (selectPanel) {
               selectPanel(null);
             }
@@ -729,6 +758,7 @@ export default function SceneContainer() {
             setSelectedInverterId(null);
             setSelectedTransformerId(null);
             setSelectedCameraId(null);
+            setIsITHouseSelected(false);
             if (selectPanel) {
               selectPanel(null);
             }
@@ -760,10 +790,11 @@ export default function SceneContainer() {
               inverterIndex={index}
               isSelected={selectedInverterId === index}
               onSelect={() => handleSelectInverter(index)}
+              onPositionChange={(newPos) => handleInverterPositionChange(index, newPos)}
             />
           ))}
           
-          {cameraPositions.map((position, index) => (
+          {cameraPositionsState.map((position, index) => (
             <Camera 
               key={`camera-${index}`}
               position={new THREE.Vector3(...position)}
@@ -771,10 +802,11 @@ export default function SceneContainer() {
               cameraIndex={index}
               isSelected={selectedCameraId === index}
               onSelect={() => handleSelectCamera(index)}
+              onPositionChange={(newPos) => handleCameraPositionChange(index, newPos)}
             />
           ))}
           
-          {transformerPositions.map((position, index) => (
+          {transformerPositionsState.map((position, index) => (
             <TransformerStation 
               key={`transformer-${index}`}
               position={new THREE.Vector3(...position)}
@@ -782,10 +814,26 @@ export default function SceneContainer() {
               transformerIndex={index}
               isSelected={selectedTransformerId === index}
               onSelect={() => handleSelectTransformer(index)}
+              onPositionChange={(newPos) => handleTransformerPositionChange(index, newPos)}
             />
           ))}
           
-          <ITHouse position={new THREE.Vector3(...itHousePosition)} />
+          <ITHouse 
+            position={new THREE.Vector3(...itHousePositionState)} 
+            isSelected={isITHouseSelected}
+            onSelect={handleSelectITHouse}
+            onPositionChange={handleITHousePositionChange}
+          />
+          
+          {savedBoundaries.map((boundary, index) => (
+            <Road 
+              key={`road-${index}`}
+              boundary={boundary}
+              width={10}
+              color="#2a2a2a"
+              elevation={0.1}
+            />
+          ))}
           
           <OrbitControls 
             ref={orbitControlsRef}
@@ -796,6 +844,7 @@ export default function SceneContainer() {
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
             target={new THREE.Vector3(...panelCenter)}
+            enabled={!drawingMode && selectedComponentType === null}
           />
           
           {showStats && <Stats />}
@@ -841,3 +890,4 @@ export default function SceneContainer() {
     </div>
   );
 }
+

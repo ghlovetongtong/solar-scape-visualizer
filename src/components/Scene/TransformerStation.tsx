@@ -2,6 +2,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
@@ -9,6 +10,7 @@ interface TransformerStationProps {
   transformerIndex: number;
   isSelected?: boolean;
   onSelect?: () => void;
+  onPositionChange?: (position: THREE.Vector3) => void;
 }
 
 export default function TransformerStation({ 
@@ -16,8 +18,18 @@ export default function TransformerStation({
   rotation = new THREE.Euler(), 
   transformerIndex, 
   isSelected = false, 
-  onSelect 
+  onSelect,
+  onPositionChange
 }: TransformerStationProps) {
+  
+  const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
+    enabled: isSelected,
+    onDragEnd: (newPosition) => {
+      if (onPositionChange) {
+        onPositionChange(newPosition);
+      }
+    }
+  });
   
   const handleClick = (e: any) => {
     e.stopPropagation();
@@ -27,7 +39,14 @@ export default function TransformerStation({
   };
   
   return (
-    <group position={position} rotation={rotation} onClick={handleClick}>
+    <group 
+      ref={groupRef}
+      position={position} 
+      rotation={rotation} 
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      userData={{ type: 'selectable', componentType: 'transformer', draggable: true }}
+    >
       {/* Platform/base */}
       <mesh 
         receiveShadow 
@@ -35,7 +54,7 @@ export default function TransformerStation({
       >
         <boxGeometry args={[10, 0.6, 8]} />
         <meshStandardMaterial 
-          color={isSelected ? "#94a3b8" : "#555555"} 
+          color={isDragging ? "#b1cdff" : isSelected ? "#94a3b8" : "#555555"} 
           roughness={0.8} 
           emissive={isSelected ? "#94a3b8" : "#000000"}
           emissiveIntensity={isSelected ? 0.2 : 0}
@@ -50,7 +69,7 @@ export default function TransformerStation({
       >
         <boxGeometry args={[6, 4, 4]} />
         <meshStandardMaterial 
-          color={isSelected ? "#60a5fa" : "#8a898c"} 
+          color={isDragging ? "#87c2ff" : isSelected ? "#60a5fa" : "#8a898c"} 
           roughness={0.5} 
           metalness={0.4}
           emissive={isSelected ? "#60a5fa" : "#000000"}

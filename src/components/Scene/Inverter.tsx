@@ -2,6 +2,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface InverterProps {
   position: THREE.Vector3;
@@ -9,6 +10,7 @@ interface InverterProps {
   inverterIndex: number;
   isSelected?: boolean;
   onSelect?: () => void;
+  onPositionChange?: (position: THREE.Vector3) => void;
 }
 
 export default function Inverter({ 
@@ -16,8 +18,18 @@ export default function Inverter({
   rotation = new THREE.Euler(), 
   inverterIndex, 
   isSelected = false, 
-  onSelect 
+  onSelect,
+  onPositionChange
 }: InverterProps) {
+  
+  const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
+    enabled: isSelected,
+    onDragEnd: (newPosition) => {
+      if (onPositionChange) {
+        onPositionChange(newPosition);
+      }
+    }
+  });
   
   const handleClick = (e: THREE.Event) => {
     e.stopPropagation();
@@ -28,10 +40,12 @@ export default function Inverter({
   
   return (
     <group 
+      ref={groupRef}
       position={position} 
       rotation={rotation} 
-      onClick={handleClick} 
-      userData={{ type: 'selectable', componentType: 'inverter' }}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      userData={{ type: 'selectable', componentType: 'inverter', draggable: true }}
     >
       {/* Main inverter box */}
       <mesh 
@@ -42,7 +56,7 @@ export default function Inverter({
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         <meshPhysicalMaterial 
-          color={isSelected ? "#38BDF8" : "#2b2d42"} 
+          color={isDragging ? "#60cdff" : isSelected ? "#38BDF8" : "#2b2d42"} 
           roughness={0.6} 
           metalness={0.4}
           emissive={isSelected ? "#38BDF8" : "#000000"}
@@ -85,9 +99,9 @@ export default function Inverter({
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
-          color={isSelected ? "#ffffff" : "#00ff00"} 
-          emissive={isSelected ? "#ffffff" : "#00ff00"}
-          emissiveIntensity={isSelected ? 1.5 : 1.0}
+          color={isDragging ? "#ffffff" : isSelected ? "#ffffff" : "#00ff00"} 
+          emissive={isDragging ? "#ffffff" : isSelected ? "#ffffff" : "#00ff00"}
+          emissiveIntensity={isDragging ? 2.0 : isSelected ? 1.5 : 1.0}
         />
       </mesh>
 

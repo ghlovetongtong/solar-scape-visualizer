@@ -2,14 +2,45 @@
 import React from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { useDraggable } from '@/hooks/useDraggable';
 
 interface ITHouseProps {
   position: THREE.Vector3;
+  isSelected?: boolean;
+  onSelect?: () => void;
+  onPositionChange?: (position: THREE.Vector3) => void;
 }
 
-export default function ITHouse({ position }: ITHouseProps) {
+export default function ITHouse({ 
+  position, 
+  isSelected = false,
+  onSelect,
+  onPositionChange
+}: ITHouseProps) {
+  const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
+    enabled: isSelected,
+    onDragEnd: (newPosition) => {
+      if (onPositionChange) {
+        onPositionChange(newPosition);
+      }
+    }
+  });
+
+  const handleClick = (e: THREE.Event) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect();
+    }
+  };
+
   return (
-    <group position={position}>
+    <group 
+      ref={groupRef}
+      position={position}
+      onClick={handleClick}
+      onPointerDown={handlePointerDown}
+      userData={{ type: 'selectable', componentType: 'itHouse', draggable: true }}
+    >
       {/* Main building */}
       <mesh 
         castShadow 
@@ -17,7 +48,12 @@ export default function ITHouse({ position }: ITHouseProps) {
         position={[0, 2, 0]}
       >
         <boxGeometry args={[10, 4, 6]} />
-        <meshStandardMaterial color="#f1f1f1" roughness={0.7} />
+        <meshStandardMaterial 
+          color={isDragging ? "#f8f8ff" : isSelected ? "#f8f8ff" : "#f1f1f1"} 
+          roughness={0.7}
+          emissive={isSelected ? "#e2e8f0" : "#000000"}
+          emissiveIntensity={isSelected ? 0.2 : 0}
+        />
       </mesh>
       
       {/* Roof */}
@@ -26,7 +62,10 @@ export default function ITHouse({ position }: ITHouseProps) {
         position={[0, 4.5, 0]}
       >
         <boxGeometry args={[11, 1, 7]} />
-        <meshStandardMaterial color="#555555" roughness={0.6} />
+        <meshStandardMaterial 
+          color={isSelected ? "#6b7280" : "#555555"} 
+          roughness={0.6} 
+        />
       </mesh>
       
       {/* Door */}
@@ -34,7 +73,11 @@ export default function ITHouse({ position }: ITHouseProps) {
         position={[0, 1.2, 3.01]}
       >
         <planeGeometry args={[1.2, 2.4]} />
-        <meshStandardMaterial color="#333333" roughness={0.5} metalness={0.3} />
+        <meshStandardMaterial 
+          color={isSelected ? "#4b5563" : "#333333"} 
+          roughness={0.5} 
+          metalness={0.3} 
+        />
       </mesh>
       
       {/* Windows */}
@@ -43,7 +86,7 @@ export default function ITHouse({ position }: ITHouseProps) {
       >
         <planeGeometry args={[1.5, 1.5]} />
         <meshPhysicalMaterial 
-          color="#88a8df" 
+          color={isSelected ? "#93c5fd" : "#88a8df"} 
           roughness={0.1} 
           metalness={0.2} 
           transmission={0.9}
@@ -56,7 +99,7 @@ export default function ITHouse({ position }: ITHouseProps) {
       >
         <planeGeometry args={[1.5, 1.5]} />
         <meshPhysicalMaterial 
-          color="#88a8df" 
+          color={isSelected ? "#93c5fd" : "#88a8df"} 
           roughness={0.1} 
           metalness={0.2} 
           transmission={0.9}
@@ -70,7 +113,10 @@ export default function ITHouse({ position }: ITHouseProps) {
         position={[5.5, 2, 0]}
       >
         <boxGeometry args={[1, 1, 2]} />
-        <meshStandardMaterial color="#888888" roughness={0.5} />
+        <meshStandardMaterial 
+          color={isSelected ? "#9ca3af" : "#888888"} 
+          roughness={0.5} 
+        />
       </mesh>
       
       {/* Antenna */}
@@ -87,7 +133,10 @@ export default function ITHouse({ position }: ITHouseProps) {
         rotation={[0, 0, Math.PI / 2]}
       >
         <sphereGeometry args={[0.4, 16, 16, 0, Math.PI]} />
-        <meshStandardMaterial color="#dddddd" roughness={0.4} />
+        <meshStandardMaterial 
+          color={isSelected ? "#f1f5f9" : "#dddddd"} 
+          roughness={0.4} 
+        />
       </mesh>
       
       {/* Building Label */}
