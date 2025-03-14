@@ -818,4 +818,122 @@ export default function SceneContainer() {
           }
         }}
       >
-        <CustomEnvironment time
+        <CustomEnvironment timeOfDay={timeOfDay} />
+        
+        <Suspense fallback={null}>
+          <OrbitControls 
+            ref={orbitControlsRef}
+            enableDamping
+            dampingFactor={0.05}
+            rotateSpeed={0.5}
+            minDistance={10}
+            maxDistance={500}
+            target={new THREE.Vector3(...panelCenter)}
+          />
+          
+          <SkyBox />
+          
+          <Terrain />
+          
+          <SolarPanels 
+            panelPositions={panelPositions}
+            selectedPanelId={selectedPanelId}
+            onPanelSelected={selectPanel}
+            onPanelPositionUpdate={updatePanelPosition}
+            onPanelRotationUpdate={updatePanelRotation}
+            onDragStart={handleComponentDragStart}
+            onDragEnd={() => setIsDraggingComponent(false)}
+          />
+          
+          {inverterPositionsState.map((position, index) => (
+            <Inverter 
+              key={`inverter-${index}`}
+              id={index}
+              position={position} 
+              rotation={inverterRotations[index] || [0, 0, 0]}
+              isSelected={selectedComponentType === 'inverter' && selectedInverterId === index}
+              onSelect={() => handleSelectInverter(index)}
+              onPositionChange={handleInverterPositionChange}
+              onDragStart={handleComponentDragStart}
+            />
+          ))}
+          
+          {transformerPositionsState.map((position, index) => (
+            <TransformerStation 
+              key={`transformer-${index}`}
+              id={index}
+              position={position} 
+              rotation={transformerRotations[index] || [0, 0, 0]}
+              isSelected={selectedComponentType === 'transformer' && selectedTransformerId === index}
+              onSelect={() => handleSelectTransformer(index)}
+              onPositionChange={handleTransformerPositionChange}
+              onDragStart={handleComponentDragStart}
+            />
+          ))}
+          
+          {cameraPositionsState.map((position, index) => (
+            <Camera 
+              key={`camera-${index}`}
+              id={index}
+              position={position} 
+              rotation={cameraRotations[index] || [0, 0, 0]}
+              isSelected={selectedComponentType === 'camera' && selectedCameraId === index}
+              onSelect={() => handleSelectCamera(index)}
+              onPositionChange={handleCameraPositionChange}
+              onDragStart={handleComponentDragStart}
+            />
+          ))}
+          
+          <ITHouse 
+            position={itHousePositionState}
+            isSelected={selectedComponentType === 'itHouse' && isITHouseSelected}
+            onSelect={handleSelectITHouse}
+            onPositionChange={handleITHousePositionChange}
+            onDragStart={handleComponentDragStart}
+          />
+          
+          <Road />
+        </Suspense>
+        
+        {showStats && <Stats />}
+      </Canvas>
+      
+      <Controls 
+        setTimeOfDay={setTimeOfDay}
+        timeOfDay={timeOfDay}
+        isDrawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+        currentBoundary={currentBoundary}
+        onBoundaryComplete={handleBoundaryComplete}
+        onSaveBoundary={handleSaveBoundary}
+        onClearBoundary={handleClearBoundary}
+        onClearAllBoundaries={handleClearAllBoundaries}
+        savedBoundariesCount={savedBoundaries.length}
+        onGeneratePanels={handleGenerateNewPanelsInBoundary}
+        onClearAllPanels={handleClearAllPanels}
+        onSaveLayout={handleSaveLayout}
+        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
+        selectedComponentType={selectedComponentType}
+        selectedComponentId={
+          selectedComponentType === 'inverter' 
+            ? selectedInverterId 
+            : selectedComponentType === 'transformer'
+              ? selectedTransformerId
+              : selectedComponentType === 'camera'
+                ? selectedCameraId
+                : selectedPanelId
+        }
+        showStats={showStats}
+        setShowStats={setShowStats}
+        updateInverterPosition={updateInverterPosition}
+        updateTransformerPosition={updateTransformerPosition}
+        updateCameraPosition={updateCameraPosition}
+        updateInverterRotation={updateInverterRotation}
+        updateTransformerRotation={updateTransformerRotation}
+        updateCameraRotation={updateCameraRotation}
+      />
+      
+      {!sceneReady && <Loader />}
+    </div>
+  );
+}
