@@ -16,7 +16,6 @@ import SkyBox from './SkyBox';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
-// New interface for draggable object state management
 interface DraggableObjectState {
   type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
   index?: number;
@@ -414,13 +413,63 @@ export default function SceneContainer() {
 
     const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
 
-    const cameraPositions: [number, number, number][] = [
-      [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
-      [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
-      [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
-      [minX, 8, centerZ - depth * 0.3], [minX, 8, centerZ + depth * 0.3],
-      [maxX, 8, centerZ - depth * 0.3], [maxX, 8, centerZ + depth * 0.3]
-    ];
+    // Generate camera positions around the perimeter of solar panels with better coverage
+    const cameraPositions: [number, number, number][] = [];
+    
+    // Camera height
+    const cameraHeight = 8;
+    
+    // Corner cameras (slightly pulled outside for better overview)
+    cameraPositions.push([minX - 5, cameraHeight, minZ - 5]); // Northwest corner
+    cameraPositions.push([maxX + 5, cameraHeight, minZ - 5]); // Northeast corner
+    cameraPositions.push([minX - 5, cameraHeight, maxZ + 5]); // Southwest corner
+    cameraPositions.push([maxX + 5, cameraHeight, maxZ + 5]); // Southeast corner
+    
+    // Side cameras
+    const sideCamCount = 4; // Number of cameras on each side
+    
+    // North side (minZ)
+    for (let i = 1; i <= sideCamCount; i++) {
+      const x = minX + (width * i) / (sideCamCount + 1);
+      cameraPositions.push([x, cameraHeight, minZ - 8]);
+    }
+    
+    // East side (maxX)
+    for (let i = 1; i <= sideCamCount; i++) {
+      const z = minZ + (depth * i) / (sideCamCount + 1);
+      cameraPositions.push([maxX + 8, cameraHeight, z]);
+    }
+    
+    // South side (maxZ)
+    for (let i = 1; i <= sideCamCount; i++) {
+      const x = minX + (width * i) / (sideCamCount + 1);
+      cameraPositions.push([x, cameraHeight, maxZ + 8]);
+    }
+    
+    // West side (minX)
+    for (let i = 1; i <= sideCamCount; i++) {
+      const z = minZ + (depth * i) / (sideCamCount + 1);
+      cameraPositions.push([minX - 8, cameraHeight, z]);
+    }
+    
+    // If the panel area is very large, add some internal cameras
+    if (width > 100 && depth > 100) {
+      // Add cameras in the central area
+      cameraPositions.push([centerX, cameraHeight, centerZ]);
+      
+      // Add cameras at quarter positions if the area is large enough
+      if (width > 200 && depth > 200) {
+        cameraPositions.push([centerX - width/4, cameraHeight, centerZ - depth/4]);
+        cameraPositions.push([centerX + width/4, cameraHeight, centerZ - depth/4]);
+        cameraPositions.push([centerX - width/4, cameraHeight, centerZ + depth/4]);
+        cameraPositions.push([centerX + width/4, cameraHeight, centerZ + depth/4]);
+      }
+    }
+    
+    // Limit to maximum 20 cameras
+    if (cameraPositions.length > 20) {
+      cameraPositions.length = 20;
+    }
 
     return {
       inverters: inverterPositions,
