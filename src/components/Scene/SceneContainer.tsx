@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -159,7 +158,6 @@ export default function SceneContainer() {
   const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
   const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
   
-  // New state for tracking which object is being dragged
   const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
   
   const orbitControlsRef = useRef<any>(null);
@@ -188,7 +186,6 @@ export default function SceneContainer() {
 
   useEffect(() => {
     if (orbitControlsRef.current) {
-      // Disable orbit controls when in drawing mode or when dragging an object
       orbitControlsRef.current.enabled = !drawingMode && !draggingObject;
     }
   }, [drawingMode, draggingObject]);
@@ -219,13 +216,13 @@ export default function SceneContainer() {
     const hasPanels = isInitialized && panelPositions.length > 0;
 
     const defaultPositions = {
-      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]],
-      transformers: [[0, 0, 0], [30, 0, 0]],
-      itHouse: [0, 0, 0],
+      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]] as [number, number, number][],
+      transformers: [[0, 0, 0], [30, 0, 0]] as [number, number, number][],
+      itHouse: [0, 0, 0] as [number, number, number],
       cameras: [
         [0, 8, 0], [30, 8, 0], [60, 8, 0], [90, 8, 0], [120, 8, 0], [150, 8, 0],
         [180, 8, 0], [210, 8, 0], [240, 8, 0], [270, 8, 0], [300, 8, 0], [330, 8, 0]
-      ]
+      ] as [number, number, number][]
     };
 
     if (!hasPanels) {
@@ -290,7 +287,7 @@ export default function SceneContainer() {
     console.log(`Found ${rows.length} panel rows`);
 
     // Generate inverter positions specifically in gaps between rows
-    const inverterPositions = [];
+    const inverterPositions: [number, number, number][] = [];
     
     // Skip isolated rows with few panels
     const significantRows = rows.filter(row => row.panelCount >= 3 && row.width > 5);
@@ -410,14 +407,14 @@ export default function SceneContainer() {
       }
     }
 
-    const transformerPositions = [
+    const transformerPositions: [number, number, number][] = [
       [maxX + 20, 0, centerZ - depth * 0.25],
       [maxX + 20, 0, centerZ + depth * 0.25]
     ];
 
-    const itHousePosition = [minX - 20, 0, centerZ];
+    const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
 
-    const cameraPositions = [
+    const cameraPositions: [number, number, number][] = [
       [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
       [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
       [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
@@ -502,7 +499,6 @@ export default function SceneContainer() {
     });
   }, [inverterPositions]);
   
-  // New handlers for drag operations
   const handleStartDrag = useCallback((type: 'inverter' | 'camera' | 'transformer' | 'itHouse', index?: number) => {
     setDraggingObject({ type, index, isDragging: true });
     
@@ -524,7 +520,6 @@ export default function SceneContainer() {
     console.log("Finished dragging object");
   }, []);
   
-  // Handle dragging inverter
   const handleDragInverter = useCallback((index: number, newPosition: [number, number, number]) => {
     setInverterPositions(prev => {
       const updated = [...prev];
@@ -533,7 +528,6 @@ export default function SceneContainer() {
     });
   }, []);
   
-  // Handle dragging camera
   const handleDragCamera = useCallback((index: number, newPosition: [number, number, number]) => {
     setCameraPositions(prev => {
       const updated = [...prev];
@@ -542,7 +536,6 @@ export default function SceneContainer() {
     });
   }, []);
   
-  // Handle dragging transformer
   const handleDragTransformer = useCallback((index: number, newPosition: [number, number, number]) => {
     setTransformerPositions(prev => {
       const updated = [...prev];
@@ -551,7 +544,6 @@ export default function SceneContainer() {
     });
   }, []);
   
-  // Handle dragging IT house
   const handleDragITHouse = useCallback((newPosition: [number, number, number]) => {
     setItHousePosition(newPosition);
   }, []);
