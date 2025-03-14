@@ -172,20 +172,67 @@ const SceneContainer: React.FC = () => {
   }, [panelPositions, inverters, saveCurrentLayout]);
 
   return (
-    <Canvas shadows gl={{ antialias: true }} 
-      camera={{ position: [0, 50, 100], fov: 75 }}
-      style={{ 
-        background: 'radial-gradient(#1e293b, #0f172a)',
-        width: '100%', 
-        height: '100vh' 
-      }}
-    >
-      {showStats && <Stats />}
+    <div className="relative w-full h-screen">
+      <Canvas shadows gl={{ antialias: true }} 
+        camera={{ position: [0, 50, 100], fov: 75 }}
+        style={{ 
+          background: 'radial-gradient(#1e293b, #0f172a)',
+          width: '100%', 
+          height: '100vh' 
+        }}
+      >
+        {showStats && <Stats />}
+        
+        <Camera 
+          position={new THREE.Vector3(0, 50, 0)} 
+          cameraIndex={0} 
+        />
+        
+        <SkyBox timeOfDay={timeOfDay} />
+        <ambientLight intensity={0.6} />
+        <directionalLight
+          position={[100, 100, 50]}
+          intensity={0.8}
+          castShadow
+          shadow-mapSize-width={2048}
+          shadow-mapSize-height={2048}
+          shadow-bias={-0.0001}
+        />
+        
+        <Terrain />
+        <Ground />
+        <TransformerStation 
+          position={new THREE.Vector3(0, 0, 0)} 
+          transformerIndex={0}
+        />
+        <ITHouse position={new THREE.Vector3(-40, 0, 10)} />
+        <Road />
+        <Vegetation />
+        
+        <SolarPanel 
+          panelPositions={panelPositions}
+          selectedPanelId={selectedPanelId}
+          onSelectPanel={handleSelectPanel}
+        />
+        
+        <InverterContainer 
+          inverters={inverters}
+          selectedInverterIndex={selectedInverterIndex}
+          onSelectInverter={handleSelectInverter}
+          onDragStart={handleInverterDragStart}
+          onDrag={handleInverterDrag}
+          onDragEnd={handleInverterDragEnd}
+        />
+        
+        <BoundaryDrawing 
+          enabled={drawingMode}
+          onComplete={(points) => {
+            setBoundaries(prev => [...prev, points]);
+            toast.success(`New boundary with ${points.length} points created`);
+          }}
+        />
+      </Canvas>
       
-      <Camera 
-        position={new THREE.Vector3(0, 50, 0)} 
-        cameraIndex={0} 
-      />
       <Controls 
         showStats={showStats}
         setShowStats={setShowStats}
@@ -208,55 +255,14 @@ const SceneContainer: React.FC = () => {
         onSaveLayout={handleSaveLayout}
       />
       
-      <SkyBox timeOfDay={timeOfDay} />
-      <ambientLight intensity={0.6} />
-      <directionalLight
-        position={[100, 100, 50]}
-        intensity={0.8}
-        castShadow
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
-        shadow-bias={-0.0001}
-      />
-      
-      <Terrain />
-      <Ground />
-      <TransformerStation 
-        position={new THREE.Vector3(0, 0, 0)} 
-        transformerIndex={0} 
-      />
-      <ITHouse position={new THREE.Vector3(-40, 0, 10)} />
-      <Road />
-      <Vegetation />
-      
-      <SolarPanel 
-        panelPositions={panelPositions}
-        selectedPanelId={selectedPanelId}
-        onSelectPanel={handleSelectPanel}
-      />
-      
-      <InverterContainer 
-        inverters={inverters}
-        selectedInverterIndex={selectedInverterIndex}
-        onSelectInverter={handleSelectInverter}
-        onDragStart={handleInverterDragStart}
-        onDrag={handleInverterDrag}
-        onDragEnd={handleInverterDragEnd}
-      />
-      
-      <InverterControls 
-        selectedInverterIndex={selectedInverterIndex !== null ? selectedInverterIndex : 0} 
-        onDeselectInverter={handleDeselectInverter}
-        onUpdateInverterPosition={handleUpdateInverterPosition}
-      />
-      <BoundaryDrawing 
-        enabled={drawingMode}
-        onComplete={(points) => {
-          setBoundaries(prev => [...prev, points]);
-          toast.success(`New boundary with ${points.length} points created`);
-        }}
-      />
-    </Canvas>
+      {selectedInverterIndex !== null && (
+        <InverterControls 
+          selectedInverterIndex={selectedInverterIndex} 
+          onDeselectInverter={handleDeselectInverter}
+          onUpdateInverterPosition={handleUpdateInverterPosition}
+        />
+      )}
+    </div>
   );
 };
 
