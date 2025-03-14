@@ -1,7 +1,6 @@
 
 import React from 'react';
 import Inverter from './Inverter';
-import InverterDetailsPopup from './InverterDetailsPopup';
 import useInverterDetails from '@/hooks/useInverterDetails';
 import { Vector3 } from 'three';
 
@@ -37,9 +36,6 @@ export default function InverterContainer({
 }: InverterContainerProps) {
   // Use the hook to manage inverter details popup
   const {
-    isDetailsPopupOpen,
-    selectedInverterData,
-    closeInverterDetails,
     handleInverterClick
   } = useInverterDetails();
 
@@ -79,13 +75,6 @@ export default function InverterContainer({
           model={inverter.model}
         />
       ))}
-
-      {/* Render the details popup */}
-      <InverterDetailsPopup
-        isOpen={isDetailsPopupOpen}
-        onClose={closeInverterDetails}
-        inverterData={selectedInverterData}
-      />
     </>
   );
 }

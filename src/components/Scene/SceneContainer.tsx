@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -10,12 +9,14 @@ import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
 import Inverter from './Inverter';
 import InverterContainer from './InverterContainer';
+import InverterDetailsPopup from './InverterDetailsPopup';
 import Camera from './Camera';
 import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
+import useInverterDetails from '@/hooks/useInverterDetails';
 import Road from './Road';
 
 interface DraggableObjectState {
@@ -175,6 +176,13 @@ export default function SceneContainer() {
     clearAllPanels,
     saveCurrentLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
+  
+  const {
+    isDetailsPopupOpen,
+    selectedInverterData,
+    closeInverterDetails,
+    handleInverterClick
+  } = useInverterDetails();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -835,6 +843,12 @@ export default function SceneContainer() {
           {showStats && <Stats />}
         </Suspense>
       </Canvas>
+      
+      <InverterDetailsPopup
+        isOpen={isDetailsPopupOpen}
+        onClose={closeInverterDetails}
+        inverterData={selectedInverterData}
+      />
       
       <Controls 
         showStats={showStats}
