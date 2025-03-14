@@ -214,13 +214,13 @@ export default function SceneContainer() {
     const hasPanels = isInitialized && panelPositions.length > 0;
 
     const defaultPositions = {
-      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]],
-      transformers: [[0, 0, 0], [30, 0, 0]],
-      itHouse: [0, 0, 0],
+      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]] as [number, number, number][],
+      transformers: [[0, 0, 0], [30, 0, 0]] as [number, number, number][],
+      itHouse: [0, 0, 0] as [number, number, number],
       cameras: [
         [0, 8, 0], [30, 8, 0], [60, 8, 0], [90, 8, 0], [120, 8, 0], [150, 8, 0],
         [180, 8, 0], [210, 8, 0], [240, 8, 0], [270, 8, 0], [300, 8, 0], [330, 8, 0]
-      ]
+      ] as [number, number, number][]
     };
 
     if (!hasPanels) {
@@ -275,7 +275,7 @@ export default function SceneContainer() {
 
     rows.sort((a, b) => a.z - b.z);
     
-    const inverterPositions = [];
+    const inverterPositions: [number, number, number][] = [];
     
     const significantRows = rows.filter(row => row.panelCount >= 3 && row.width > 5);
     significantRows.sort((a, b) => b.panelCount - a.panelCount);
@@ -367,7 +367,7 @@ export default function SceneContainer() {
     }
     
     if (inverterPositions.length < 7) {
-      const perimeterPositions = [
+      const perimeterPositions: [number, number, number][] = [
         [minX + width * 0.25, 0, minZ - 5],
         [minX + width * 0.75, 0, minZ - 5],
         [maxX + 5, 0, minZ + depth * 0.25],
@@ -382,14 +382,14 @@ export default function SceneContainer() {
       }
     }
 
-    const transformerPositions = [
+    const transformerPositions: [number, number, number][] = [
       [maxX + 20, 0, centerZ - depth * 0.25],
       [maxX + 20, 0, centerZ + depth * 0.25]
     ];
 
-    const itHousePosition = [minX - 20, 0, centerZ];
+    const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
 
-    const cameraPositions = [
+    const cameraPositions: [number, number, number][] = [
       [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
       [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
       [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
@@ -528,15 +528,15 @@ export default function SceneContainer() {
       }
       
       if (inverterPositionsState.length === 0) {
-        setInverterPositionsState(positions.inverters);
+        setInverterPositionsState([...positions.inverters]);
       }
       
       if (transformerPositionsState.length === 0) {
-        setTransformerPositionsState(positions.transformers);
+        setTransformerPositionsState([...positions.transformers]);
       }
       
       if (cameraPositionsState.length === 0) {
-        setCameraPositionsState(positions.cameras);
+        setCameraPositionsState([...positions.cameras]);
       }
     }
   }, [positions, inverterRotations.length, transformerRotations.length, cameraRotations.length, 
