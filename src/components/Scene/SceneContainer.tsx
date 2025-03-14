@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -356,9 +357,8 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [0, 100, 0],
-          fov: 60,
-          up: [0, 0, -1],
+          position: [100, 80, 100], // More natural camera angle
+          fov: 45,
           near: 1,
           far: 1000
         }}
@@ -423,6 +423,7 @@ export default function SceneContainer() {
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
+            target={[0, 0, 0]} // Center target
           />
           
           {showStats && <Stats />}
