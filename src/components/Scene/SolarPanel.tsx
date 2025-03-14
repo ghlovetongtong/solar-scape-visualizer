@@ -84,7 +84,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#F1F5FD'),
+      color: new THREE.Color('#353638'),
       metalness: 0.5,
       roughness: 0.4,
       emissive: new THREE.Color('#F1F1F1'),
