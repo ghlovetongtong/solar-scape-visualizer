@@ -16,6 +16,7 @@ import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import Road from './Road';
+import { useDraggable } from '@/hooks/useDraggable';
 
 function Loader() {
   const { progress, errors, active, item } = useProgress();
@@ -815,3 +816,100 @@ export default function SceneContainer() {
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}
               rotation={new THREE.Euler(...(inverterRotations[index] || [0,0,0]))}
+              isSelected={selectedInverterId === index && selectedComponentType === 'inverter'}
+              onSelect={() => handleSelectInverter(index)}
+              onPositionChange={(newPosition) => handleInverterPositionChange(index, newPosition)}
+              onRotationChange={(euler) => {
+                setInverterRotations(prev => {
+                  const rotations = [...prev];
+                  rotations[index] = [euler.x, euler.y, euler.z];
+                  return rotations;
+                });
+              }}
+            />
+          ))}
+          
+          {transformerPositionsState.map((position, index) => (
+            <TransformerStation
+              key={`transformer-${index}`}
+              position={new THREE.Vector3(...position)}
+              rotation={new THREE.Euler(...(transformerRotations[index] || [0,0,0]))}
+              isSelected={selectedTransformerId === index && selectedComponentType === 'transformer'}
+              onSelect={() => handleSelectTransformer(index)}
+              onPositionChange={(newPosition) => handleTransformerPositionChange(index, newPosition)}
+              onRotationChange={(euler) => {
+                setTransformerRotations(prev => {
+                  const rotations = [...prev];
+                  rotations[index] = [euler.x, euler.y, euler.z];
+                  return rotations;
+                });
+              }}
+            />
+          ))}
+          
+          {cameraPositionsState.map((position, index) => (
+            <Camera
+              key={`camera-${index}`}
+              position={new THREE.Vector3(...position)}
+              rotation={new THREE.Euler(...(cameraRotations[index] || [0,0,0]))}
+              isSelected={selectedCameraId === index && selectedComponentType === 'camera'}
+              onSelect={() => handleSelectCamera(index)}
+              onPositionChange={(newPosition) => handleCameraPositionChange(index, newPosition)}
+              onRotationChange={(euler) => {
+                setCameraRotations(prev => {
+                  const rotations = [...prev];
+                  rotations[index] = [euler.x, euler.y, euler.z];
+                  return rotations;
+                });
+              }}
+            />
+          ))}
+          
+          <ITHouse
+            position={new THREE.Vector3(...itHousePositionState)}
+            isSelected={isITHouseSelected && selectedComponentType === 'itHouse'}
+            onSelect={handleSelectITHouse}
+            onPositionChange={handleITHousePositionChange}
+          />
+          
+          <Road position={panelCenter} />
+          
+          <OrbitControls
+            ref={orbitControlsRef}
+            minDistance={10}
+            maxDistance={500}
+            maxPolarAngle={Math.PI / 2 - 0.05}
+            target={new THREE.Vector3(...panelCenter)}
+          />
+          
+          {showStats && <Stats />}
+        </Suspense>
+      </Canvas>
+
+      <Controls
+        showStats={showStats}
+        setShowStats={setShowStats}
+        timeOfDay={timeOfDay}
+        setTimeOfDay={setTimeOfDay}
+        drawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+        onSaveBoundary={handleSaveBoundary}
+        onClearBoundary={handleClearBoundary}
+        onClearAllBoundaries={handleClearAllBoundaries}
+        onGeneratePanels={handleGenerateNewPanelsInBoundary}
+        onClearAllPanels={handleClearAllPanels}
+        onSaveLayout={handleSaveLayout}
+        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
+        selectedComponentType={selectedComponentType}
+        updatePanelPosition={updatePanelPosition}
+        updatePanelRotation={updatePanelRotation}
+        updateInverterPosition={updateInverterPosition}
+        updateTransformerPosition={updateTransformerPosition}
+        updateCameraPosition={updateCameraPosition}
+      />
+
+      {!sceneReady && <Loader />}
+    </div>
+  );
+}
+
