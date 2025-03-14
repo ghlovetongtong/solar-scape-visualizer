@@ -156,11 +156,11 @@ export default function Camera({
       <Text
         position={[0, 0.5, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.3}  // Increased from 0.2 to 0.3
+        fontSize={0.5}  // Increased from 0.3 to 0.5
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.03}  // Increased from 0.02 to 0.03
+        outlineWidth={0.05}  // Increased from 0.03 to 0.05
         outlineColor="#000000"
       >
         {`Camera ${cameraIndex + 1}`}

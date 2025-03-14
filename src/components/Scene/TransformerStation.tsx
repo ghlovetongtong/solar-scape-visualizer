@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -172,11 +173,11 @@ export default function TransformerStation({
       <Text
         position={[0, 5, 2.5]}
         rotation={[0, 0, 0]}
-        fontSize={0.8}
+        fontSize={1.2}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.06}
+        outlineWidth={0.1}
         outlineColor="#000000"
       >
         {`Transformer ${transformerIndex + 1}`}
