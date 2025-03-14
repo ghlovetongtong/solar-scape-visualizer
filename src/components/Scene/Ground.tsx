@@ -15,7 +15,7 @@ export default function Ground({
   resolution = 128,
   savedBoundaries = [] 
 }: GroundProps) {
-  // Create a more appropriately sized plane for the ground
+  // Create a perfect square plane for the ground with equal width and height
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
   // Use the new Imgur URL directly for the texture
