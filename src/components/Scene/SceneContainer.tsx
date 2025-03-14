@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -175,11 +174,9 @@ export default function SceneContainer() {
     }
   }, [drawingMode]);
 
-  // Calculate positions for secondary structures based on panel layout
   const calculateSecondaryPositions = useCallback(() => {
     const hasPanels = isInitialized && panelPositions.length > 0;
 
-    // Default positions when no panels
     const defaultPositions = {
       inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]],
       transformers: [[0, 0, 0], [30, 0, 0]],
@@ -194,7 +191,6 @@ export default function SceneContainer() {
       return defaultPositions;
     }
 
-    // Calculate bounds of panel field
     let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
     panelPositions.forEach(panel => {
       minX = Math.min(minX, panel.position[0]);
@@ -203,7 +199,6 @@ export default function SceneContainer() {
       maxZ = Math.max(maxZ, panel.position[2]);
     });
 
-    // Add padding
     const padding = 20;
     minX -= padding;
     maxX += padding;
@@ -215,7 +210,6 @@ export default function SceneContainer() {
     const width = maxX - minX;
     const depth = maxZ - minZ;
 
-    // Position inverters strategically around the field
     const inverterPositions = [
       [centerX - width * 0.25, 0, centerZ - depth * 0.25],  // Top-left quadrant
       [centerX + width * 0.25, 0, centerZ - depth * 0.25],  // Top-right quadrant
@@ -226,20 +220,15 @@ export default function SceneContainer() {
       [centerX + width * 0.4, 0, centerZ]                  // Right middle
     ];
 
-    // Position transformers outside the field
     const transformerPositions = [
       [maxX + 20, 0, centerZ - depth * 0.25],
       [maxX + 20, 0, centerZ + depth * 0.25]
     ];
 
-    // IT house on the opposite side
     const itHousePosition = [minX - 20, 0, centerZ];
 
-    // Cameras positioned around the perimeter
     const cameraPositions = [
-      // Corners
       [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
-      // Sides
       [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
       [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
       [minX, 8, centerZ - depth * 0.3], [minX, 8, centerZ + depth * 0.3],
@@ -366,7 +355,13 @@ export default function SceneContainer() {
     <div className="h-full w-full relative">
       <Canvas
         shadows
-        camera={{ position: [140, 50, 240], fov: 45 }}
+        camera={{ 
+          position: [0, 100, 0],
+          fov: 60,
+          up: [0, 0, -1],
+          near: 1,
+          far: 1000
+        }}
         gl={{ 
           antialias: true,
           alpha: false,
@@ -427,6 +422,7 @@ export default function SceneContainer() {
             maxDistance={800}
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
+            minPolarAngle={0.1}
           />
           
           {showStats && <Stats />}
