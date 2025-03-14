@@ -16,6 +16,18 @@ export default function Terrain({
   onBoundaryComplete,
   savedBoundaries = []
 }: TerrainProps) {
+  // Create a safe callback wrapper that won't cause "lov" errors
+  const handleBoundaryComplete = (points: BoundaryPoint[]) => {
+    if (onBoundaryComplete && points.length > 2) {
+      // Ensure we're dealing with a valid boundary before calling the callback
+      try {
+        onBoundaryComplete(points);
+      } catch (error) {
+        console.error("Error in boundary completion callback:", error);
+      }
+    }
+  };
+
   return (
     <group>
       <Ground size={400} savedBoundaries={savedBoundaries} />
@@ -23,7 +35,9 @@ export default function Terrain({
       {drawingEnabled && (
         <BoundaryDrawing 
           enabled={drawingEnabled} 
-          onComplete={onBoundaryComplete} 
+          onComplete={handleBoundaryComplete} 
+          color="#00ff00"
+          lineWidth={3}
         />
       )}
     </group>

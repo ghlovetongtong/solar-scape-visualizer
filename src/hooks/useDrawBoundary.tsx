@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 
@@ -14,6 +14,14 @@ export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [points, setPoints] = useState<BoundaryPoint[]>([]);
   const { camera, raycaster, scene, gl } = useThree();
+  
+  // Store onComplete in a ref to avoid stale closure issues
+  const onCompleteRef = useRef(onComplete);
+  
+  // Update the ref when onComplete changes
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+  }, [onComplete]);
 
   // Create a plane that represents the ground for raycasting
   const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -67,15 +75,13 @@ export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
       // Make a simplified copy of the points to ensure we have a clean boundary
       const simplifiedPoints = simplifyBoundary([...points]);
       
-      // Use setTimeout to ensure the completion event occurs after the current render cycle
-      // This should help avoid the "Cannot read properties of undefined (reading 'lov')" error
-      setTimeout(() => {
-        if (onComplete && simplifiedPoints.length > 2) {
-          onComplete(simplifiedPoints);
-        }
-      }, 0);
+      // Use the ref to safely get the most up-to-date callback
+      if (onCompleteRef.current && simplifiedPoints.length > 2) {
+        // Call the callback directly without setTimeout
+        onCompleteRef.current(simplifiedPoints);
+      }
     }
-  }, [isDrawing, enabled, points, onComplete]);
+  }, [isDrawing, enabled, points]);
 
   // Helper function to simplify boundary by removing redundant points
   const simplifyBoundary = (points: BoundaryPoint[]): BoundaryPoint[] => {

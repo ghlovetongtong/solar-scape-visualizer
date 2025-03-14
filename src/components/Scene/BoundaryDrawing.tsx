@@ -38,7 +38,9 @@ export default function BoundaryDrawing({
 
   if (linePoints.length < 2) return null;
 
-  // Use Line instead of LineSegments to ensure continuous drawing
+  // Create a line geometry from the points array
+  const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
+
   return (
     <group>
       <line>
@@ -46,7 +48,7 @@ export default function BoundaryDrawing({
           <bufferAttribute
             attach="attributes-position"
             count={linePoints.length}
-            array={new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]))}
+            array={positions}
             itemSize={3}
           />
         </bufferGeometry>
