@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -15,6 +14,7 @@ import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
+import Road from './Road';
 
 function Loader() {
   const { progress, errors, active, item } = useProgress();
@@ -233,102 +233,139 @@ export default function SceneContainer() {
     const width = maxX - minX;
     const depth = maxZ - minZ;
 
-    // Find clusters of panels to identify gaps between panel groups
-    const clusterThreshold = 15; // Distance threshold for clustering
-    const panelClusters = [];
-    
-    // Simple clustering algorithm
+    // Find rows of panels by grouping them by Z coordinate
+    // First identify unique row locations with some tolerance
+    const rowTolerance = 2; // Small tolerance for Z coordinate to consider panels in the same row
+    const rows = [];
+    const processedZCoordinates = new Set();
+
+    // Find all distinct rows
     for (const panel of panelPositions) {
-      const [x, y, z] = panel.position;
-      let foundCluster = false;
-      
-      for (const cluster of panelClusters) {
-        // Check if panel is close to any existing cluster
-        if (Math.abs(x - cluster.centerX) < clusterThreshold && 
-            Math.abs(z - cluster.centerZ) < clusterThreshold) {
-          // Add to cluster
-          cluster.panels.push(panel);
-          cluster.centerX = (cluster.centerX * (cluster.panels.length - 1) + x) / cluster.panels.length;
-          cluster.centerZ = (cluster.centerZ * (cluster.panels.length - 1) + z) / cluster.panels.length;
-          foundCluster = true;
-          break;
+      const z = Math.round(panel.position[2] / rowTolerance) * rowTolerance;
+      if (!processedZCoordinates.has(z)) {
+        processedZCoordinates.add(z);
+        const rowPanels = panelPositions.filter(p => 
+          Math.abs(Math.round(p.position[2] / rowTolerance) * rowTolerance - z) < rowTolerance
+        );
+        
+        if (rowPanels.length > 0) {
+          // Find min and max X for this row
+          let rowMinX = Infinity, rowMaxX = -Infinity;
+          for (const p of rowPanels) {
+            rowMinX = Math.min(rowMinX, p.position[0]);
+            rowMaxX = Math.max(rowMaxX, p.position[0]);
+          }
+          
+          rows.push({
+            z,
+            minX: rowMinX,
+            maxX: rowMaxX,
+            panelCount: rowPanels.length
+          });
         }
       }
-      
-      // If not close to any cluster, create a new one
-      if (!foundCluster) {
-        panelClusters.push({
-          panels: [panel],
-          centerX: x,
-          centerZ: z
-        });
-      }
     }
-    
-    // Sort clusters by size (number of panels)
-    panelClusters.sort((a, b) => b.panels.length - a.panels.length);
 
-    // Generate inverter positions
+    // Sort rows by Z coordinate
+    rows.sort((a, b) => a.z - b.z);
+
+    // Generate inverter positions in gaps between rows
     const inverterPositions = [];
     
-    // Put one inverter in the smallest cluster if we have multiple clusters
-    if (panelClusters.length > 1) {
-      const smallCluster = panelClusters[panelClusters.length - 1];
-      inverterPositions.push([smallCluster.centerX, 0, smallCluster.centerZ]);
-    }
-    
-    // Largest cluster or only cluster
-    const largeCluster = panelClusters[0];
-    
-    // Divide the largest cluster into sections and place inverters
-    const sections = Math.min(6, Math.ceil(largeCluster.panels.length / 300)); // One inverter per ~300 panels
-    
-    if (sections > 1) {
-      // Find min/max coordinates of the large cluster
-      let clusterMinX = Infinity, clusterMaxX = -Infinity;
-      let clusterMinZ = Infinity, clusterMaxZ = -Infinity;
-      
-      for (const panel of largeCluster.panels) {
-        clusterMinX = Math.min(clusterMinX, panel.position[0]);
-        clusterMaxX = Math.max(clusterMaxX, panel.position[0]);
-        clusterMinZ = Math.min(clusterMinZ, panel.position[2]);
-        clusterMaxZ = Math.max(clusterMaxZ, panel.position[2]);
-      }
-      
-      const clusterWidth = clusterMaxX - clusterMinX;
-      const clusterDepth = clusterMaxZ - clusterMinZ;
-      const clusterCenterX = (clusterMinX + clusterMaxX) / 2;
-      const clusterCenterZ = (clusterMinZ + clusterMaxZ) / 2;
-      
-      // Add inverters in a grid pattern
-      const gridSize = Math.ceil(Math.sqrt(sections));
-      const spacing = Math.min(clusterWidth, clusterDepth) / (gridSize + 1);
-      
-      for (let i = 0; i < sections; i++) {
-        const row = Math.floor(i / gridSize);
-        const col = i % gridSize;
+    // If we have at least 2 rows, place inverters between them
+    if (rows.length >= 2) {
+      // For each pair of adjacent rows, find a gap and place an inverter
+      for (let i = 0; i < rows.length - 1; i++) {
+        const gapZ = (rows[i].z + rows[i+1].z) / 2;
         
-        const posX = clusterMinX + spacing + col * spacing;
-        const posZ = clusterMinZ + spacing + row * spacing;
+        // Place inverters at different X positions along the row gap
+        const rowWidth = Math.max(rows[i].maxX, rows[i+1].maxX) - Math.min(rows[i].minX, rows[i+1].minX);
+        const interval = Math.max(rowWidth / 4, 20); // Place one inverter every 20-30 units or 1/4 of row width
         
-        inverterPositions.push([posX, 0, posZ]);
+        const startX = Math.min(rows[i].minX, rows[i+1].minX) + interval/2;
+        const maxInverters = Math.min(3, Math.floor(rowWidth / interval)); // Maximum 3 inverters per gap
+        
+        for (let j = 0; j < maxInverters; j++) {
+          // Check if this position would overlap with a panel
+          const posX = startX + j * interval;
+          const overlapTolerance = 3; // Minimum distance to any panel
+          
+          // Check for overlap with any panel
+          let overlapsPanel = false;
+          for (const panel of panelPositions) {
+            const dx = Math.abs(panel.position[0] - posX);
+            const dz = Math.abs(panel.position[2] - gapZ);
+            if (dx < overlapTolerance && dz < overlapTolerance) {
+              overlapsPanel = true;
+              break;
+            }
+          }
+          
+          if (!overlapsPanel) {
+            inverterPositions.push([posX, 0, gapZ]);
+            if (inverterPositions.length >= 7) break; // We only need 7 inverters total
+          }
+        }
+        
+        if (inverterPositions.length >= 7) break;
       }
-    } else {
-      // Just one inverter in the center of the large cluster
-      inverterPositions.push([largeCluster.centerX, 0, largeCluster.centerZ]);
     }
     
-    // Ensure we have at least one inverter
-    if (inverterPositions.length === 0) {
-      inverterPositions.push([centerX, 0, centerZ]);
+    // If we couldn't place enough inverters in gaps, add more at the edges of rows
+    if (inverterPositions.length < 7 && rows.length > 0) {
+      // Place inverters at the beginning and end of major rows
+      const majorRows = [...rows].sort((a, b) => b.panelCount - a.panelCount).slice(0, 3);
+      
+      for (const row of majorRows) {
+        // Try left side of row
+        inverterPositions.push([row.minX - 5, 0, row.z]);
+        if (inverterPositions.length >= 7) break;
+        
+        // Try right side of row
+        inverterPositions.push([row.maxX + 5, 0, row.z]);
+        if (inverterPositions.length >= 7) break;
+      }
     }
     
-    // Ensure we have at least 7 inverters total (pad with default positions if needed)
+    // If we still don't have enough, fill in with default positions
+    if (inverterPositions.length < 7) {
+      // Add inverters in a grid pattern across the entire panel array
+      const gridSizeX = 3;
+      const gridSizeZ = 3;
+      
+      for (let i = 0; i < gridSizeX && inverterPositions.length < 7; i++) {
+        for (let j = 0; j < gridSizeZ && inverterPositions.length < 7; j++) {
+          const posX = minX + (width / (gridSizeX + 1)) * (i + 1);
+          const posZ = minZ + (depth / (gridSizeZ + 1)) * (j + 1);
+          
+          // Check for overlap with any panel
+          let overlapsPanel = false;
+          for (const panel of panelPositions) {
+            const dx = Math.abs(panel.position[0] - posX);
+            const dz = Math.abs(panel.position[2] - posZ);
+            if (dx < 3 && dz < 3) {
+              overlapsPanel = true;
+              break;
+            }
+          }
+          
+          if (!overlapsPanel) {
+            inverterPositions.push([posX, 0, posZ]);
+          }
+        }
+      }
+    }
+    
+    // Ensure we have at least 7 inverters total (pad with positions around the perimeter if needed)
     while (inverterPositions.length < 7) {
       const index = inverterPositions.length;
-      const offsetX = (index % 3 - 1) * width * 0.2;
-      const offsetZ = (Math.floor(index / 3) - 1) * depth * 0.2;
-      inverterPositions.push([centerX + offsetX, 0, centerZ + offsetZ]);
+      const perimeter = [
+        [minX - 10, 0, centerZ + (index * 10)],
+        [maxX + 10, 0, centerZ + (index * 10)],
+        [centerX + (index * 10), 0, minZ - 10],
+        [centerX + (index * 10), 0, maxZ + 10]
+      ];
+      inverterPositions.push(perimeter[index % 4]);
     }
 
     const transformerPositions = [

@@ -12,9 +12,9 @@ interface RoadProps {
 
 export default function Road({ 
   boundary = [], 
-  width = 8, 
-  color = '#333333',
-  elevation = 0.05
+  width = 10, 
+  color = '#2a2a2a',
+  elevation = 0.1
 }: RoadProps) {
   // Only render if we have at least 3 points to form a valid path
   const roadMesh = useMemo(() => {
@@ -31,24 +31,37 @@ export default function Road({
     // Create the road geometry - increase segments for smoother appearance
     const tubeGeometry = new THREE.TubeGeometry(
       path,
-      boundary.length * 4, // Increased segments for smoother curve
+      boundary.length * 8, // Further increased segments for smoother curve
       width / 2, // radius - half the desired road width
-      16, // Increased radial segments for smoother tube
+      18, // Increased radial segments for smoother tube
       true // closed path
     );
 
     // Create road material with better visibility
     const roadMaterial = new THREE.MeshStandardMaterial({
       color: color,
-      roughness: 0.6,
-      metalness: 0.4,
+      roughness: 0.7,
+      metalness: 0.2,
+      side: THREE.DoubleSide,
+    });
+
+    // Create road markings geometry
+    const markingsMaterial = new THREE.MeshStandardMaterial({
+      color: '#ffffff',
+      roughness: 0.5,
+      metalness: 0,
       side: THREE.DoubleSide,
     });
 
     return (
-      <mesh geometry={tubeGeometry} material={roadMaterial} receiveShadow position={[0, 0.1, 0]}>
-        {/* Removed duplicate material since it's already defined above */}
-      </mesh>
+      <group>
+        <mesh 
+          geometry={tubeGeometry} 
+          material={roadMaterial} 
+          receiveShadow 
+          position={[0, 0, 0]}
+        />
+      </group>
     );
   }, [boundary, width, color, elevation]);
 
