@@ -101,6 +101,9 @@ export default function Camera({
     Math.cos(cameraIndex * 0.5) * 0.25 + 0.75
   );
 
+  // Scale factor to increase the size of the camera model
+  const scale = 1.8;
+
   return (
     <group 
       position={position} 
@@ -108,6 +111,7 @@ export default function Camera({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerOut={handlePointerUp}
+      scale={[scale, scale, scale]}
     >
       {/* Camera mount/pole */}
       <mesh castShadow position={[0, -5, 0]}>
