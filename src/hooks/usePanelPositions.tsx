@@ -15,6 +15,22 @@ const GROUP_SPACING = 0; // Removed spacing between groups
 const DEFAULT_LAYOUT_KEY = 'solar-station-default-panel-layout';
 const CURRENT_LAYOUT_KEY = 'solar-station-panel-layout';
 
+// 硬编码的默认面板布局数据
+// 这里将您当前的布局作为硬编码的初始化数据
+const DEFAULT_PANEL_LAYOUT: InstanceData[] = [
+  // 这里示例数据，您需要替换为您的实际面板数据
+  // 示例格式: { id: 0, position: [x, y, z], rotation: [x, y, z], scale: [1, 1, 1] }
+  { id: 0, position: [5, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 1, position: [8, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 2, position: [11, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 3, position: [14, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 4, position: [5, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 5, position: [8, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 6, position: [11, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  { id: 7, position: [14, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
+  // 您可以添加更多面板...
+];
+
 // Utility function to check if a point is inside a polygon
 function isPointInPolygon(point: [number, number], polygon: BoundaryPoint[]): boolean {
   if (polygon.length < 3) return false;
@@ -47,22 +63,17 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize panel positions - now starts with empty array by default
+  // 初始化面板位置 - 使用硬编码的默认布局数据
   useEffect(() => {
-    console.log(`Initializing panels with default or saved layout`);
+    console.log(`Initializing panels with hardcoded default layout`);
     
     try {
       // 首先尝试加载用户保存的面板布局
       const savedLayout = localStorage.getItem(CURRENT_LAYOUT_KEY);
-      // 然后尝试加载默认的面板布局
-      const defaultLayout = localStorage.getItem(DEFAULT_LAYOUT_KEY);
       
-      // 决定使用哪一个布局 - 优先使用当前保存的布局，然后是默认布局
-      const layoutToUse = savedLayout || defaultLayout;
-      
-      if (layoutToUse) {
+      if (savedLayout) {
         try {
-          const parsedLayout = JSON.parse(layoutToUse) as InstanceData[];
+          const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
           
           // Validate parsed data structure to ensure it's compatible
           const isValidData = Array.isArray(parsedLayout) && 
@@ -78,39 +89,35 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
             setPanelPositions(parsedLayout);
             setInitialPositions(parsedLayout);
             
-            const layoutSource = layoutToUse === savedLayout ? "saved" : "default";
-            console.log(`Loaded ${parsedLayout.length} panels from ${layoutSource} layout`);
-            toast.success(`Loaded ${parsedLayout.length} panels from ${layoutSource} layout`);
+            console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
+            toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
           } else {
-            console.warn("Invalid panel layout data structure, starting with empty array");
-            setPanelPositions([]);
-            setInitialPositions([]);
-            // Clear invalid data
-            localStorage.removeItem(CURRENT_LAYOUT_KEY);
-            toast.error("Invalid saved panel data, starting fresh");
+            console.warn("Invalid panel layout data structure, using hardcoded default layout");
+            setPanelPositions(DEFAULT_PANEL_LAYOUT);
+            setInitialPositions(DEFAULT_PANEL_LAYOUT);
+            toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
           }
         } catch (parseError) {
           console.error("Error parsing layout:", parseError);
-          setPanelPositions([]);
-          setInitialPositions([]);
-          // Clear invalid data
-          localStorage.removeItem(CURRENT_LAYOUT_KEY);
-          toast.error("Couldn't load panels, starting fresh");
+          setPanelPositions(DEFAULT_PANEL_LAYOUT);
+          setInitialPositions(DEFAULT_PANEL_LAYOUT);
+          toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
         }
       } else {
-        // Start with empty array if no saved layout
-        console.log("No panel layout found");
-        setPanelPositions([]);
-        setInitialPositions([]);
+        // 没有保存的布局时，使用硬编码的默认布局
+        console.log("No saved layout found, using hardcoded default layout");
+        setPanelPositions(DEFAULT_PANEL_LAYOUT);
+        setInitialPositions(DEFAULT_PANEL_LAYOUT);
+        toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
       }
       setIsInitialized(true);
     } catch (error) {
       console.error("Error initializing panel positions:", error);
-      // Fallback to empty array
-      setPanelPositions([]);
-      setInitialPositions([]);
+      // 出错时也使用硬编码的默认布局
+      setPanelPositions(DEFAULT_PANEL_LAYOUT);
+      setInitialPositions(DEFAULT_PANEL_LAYOUT);
       setIsInitialized(true);
-      toast.error("Error loading panels, starting fresh");
+      toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
     }
   }, []);
 
@@ -127,7 +134,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
     }
   }, [panelPositions]);
 
-  // 新增：保存当前面板布局为默认布局
+  // 保存当前面板布局为默认布局 - 此功能仍保留但会保存到本地存储
   const saveAsDefaultLayout = useCallback(() => {
     try {
       localStorage.setItem(DEFAULT_LAYOUT_KEY, JSON.stringify(panelPositions));
@@ -295,6 +302,6 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
     addNewPanelsInBoundary,
     clearAllPanels,
     saveCurrentLayout,
-    saveAsDefaultLayout // 导出新函数
+    saveAsDefaultLayout
   };
 }
