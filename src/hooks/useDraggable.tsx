@@ -48,12 +48,14 @@ export function useDraggable(
   const handlePointerMove = (e: PointerEvent) => {
     if (!isDragging || !groupRef.current || !originalPosition.current || !dragStartPoint.current) return;
     
-    // Get screen coordinates
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    // Get screen coordinates and create a proper THREE.Vector2
+    const screenPosition = new THREE.Vector2(
+      (e.clientX / window.innerWidth) * 2 - 1,
+      -(e.clientY / window.innerHeight) * 2 + 1
+    );
     
     // Set up raycaster
-    raycaster.setFromCamera({ x, y }, camera);
+    raycaster.setFromCamera(screenPosition, camera);
     
     // Find intersection with the horizontal plane
     const intersection = new THREE.Vector3();

@@ -641,6 +641,34 @@ export default function SceneContainer() {
     );
   };
   
+  const updateTransformerPosition = (id: number, position: [number, number, number]) => {
+    setTransformerPositionsState(prev => 
+      prev.map((pos, index) => 
+        index === id 
+          ? [
+              pos[0] + position[0], 
+              pos[1] + position[1], 
+              pos[2] + position[2]
+            ] as [number, number, number]
+          : pos
+      )
+    );
+  };
+  
+  const updateCameraPosition = (id: number, position: [number, number, number]) => {
+    setCameraPositionsState(prev => 
+      prev.map((pos, index) => 
+        index === id 
+          ? [
+              pos[0] + position[0], 
+              pos[1] + position[1], 
+              pos[2] + position[2]
+            ] as [number, number, number]
+          : pos
+      )
+    );
+  };
+  
   const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
     setInverterPositionsState(prev => {
       const newPositions = [...prev];
@@ -787,107 +815,3 @@ export default function SceneContainer() {
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}
               rotation={new THREE.Euler(...(inverterRotations[index] || [0,0,0]))}
-              inverterIndex={index}
-              isSelected={selectedInverterId === index}
-              onSelect={() => handleSelectInverter(index)}
-              onPositionChange={(newPos) => handleInverterPositionChange(index, newPos)}
-            />
-          ))}
-          
-          {cameraPositionsState.map((position, index) => (
-            <Camera 
-              key={`camera-${index}`}
-              position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(cameraRotations[index] || [0,0,0]))}
-              cameraIndex={index}
-              isSelected={selectedCameraId === index}
-              onSelect={() => handleSelectCamera(index)}
-              onPositionChange={(newPos) => handleCameraPositionChange(index, newPos)}
-            />
-          ))}
-          
-          {transformerPositionsState.map((position, index) => (
-            <TransformerStation 
-              key={`transformer-${index}`}
-              position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(transformerRotations[index] || [0,0,0]))}
-              transformerIndex={index}
-              isSelected={selectedTransformerId === index}
-              onSelect={() => handleSelectTransformer(index)}
-              onPositionChange={(newPos) => handleTransformerPositionChange(index, newPos)}
-            />
-          ))}
-          
-          <ITHouse 
-            position={new THREE.Vector3(...itHousePositionState)} 
-            isSelected={isITHouseSelected}
-            onSelect={handleSelectITHouse}
-            onPositionChange={handleITHousePositionChange}
-          />
-          
-          {savedBoundaries.map((boundary, index) => (
-            <Road 
-              key={`road-${index}`}
-              boundary={boundary}
-              width={10}
-              color="#2a2a2a"
-              elevation={0.1}
-            />
-          ))}
-          
-          <OrbitControls 
-            ref={orbitControlsRef}
-            enableDamping 
-            dampingFactor={0.05} 
-            maxDistance={800}
-            minDistance={10}
-            maxPolarAngle={Math.PI / 2 - 0.1}
-            minPolarAngle={0.1}
-            target={new THREE.Vector3(...panelCenter)}
-            enabled={!drawingMode && selectedComponentType === null}
-          />
-          
-          {showStats && <Stats />}
-        </Suspense>
-      </Canvas>
-      
-      <Controls 
-        showStats={showStats}
-        setShowStats={setShowStats}
-        timeOfDay={timeOfDay}
-        setTimeOfDay={setTimeOfDay}
-        onResetPanels={resetPanelPositions}
-        
-        selectedPanelId={selectedPanelId}
-        onUpdatePanelPosition={updatePanelPosition}
-        onUpdatePanelRotation={updatePanelRotation}
-        
-        selectedComponentType={selectedComponentType}
-        selectedInverterId={selectedInverterId}
-        onUpdateInverterPosition={updateInverterPosition}
-        onUpdateInverterRotation={updateInverterRotation}
-        
-        selectedTransformerId={selectedTransformerId}
-        onUpdateTransformerPosition={updateTransformerPosition}
-        onUpdateTransformerRotation={updateTransformerRotation}
-        
-        selectedCameraId={selectedCameraId}
-        onUpdateCameraPosition={updateCameraPosition}
-        onUpdateCameraRotation={updateCameraRotation}
-        
-        drawingMode={drawingMode}
-        setDrawingMode={setDrawingMode}
-        onSaveBoundary={handleSaveBoundary}
-        onClearBoundary={handleClearBoundary}
-        onClearAllBoundaries={handleClearAllBoundaries}
-        onClearAllPanels={handleClearAllPanels}
-        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
-        onSaveLayout={handleSaveLayout}
-        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
-      />
-      
-      <Loader />
-    </div>
-  );
-}
-
