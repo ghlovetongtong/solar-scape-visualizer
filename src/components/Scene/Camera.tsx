@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -94,16 +93,6 @@ export default function Camera({
     }
   };
 
-  // Calculate color of indicator light - varies based on camera position
-  const indicatorColor = new THREE.Color(
-    Math.sin(cameraIndex * 0.7) * 0.25 + 0.75, 
-    0.1, 
-    Math.cos(cameraIndex * 0.5) * 0.25 + 0.75
-  );
-
-  // Scale factor to increase the size of the camera model
-  const scale = 1.8;
-
   return (
     <group 
       position={position} 
@@ -111,7 +100,6 @@ export default function Camera({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerOut={handlePointerUp}
-      scale={[scale, scale, scale]}
     >
       {/* Camera mount/pole */}
       <mesh castShadow position={[0, -5, 0]}>
@@ -142,8 +130,8 @@ export default function Camera({
         <mesh position={[0, 0.12, 0.2]}>
           <sphereGeometry args={[0.03, 8, 8]} />
           <meshStandardMaterial 
-            color={indicatorColor} 
-            emissive={indicatorColor} 
+            color="#ff0000" 
+            emissive="#ff0000" 
             emissiveIntensity={2} 
           />
         </mesh>

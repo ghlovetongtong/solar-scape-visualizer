@@ -64,8 +64,6 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
         setPanelPositions(parsedLayout.panels);
         setInitialPositions(parsedLayout.panels);
         console.log(`Loaded ${parsedLayout.panels.length} panels from saved layout`);
-        console.log(`Layout also contains ${parsedLayout.cameras.length} cameras at positions:`, 
-          JSON.stringify(parsedLayout.cameras));
         toast.success(`Loaded complete layout with ${parsedLayout.panels.length} panels`);
       } else {
         // Try to load legacy panel-only layout
@@ -96,22 +94,11 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const saveCurrentLayout = useCallback((completeLayout?: CompleteLayoutData) => {
     try {
       if (completeLayout) {
-        // Ensure all array data is properly formatted and cameras is included
-        const sanitizedLayout: CompleteLayoutData = {
-          panels: completeLayout.panels || [],
-          inverters: completeLayout.inverters || [],
-          transformers: completeLayout.transformers || [],
-          cameras: completeLayout.cameras || [],
-          itHouse: completeLayout.itHouse || [0, 0, 0]
-        };
-        
-        console.log("Saving complete layout with cameras:", sanitizedLayout.cameras);
-        
         // Save complete layout with all components
-        localStorage.setItem('solar-station-complete-layout', JSON.stringify(sanitizedLayout));
-        toast.success(`Saved complete layout with ${sanitizedLayout.panels.length} panels and all equipment`);
+        localStorage.setItem('solar-station-complete-layout', JSON.stringify(completeLayout));
+        toast.success(`Saved complete layout with ${completeLayout.panels.length} panels and all equipment`);
         setInitialPositions(completeLayout.panels);
-        console.log(`Saved complete layout with ${completeLayout.panels.length} panels and ${sanitizedLayout.cameras.length} cameras`);
+        console.log(`Saved complete layout with ${completeLayout.panels.length} panels`);
       } else {
         // Legacy save (panels only)
         localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));

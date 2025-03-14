@@ -16,6 +16,7 @@ import SkyBox from './SkyBox';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
+// New interface for draggable object state management
 interface DraggableObjectState {
   type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
   index?: number;
@@ -413,63 +414,13 @@ export default function SceneContainer() {
 
     const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
 
-    // Generate camera positions around the perimeter of solar panels with better coverage
-    const cameraPositions: [number, number, number][] = [];
-    
-    // Camera height
-    const cameraHeight = 8;
-    
-    // Corner cameras (slightly pulled outside for better overview)
-    cameraPositions.push([minX - 5, cameraHeight, minZ - 5]); // Northwest corner
-    cameraPositions.push([maxX + 5, cameraHeight, minZ - 5]); // Northeast corner
-    cameraPositions.push([minX - 5, cameraHeight, maxZ + 5]); // Southwest corner
-    cameraPositions.push([maxX + 5, cameraHeight, maxZ + 5]); // Southeast corner
-    
-    // Side cameras
-    const sideCamCount = 4; // Number of cameras on each side
-    
-    // North side (minZ)
-    for (let i = 1; i <= sideCamCount; i++) {
-      const x = minX + (width * i) / (sideCamCount + 1);
-      cameraPositions.push([x, cameraHeight, minZ - 8]);
-    }
-    
-    // East side (maxX)
-    for (let i = 1; i <= sideCamCount; i++) {
-      const z = minZ + (depth * i) / (sideCamCount + 1);
-      cameraPositions.push([maxX + 8, cameraHeight, z]);
-    }
-    
-    // South side (maxZ)
-    for (let i = 1; i <= sideCamCount; i++) {
-      const x = minX + (width * i) / (sideCamCount + 1);
-      cameraPositions.push([x, cameraHeight, maxZ + 8]);
-    }
-    
-    // West side (minX)
-    for (let i = 1; i <= sideCamCount; i++) {
-      const z = minZ + (depth * i) / (sideCamCount + 1);
-      cameraPositions.push([minX - 8, cameraHeight, z]);
-    }
-    
-    // If the panel area is very large, add some internal cameras
-    if (width > 100 && depth > 100) {
-      // Add cameras in the central area
-      cameraPositions.push([centerX, cameraHeight, centerZ]);
-      
-      // Add cameras at quarter positions if the area is large enough
-      if (width > 200 && depth > 200) {
-        cameraPositions.push([centerX - width/4, cameraHeight, centerZ - depth/4]);
-        cameraPositions.push([centerX + width/4, cameraHeight, centerZ - depth/4]);
-        cameraPositions.push([centerX - width/4, cameraHeight, centerZ + depth/4]);
-        cameraPositions.push([centerX + width/4, cameraHeight, centerZ + depth/4]);
-      }
-    }
-    
-    // Limit to maximum 20 cameras
-    if (cameraPositions.length > 20) {
-      cameraPositions.length = 20;
-    }
+    const cameraPositions: [number, number, number][] = [
+      [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
+      [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
+      [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
+      [minX, 8, centerZ - depth * 0.3], [minX, 8, centerZ + depth * 0.3],
+      [maxX, 8, centerZ - depth * 0.3], [maxX, 8, centerZ + depth * 0.3]
+    ];
 
     return {
       inverters: inverterPositions,
@@ -486,71 +437,28 @@ export default function SceneContainer() {
   const calculatedCameraPositions = positions.cameras;
 
   useEffect(() => {
-    // Always try to load from localStorage first
-    let loadedFromStorage = false;
-    try {
-      const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
-      if (savedLayoutData) {
-        const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
-        
-        // Set camera positions directly from saved layout if available
-        if (parsedLayout.cameras && parsedLayout.cameras.length > 0) {
-          console.log("Setting camera positions directly from saved layout:", JSON.stringify(parsedLayout.cameras, null, 2));
-          setCameraPositions(parsedLayout.cameras);
-          loadedFromStorage = true;
-        }
-      }
-    } catch (error) {
-      console.error("Error loading camera positions from complete layout:", error);
-    }
-    
-    // Only use calculated positions if we didn't load from storage
-    if (!loadedFromStorage && calculatedCameraPositions.length > 0) {
-      console.log("Using calculated camera positions:", calculatedCameraPositions);
-      setCameraPositions(calculatedCameraPositions);
-    }
-  }, [calculatedCameraPositions]);
-
-  useEffect(() => {
-    // Try to load from localStorage first
-    try {
-      const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
-      if (savedLayoutData) {
-        const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
-        
-        // Only set inverter positions if we don't have them already
-        if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
-          setInverterPositions(parsedLayout.inverters);
-        }
-        
-        // Only set transformer positions if we don't have them already
-        if (parsedLayout.transformers.length > 0 && transformerPositions.length === 0) {
-          setTransformerPositions(parsedLayout.transformers);
-        }
-        
-        // Only set IT house position if we don't have it already
-        if (parsedLayout.itHouse && (!itHousePosition[0] && !itHousePosition[2])) {
-          setItHousePosition(parsedLayout.itHouse);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading equipment positions from complete layout:", error);
-    }
-    
-    // Fall back to calculated positions if needed
     if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
       setInverterPositions(calculatedInverterPositions);
+      console.log("Initialized inverter positions:", calculatedInverterPositions);
+    }
+    
+    if (cameraPositions.length === 0 && calculatedCameraPositions.length > 0) {
+      setCameraPositions(calculatedCameraPositions);
+      console.log("Initialized camera positions:", calculatedCameraPositions);
     }
     
     if (transformerPositions.length === 0 && calculatedTransformerPositions.length > 0) {
       setTransformerPositions(calculatedTransformerPositions);
+      console.log("Initialized transformer positions:", calculatedTransformerPositions);
     }
     
     if (!itHousePosition[0] && !itHousePosition[2] && calculatedItHousePosition[0] !== 0) {
       setItHousePosition(calculatedItHousePosition);
+      console.log("Initialized IT house position:", calculatedItHousePosition);
     }
   }, [
     calculatedInverterPositions, inverterPositions.length,
+    calculatedCameraPositions, cameraPositions.length,
     calculatedTransformerPositions, transformerPositions.length,
     calculatedItHousePosition, itHousePosition
   ]);
@@ -725,7 +633,6 @@ export default function SceneContainer() {
 
   const handleSaveLayout = useCallback(() => {
     if (saveCurrentLayout) {
-      // Make sure we're passing the CURRENT camera positions
       const completeLayout: CompleteLayoutData = {
         panels: panelPositions,
         inverters: inverterPositions,
@@ -734,7 +641,6 @@ export default function SceneContainer() {
         itHouse: itHousePosition
       };
       
-      console.log("Saving layout with cameras at positions:", JSON.stringify(cameraPositions, null, 2));
       saveCurrentLayout(completeLayout);
     }
   }, [saveCurrentLayout, panelPositions, inverterPositions, transformerPositions, cameraPositions, itHousePosition]);
@@ -751,32 +657,31 @@ export default function SceneContainer() {
       }
     }
     
-    // Check for complete layout data - make this independent
+    // Check for complete layout data
     const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
     if (savedLayoutData) {
       try {
         const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
         
-        // Set camera positions directly if available
-        if (parsedLayout.cameras && parsedLayout.cameras.length > 0) {
-          console.log("Setting cameras directly from saved layout:", JSON.stringify(parsedLayout.cameras, null, 2));
-          setCameraPositions(parsedLayout.cameras);
-        }
-        
-        // Only set other equipment positions if we don't have them already
+        // Only set equipment positions if we have data and current positions are default/empty
         if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
           setInverterPositions(parsedLayout.inverters);
-          console.log("Loaded inverter positions from saved layout:", JSON.stringify(parsedLayout.inverters, null, 2));
+          console.log("Loaded inverter positions from saved layout:", parsedLayout.inverters);
         }
         
         if (parsedLayout.transformers.length > 0 && transformerPositions.length === 0) {
           setTransformerPositions(parsedLayout.transformers);
-          console.log("Loaded transformer positions from saved layout:", JSON.stringify(parsedLayout.transformers, null, 2));
+          console.log("Loaded transformer positions from saved layout:", parsedLayout.transformers);
         }
         
-        if (parsedLayout.itHouse && (!itHousePosition[0] && !itHousePosition[2])) {
+        if (parsedLayout.cameras.length > 0 && cameraPositions.length === 0) {
+          setCameraPositions(parsedLayout.cameras);
+          console.log("Loaded camera positions from saved layout:", parsedLayout.cameras);
+        }
+        
+        if (parsedLayout.itHouse && !itHousePosition[0] && !itHousePosition[2]) {
           setItHousePosition(parsedLayout.itHouse);
-          console.log("Loaded IT house position from saved layout:", JSON.stringify(parsedLayout.itHouse, null, 2));
+          console.log("Loaded IT house position from saved layout:", parsedLayout.itHouse);
         }
         
       } catch (error) {
