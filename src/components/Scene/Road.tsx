@@ -45,14 +45,6 @@ export default function Road({
       side: THREE.DoubleSide,
     });
 
-    // Create road markings geometry
-    const markingsMaterial = new THREE.MeshStandardMaterial({
-      color: '#ffffff',
-      roughness: 0.5,
-      metalness: 0,
-      side: THREE.DoubleSide,
-    });
-
     return (
       <group>
         <mesh 

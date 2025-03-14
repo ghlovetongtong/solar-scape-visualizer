@@ -17,7 +17,7 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
         receiveShadow
         position={[0, 1, 0]}
       >
-        <boxGeometry args={[2.5, 2, 1.5]} />
+        <boxGeometry args={[3.0, 2.2, 1.8]} />
         <meshPhysicalMaterial 
           color="#2b2d42" 
           roughness={0.6} 
@@ -28,9 +28,9 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       {/* Cooling fins */}
       <mesh 
         castShadow 
-        position={[0, 1, 0.8]}
+        position={[0, 1, 0.95]}
       >
-        <boxGeometry args={[2.2, 1.8, 0.1]} />
+        <boxGeometry args={[2.7, 2.0, 0.15]} />
         <meshPhysicalMaterial 
           color="#4a4e69" 
           roughness={0.3} 
@@ -43,7 +43,7 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
         castShadow 
         position={[0, 0, 0]}
       >
-        <boxGeometry args={[2, 0.5, 1]} />
+        <boxGeometry args={[2.4, 0.6, 1.2]} />
         <meshPhysicalMaterial 
           color="#222222" 
           roughness={0.5} 
@@ -53,21 +53,21 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       
       {/* Status indicator light */}
       <mesh
-        position={[0.9, 1.5, 0.8]}
+        position={[1.1, 1.6, 0.95]}
       >
-        <sphereGeometry args={[0.15, 16, 16]} />
+        <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
           color="#00ff00" 
           emissive="#00ff00"
-          emissiveIntensity={0.8}
+          emissiveIntensity={1.0}
         />
       </mesh>
 
       {/* Ventilation grille */}
       <mesh
-        position={[-0.9, 1.5, 0.8]}
+        position={[-1.0, 1.6, 0.95]}
       >
-        <boxGeometry args={[0.8, 0.8, 0.05]} />
+        <boxGeometry args={[1.0, 1.0, 0.08]} />
         <meshStandardMaterial 
           color="#333333"
           roughness={0.2}
@@ -76,21 +76,21 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
 
       {/* Cables */}
       <mesh
-        position={[0, 0.3, 0.8]}
+        position={[0, 0.3, 0.9]}
       >
-        <cylinderGeometry args={[0.1, 0.1, 1.5, 8]} />
+        <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
         <meshStandardMaterial color="#111111" />
       </mesh>
 
       {/* Inverter label */}
       <Text
-        position={[0, 2.5, 0]}
+        position={[0, 2.7, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.4}
+        fontSize={0.5}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.04}
+        outlineWidth={0.06}
         outlineColor="#000000"
       >
         {`Inverter ${inverterIndex + 1}`}
