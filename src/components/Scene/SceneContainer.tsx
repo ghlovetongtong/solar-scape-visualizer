@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats } from '@react-three/drei';
@@ -21,7 +20,6 @@ import InverterContainer from './InverterContainer';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
-// Add initial inverters
 const initialInverters = [
   {
     position: [50, 1, 30] as [number, number, number],
@@ -58,17 +56,11 @@ const SceneContainer: React.FC = () => {
   const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
   const [isDraggingInverter, setIsDraggingInverter] = useState<boolean>(false);
   
-  // Add time of day state
-  const [timeOfDay, setTimeOfDay] = useState<number>(0.5); // noon by default
-  
-  // Add boundary drawing state
+  const [timeOfDay, setTimeOfDay] = useState<number>(0.5);
   const [drawingMode, setDrawingMode] = useState<boolean>(false);
   const [boundaries, setBoundaries] = useState<BoundaryPoint[][]>([]);
-  
-  // Add stats toggle
   const [showStats, setShowStats] = useState<boolean>(true);
   
-  // Use panel positions hook
   const {
     panelPositions,
     selectedPanelId,
@@ -81,19 +73,16 @@ const SceneContainer: React.FC = () => {
     saveCurrentLayout
   } = usePanelPositions();
 
-  // Handle inverter selection
   const handleSelectInverter = useCallback((index: number) => {
     console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
     setSelectedInverterIndex(index);
   }, [selectedInverterIndex]);
 
-  // Handle inverter drag start
   const handleInverterDragStart = useCallback((index: number) => {
     console.log(`Started dragging inverter ${index + 1}`);
     setIsDraggingInverter(true);
   }, []);
 
-  // Handle inverter drag
   const handleInverterDrag = useCallback((index: number, position: [number, number, number]) => {
     setInverters(prevInverters => 
       prevInverters.map(inverter => 
@@ -104,12 +93,10 @@ const SceneContainer: React.FC = () => {
     );
   }, []);
 
-  // Handle inverter drag end
   const handleInverterDragEnd = useCallback((index: number, position: [number, number, number]) => {
     console.log(`Finished dragging object`);
     setIsDraggingInverter(false);
     
-    // Update the inverter position
     setInverters(prevInverters => 
       prevInverters.map(inverter => 
         inverter.index === index 
@@ -118,23 +105,19 @@ const SceneContainer: React.FC = () => {
       )
     );
     
-    // Show a toast notification
     toast.success(`Inverter ${index + 1} repositioned`, {
       description: `New position: X: ${position[0].toFixed(1)}, Z: ${position[2].toFixed(1)}`
     });
   }, []);
-  
-  // Handle panel selection
+
   const handleSelectPanel = useCallback((id: number | null) => {
     selectPanel(id);
   }, [selectPanel]);
-  
-  // Handle deselect inverter
+
   const handleDeselectInverter = useCallback(() => {
     setSelectedInverterIndex(null);
   }, []);
-  
-  // Handle update inverter position
+
   const handleUpdateInverterPosition = useCallback((index: number, positionDelta: [number, number, number]) => {
     setInverters(prevInverters => 
       prevInverters.map(inverter => 
@@ -151,20 +134,15 @@ const SceneContainer: React.FC = () => {
       )
     );
   }, []);
-  
-  // Handle save boundary
+
   const handleSaveBoundary = useCallback(() => {
-    // This would be implemented to save the current boundary
     toast.success('Boundary saved');
   }, []);
-  
-  // Handle clear boundary
+
   const handleClearBoundary = useCallback(() => {
-    // This would be implemented to clear the current boundary drawing
     toast.info('Boundary drawing cleared');
   }, []);
-  
-  // Handle generate panels in boundary
+
   const handleGenerateNewPanelsInBoundary = useCallback(() => {
     if (boundaries.length === 0) {
       toast.error('No boundaries defined');
@@ -180,14 +158,13 @@ const SceneContainer: React.FC = () => {
     
     toast.success(`Generated ${totalPanels} new solar panels`);
   }, [boundaries, addNewPanelsInBoundary]);
-  
-  // Handle save layout
+
   const handleSaveLayout = useCallback(() => {
     const completeLayout = {
       panels: panelPositions,
       inverters: inverters.map(inv => inv.position),
-      transformers: [[0, 0, 0]], // Default position
-      cameras: [], // No cameras yet
+      transformers: [[0, 0, 0] as [number, number, number]],
+      cameras: [] as [number, number, number][],
       itHouse: [-40, 0, 10] as [number, number, number]
     };
     
@@ -205,7 +182,6 @@ const SceneContainer: React.FC = () => {
     >
       {showStats && <Stats />}
       
-      {/* Camera and Controls need props */}
       <Camera 
         position={new THREE.Vector3(0, 50, 0)} 
         cameraIndex={0} 
@@ -232,7 +208,6 @@ const SceneContainer: React.FC = () => {
         onSaveLayout={handleSaveLayout}
       />
       
-      {/* Environment */}
       <SkyBox timeOfDay={timeOfDay} />
       <ambientLight intensity={0.6} />
       <directionalLight
@@ -244,22 +219,22 @@ const SceneContainer: React.FC = () => {
         shadow-bias={-0.0001}
       />
       
-      {/* Ground, terrain and structures */}
       <Terrain />
       <Ground />
-      <TransformerStation position={new THREE.Vector3(0, 0, 0)} />
+      <TransformerStation 
+        position={new THREE.Vector3(0, 0, 0)} 
+        transformerIndex={0} 
+      />
       <ITHouse position={new THREE.Vector3(-40, 0, 10)} />
       <Road />
       <Vegetation />
       
-      {/* Solar panels with required props */}
       <SolarPanel 
         panelPositions={panelPositions}
         selectedPanelId={selectedPanelId}
         onSelectPanel={handleSelectPanel}
       />
       
-      {/* Inverters */}
       <InverterContainer 
         inverters={inverters}
         selectedInverterIndex={selectedInverterIndex}
@@ -269,7 +244,6 @@ const SceneContainer: React.FC = () => {
         onDragEnd={handleInverterDragEnd}
       />
       
-      {/* UI Components */}
       <InverterControls 
         selectedInverterIndex={selectedInverterIndex !== null ? selectedInverterIndex : 0} 
         onDeselectInverter={handleDeselectInverter}
