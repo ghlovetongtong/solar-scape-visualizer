@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -12,9 +13,8 @@ interface SolarPanelsProps {
 }
 
 export default function SolarPanels({ panelPositions, selectedPanelId, onSelectPanel }: SolarPanelsProps) {
-  // Create panel geometry and materials
+  // Create panel geometry with exact dimensions - fixed to 3x2 units
   const panelGeometry = useMemo(() => {
-    // Keep exact same dimensions for visual appearance
     const baseGeometry = new THREE.BoxGeometry(3, 0.1, 2);
     return baseGeometry;
   }, []);
@@ -186,13 +186,17 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       
       // Create matrices for all panels
       batch.forEach((panel, index) => {
+        // Use a consistent matrix transformation to avoid distortion
         const matrix = new THREE.Matrix4();
+        // Get position directly from panel data
         const position = new THREE.Vector3(...panel.position);
+        // Convert rotation values to quaternion, ensuring correct orientation
         const rotation = new THREE.Euler(...panel.rotation);
         const quaternion = new THREE.Quaternion().setFromEuler(rotation);
-        const scale = new THREE.Vector3(...panel.scale);
+        // Explicitly set scale to [1,1,1] to prevent any scaling issues
+        const scale = new THREE.Vector3(1, 1, 1);
         
-        // Compose matrix for panel
+        // Compose matrix with exact values to ensure consistent rendering
         matrix.compose(position, quaternion, scale);
         
         // Hide the panel if it's the selected one (we'll render it separately)
@@ -276,12 +280,12 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
           <mesh
             position={new THREE.Vector3(...selectedPanel.position)}
             rotation={new THREE.Euler(...selectedPanel.rotation)}
-            scale={new THREE.Vector3(...selectedPanel.scale)}
+            scale={new THREE.Vector3(1, 1, 1)} // Ensure consistent scale
             castShadow
             receiveShadow
             userData={{ panelId: selectedPanel.id }}
           >
-            <boxGeometry args={[3, 0.1, 2]} />
+            <boxGeometry args={[3, 0.1, 2]} /> {/* Exact dimensions matching instanced panels */}
             <meshStandardMaterial 
               map={panelTexture}
               color='#38BDF8'  // Brighter highlight color

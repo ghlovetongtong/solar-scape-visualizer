@@ -29,10 +29,13 @@ export function updateInstancedMesh(
   const quaternion = new THREE.Quaternion();
   
   instances.forEach((instance, index) => {
+    // Ensure exact position from instance data
     const position = new THREE.Vector3(...instance.position);
+    // Convert rotation values to quaternion
     const euler = new THREE.Euler(...instance.rotation);
     quaternion.setFromEuler(euler);
-    const scale = new THREE.Vector3(...instance.scale);
+    // Always use uniform scale [1,1,1] to prevent distortion
+    const scale = new THREE.Vector3(1, 1, 1);
     
     matrix.compose(position, quaternion, scale);
     mesh.setMatrixAt(index, matrix);

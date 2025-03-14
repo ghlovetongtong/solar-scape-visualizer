@@ -109,8 +109,8 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       const boundaryWidth = maxX - minX;
       const boundaryDepth = maxZ - minZ;
       
-      // Panel size is approximately 3 units wide and 2 units deep
-      // Use these dimensions directly for spacing to create no gaps
+      // Panel size is exactly 3 units wide and 2 units deep
+      // No variation to ensure consistent panel sizes
       const spacingX = 3;
       const spacingZ = 2;
       
@@ -146,14 +146,14 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
               // Get ground height at this position
               const groundHeight = getHeightAtPosition(x, z);
               
-              // Create the panel with a slight randomization to rotation
-              const rotationY = (Math.random() - 0.5) * 0.1; // Reduced rotation variation
+              // Create the panel with NO randomization to rotation to prevent visual distortion
+              // Removed the random rotation that was causing visual inconsistency
               
               newPanels.push({
                 id: nextPanelId + panelCount,
                 position: [x, 1.0 + groundHeight, z],
-                rotation: [-Math.PI / 8, rotationY, 0],
-                scale: [1, 1, 1]
+                rotation: [-Math.PI / 8, 0, 0], // Fixed rotation without random variation
+                scale: [1, 1, 1] // Ensure uniform scale for all panels
               });
               
               panelCount++;
