@@ -30,7 +30,7 @@ export function useDraggable(
   const { camera, gl } = useThree();
   const plane = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
   const planeNormal = new THREE.Vector3(0, 1, 0);
-  const startPoint = new THREE.Vector3();
+  const intersection = useRef(new THREE.Vector3());
   const pointerId = useRef<number | null>(null);
 
   // Set initial position
@@ -42,6 +42,8 @@ export function useDraggable(
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!enabled || !groupRef.current) return;
+    
+    console.log("Pointer down on draggable object", e.pointerId);
     
     // Prevent event from propagating to parent elements
     e.stopPropagation();
@@ -59,18 +61,16 @@ export function useDraggable(
     plane.current.setFromNormalAndCoplanarPoint(planeNormal, planePosition);
     
     // Cast a ray from the camera to the pointer position
+    const raycaster = new THREE.Raycaster();
     const coords = {
       x: (e.clientX / window.innerWidth) * 2 - 1,
       y: -(e.clientY / window.innerHeight) * 2 + 1,
     };
-    
-    // Create a raycaster
-    const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(coords.x, coords.y), camera);
     
     // Find intersection with the horizontal plane
-    if (raycaster.ray.intersectPlane(plane.current, startPoint)) {
-      dragStartPoint.current = startPoint.clone();
+    if (raycaster.ray.intersectPlane(plane.current, intersection.current)) {
+      dragStartPoint.current = intersection.current.clone();
     }
     
     if (onDragStart) {
@@ -88,22 +88,21 @@ export function useDraggable(
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
     if (!isDragging || !groupRef.current || !originalPosition.current || !dragStartPoint.current || pointerId.current !== e.pointerId) return;
     
+    console.log("Pointer move while dragging", e.pointerId);
+    
     // Update the raycaster with current pointer position
+    const raycaster = new THREE.Raycaster();
     const coords = {
       x: (e.clientX / window.innerWidth) * 2 - 1,
       y: -(e.clientY / window.innerHeight) * 2 + 1,
     };
-    
-    // Create a raycaster
-    const raycaster = new THREE.Raycaster();
     raycaster.setFromCamera(new THREE.Vector2(coords.x, coords.y), camera);
     
     // Find intersection with the horizontal plane
-    const intersection = new THREE.Vector3();
-    if (raycaster.ray.intersectPlane(plane.current, intersection)) {
+    if (raycaster.ray.intersectPlane(plane.current, intersection.current)) {
       // Calculate the movement delta from the drag start point
-      const deltaX = intersection.x - dragStartPoint.current.x;
-      const deltaZ = intersection.z - dragStartPoint.current.z;
+      const deltaX = intersection.current.x - dragStartPoint.current.x;
+      const deltaZ = intersection.current.z - dragStartPoint.current.z;
       
       // Update the object position
       groupRef.current.position.x = originalPosition.current.x + deltaX;
@@ -120,6 +119,8 @@ export function useDraggable(
 
   const handlePointerUp = (e: ThreeEvent<PointerEvent>) => {
     if (!isDragging || pointerId.current !== e.pointerId) return;
+    
+    console.log("Pointer up after dragging", e.pointerId);
     
     // Release pointer capture
     // TypeScript fix: Cast to HTMLElement to access pointer capture methods
@@ -142,6 +143,8 @@ export function useDraggable(
 
   const handlePointerCancel = (e: ThreeEvent<PointerEvent>) => {
     if (pointerId.current !== e.pointerId) return;
+    
+    console.log("Pointer cancel event", e.pointerId);
     
     // Release pointer capture
     // TypeScript fix: Cast to HTMLElement to access pointer capture methods

@@ -37,6 +37,7 @@ export default function Camera({
   } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
+      console.log("Camera drag end:", newPosition);
       if (onPositionChange) {
         onPositionChange(newPosition);
       }
@@ -53,6 +54,7 @@ export default function Camera({
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    console.log("Camera clicked:", cameraIndex);
     if (onSelect) {
       onSelect();
     }

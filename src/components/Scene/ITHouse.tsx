@@ -28,6 +28,7 @@ export default function ITHouse({
   } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
+      console.log("IT House drag end:", newPosition);
       if (onPositionChange) {
         onPositionChange(newPosition);
       }
@@ -36,6 +37,7 @@ export default function ITHouse({
 
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    console.log("IT House clicked");
     if (onSelect) {
       onSelect();
     }

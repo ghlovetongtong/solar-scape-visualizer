@@ -35,6 +35,7 @@ export default function Inverter({
   } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
+      console.log("Inverter drag end:", newPosition);
       if (onPositionChange) {
         onPositionChange(newPosition);
       }
@@ -43,6 +44,7 @@ export default function Inverter({
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    console.log("Inverter clicked:", inverterIndex);
     if (onSelect) {
       onSelect();
     }

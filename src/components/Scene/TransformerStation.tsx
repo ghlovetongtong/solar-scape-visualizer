@@ -35,6 +35,7 @@ export default function TransformerStation({
   } = useDraggable(position, {
     enabled: isSelected,
     onDragEnd: (newPosition) => {
+      console.log("Transformer drag end:", newPosition);
       if (onPositionChange) {
         onPositionChange(newPosition);
       }
@@ -43,6 +44,7 @@ export default function TransformerStation({
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    console.log("Transformer clicked:", transformerIndex);
     if (onSelect) {
       onSelect();
     }
