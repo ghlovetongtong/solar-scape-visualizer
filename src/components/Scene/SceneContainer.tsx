@@ -525,18 +525,27 @@ export default function SceneContainer() {
   }, []);
 
   const handleSceneObjectClick = useCallback((event: any) => {
-    if (event.object && event.object.userData) {
-      if (event.object.userData.type === 'inverter') {
-        setSelectedInverterIndex(event.object.userData.inverterIndex);
-        selectPanel(null);
-        event.stopPropagation();
-      } else if (event.object.userData.type === 'panel') {
-        setSelectedInverterIndex(null);
-      } else {
-        setSelectedInverterIndex(null);
-        selectPanel(null);
-      }
-    } else {
+    console.log("Scene click detected", event.object?.userData);
+    
+    if (!event.object) {
+      setSelectedInverterIndex(null);
+      selectPanel(null);
+      return;
+    }
+    
+    const userData = event.object.userData;
+    if (!userData) return;
+    
+    if (userData.type === 'inverter') {
+      console.log(`Inverter ${userData.inverterIndex} selected`);
+      setSelectedInverterIndex(userData.inverterIndex);
+      selectPanel(null);
+      event.stopPropagation();
+    } 
+    else if (userData.type === 'panel' || userData.type === 'panel-instance') {
+      setSelectedInverterIndex(null);
+    }
+    else {
       setSelectedInverterIndex(null);
       selectPanel(null);
     }

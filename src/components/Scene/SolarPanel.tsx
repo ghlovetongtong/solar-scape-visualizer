@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -129,20 +130,30 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelPositions, batchSize]);
   
   const handleClick = (event: any) => {
+    event.stopPropagation(); // 阻止事件冒泡
+    
     if (event.intersections.length > 0) {
       const intersection = event.intersections[0];
-      if (intersection.instanceId !== undefined) {
-        const batchIndex = Math.floor(intersection.object.userData.batchIndex || 0);
+      
+      if (intersection.instanceId !== undefined && intersection.object.userData.batchIndex !== undefined) {
+        const batchIndex = Math.floor(intersection.object.userData.batchIndex);
         const panelId = batchIndex * batchSize + intersection.instanceId;
-        onSelectPanel(panelId);
+        
+        // 确保索引在有效范围内
+        if (panelId < panelPositions.length) {
+          const actualPanelId = panelPositions[panelId].id;
+          console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
+          onSelectPanel(actualPanelId);
+        }
       } else if (intersection.object.userData.panelId !== undefined) {
-        onSelectPanel(intersection.object.userData.panelId);
+        const panelId = intersection.object.userData.panelId;
+        console.log(`Selected panel clicked: panelId=${panelId}`);
+        onSelectPanel(panelId);
+      } else {
+        // 如果点击的不是面板，保持选中状态不变
+        console.log('Clicked on panel group but not a specific panel');
       }
-    } else {
-      onSelectPanel(null);
     }
-    
-    event.stopPropagation();
   };
   
   const selectedPanel = useMemo(() => {
@@ -199,7 +210,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelBatches, selectedPanelId, panelPositions]);
   
   return (
-    <group onClick={handleClick} userData={{ type: 'panel' }}>
+    <group onClick={handleClick} userData={{ type: 'panel-group' }}>
       {panelBatches.map((batch, batchIndex) => (
         <group key={`batch-${batchIndex}`}>
           <instancedMesh
@@ -209,7 +220,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex }}
+            userData={{ batchIndex, type: 'panel-instance' }}
           />
           
           <instancedMesh
@@ -219,7 +230,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex }}
+            userData={{ batchIndex, type: 'panel-instance' }}
           />
           
           <instancedMesh
@@ -229,7 +240,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[bracketGeometry, materials.bracketMaterial, batch.length]}
             castShadow
             receiveShadow
-            userData={{ batchIndex }}
+            userData={{ batchIndex, type: 'panel-instance' }}
           />
         </group>
       ))}

@@ -30,10 +30,19 @@ export default function Inverter({
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
+  const handleClick = (event: any) => {
+    // 阻止事件冒泡，确保不会触发场景的点击事件
+    event.stopPropagation();
+    if (onClick) {
+      onClick(event);
+    }
+    console.log(`Inverter ${inverterIndex + 1} clicked`);
+  };
+
   return (
     <group 
       position={position}
-      onClick={onClick}
+      onClick={handleClick}
       userData={{ type: 'inverter', inverterIndex }}
     >
       {/* Main inverter box */}
@@ -41,6 +50,7 @@ export default function Inverter({
         castShadow 
         receiveShadow
         position={[0, 1, 0]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         {baseMaterial}
@@ -50,6 +60,7 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 1, 0.95]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
         {finsMaterial}
@@ -59,6 +70,7 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 0, 0]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
         {connectionMaterial}
@@ -67,6 +79,7 @@ export default function Inverter({
       {/* Status indicator light */}
       <mesh
         position={[1.1, 1.6, 0.95]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
@@ -79,6 +92,7 @@ export default function Inverter({
       {/* Ventilation grille */}
       <mesh
         position={[-1.0, 1.6, 0.95]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <boxGeometry args={[1.0, 1.0, 0.08]} />
         <meshStandardMaterial 
@@ -90,6 +104,7 @@ export default function Inverter({
       {/* Cables */}
       <mesh
         position={[0, 0.3, 0.9]}
+        userData={{ type: 'inverter', inverterIndex }}
       >
         <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
         <meshStandardMaterial color="#111111" />
