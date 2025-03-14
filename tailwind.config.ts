@@ -65,6 +65,7 @@ export default {
 				},
 				solar: {
 					panel: '#0F1F40',  // Updated panel color
+					'panel-shadowed': '#F1F5FD', // New very light blue for shadowed panels
 					frame: '#8e9196',
 					inverter: '#403e43',
 					camera: '#333333',

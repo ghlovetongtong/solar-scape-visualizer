@@ -94,14 +94,14 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       emissiveIntensity: 0.2 // Reduced intensity for a more subdued glow
     });
     
-    // Using a much lighter color for shadowed panels
+    // Using an even lighter color for shadowed panels - very pale blue
     const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
       map: panelTexture,
-      color: new THREE.Color('#D3E4FD'),  // Very light blue for non-irradiated panels
+      color: new THREE.Color('#F1F5FD'),  // Much lighter blue for non-irradiated panels
       metalness: 0.5,
       roughness: 0.4,
       emissive: new THREE.Color('#111111'), // Darker emissive color for shadowed panels
-      emissiveIntensity: 0.1 // Lower intensity for non-irradiated panels
+      emissiveIntensity: 0.05 // Even lower intensity for non-irradiated panels
     });
     
     const frameMaterial = new THREE.MeshStandardMaterial({
