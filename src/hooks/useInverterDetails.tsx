@@ -21,6 +21,7 @@ export default function useInverterDetails() {
   const [selectedInverterData, setSelectedInverterData] = useState<InverterData | null>(null);
 
   const openInverterDetails = (inverterData: InverterData) => {
+    console.log("Opening inverter details with data:", inverterData);
     setSelectedInverterData(inverterData);
     setIsDetailsPopupOpen(true);
   };

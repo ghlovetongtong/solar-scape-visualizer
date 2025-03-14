@@ -35,9 +35,7 @@ export default function InverterContainer({
   onDrag
 }: InverterContainerProps) {
   // Use the hook to manage inverter details popup
-  const {
-    handleInverterClick
-  } = useInverterDetails();
+  const { openInverterDetails } = useInverterDetails();
 
   const handleInverterSelect = (event: any, index: number) => {
     // First handle the selection for parent component
@@ -45,8 +43,13 @@ export default function InverterContainer({
       onSelectInverter(index);
     }
     
+    // Extract the inverter data from the clicked object
+    const userData = event.object?.userData;
+    
     // Then show the details popup
-    handleInverterClick(event);
+    if (userData?.type === 'inverter' && userData.details) {
+      openInverterDetails(userData.details);
+    }
   };
 
   return (
