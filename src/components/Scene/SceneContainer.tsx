@@ -186,7 +186,7 @@ export default function SceneContainer() {
   ];
 
   const itHousePosition = isInitialized && panelPositions.length > 0 ? 
-    [60, 0, 40]     // Positioned well within terrain bounds (moved closer to center)
+    [-90, 0, 0]     // Positioned opposite to transformers (which are at x=90) and outside panel area
     : [0, 0, 0];    // Default position if panels not initialized
 
   const cameraPositions = isInitialized && panelPositions.length > 0 ? [
