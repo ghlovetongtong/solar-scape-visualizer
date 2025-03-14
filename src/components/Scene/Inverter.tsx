@@ -1,23 +1,35 @@
-
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { useThree, useFrame } from '@react-three/fiber';
 
 interface InverterProps {
   position: THREE.Vector3;
   inverterIndex: number;
   isSelected?: boolean;
+  isDragging?: boolean;
   onClick?: (event: any) => void;
+  onDragStart?: (index: number) => void;
+  onDragEnd?: (index: number, position: [number, number, number]) => void;
+  onDrag?: (index: number, position: [number, number, number]) => void;
 }
 
 export default function Inverter({ 
   position, 
   inverterIndex, 
-  isSelected = false, 
-  onClick 
+  isSelected = false,
+  isDragging = false,
+  onClick,
+  onDragStart,
+  onDragEnd,
+  onDrag
 }: InverterProps) {
   
-  // Define materials based on selection state
+  const groupRef = useRef<THREE.Group>(null);
+  const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
+  const { raycaster, camera, mouse } = useThree();
+  
+  // Define materials based on selection and dragging state
   const baseMaterial = isSelected
     ? <meshPhysicalMaterial color="#9b87f5" roughness={0.4} metalness={0.6} emissive="#9b87f5" emissiveIntensity={0.5} />
     : <meshPhysicalMaterial color="#2b2d42" roughness={0.6} metalness={0.4} />;
@@ -29,6 +41,36 @@ export default function Inverter({
   const finsMaterial = isSelected
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
+
+  // Set up drag handling
+  useFrame(() => {
+    if (isDragging && dragOffset && groupRef.current && onDrag) {
+      // Create a plane parallel to the ground at the object's height
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+      
+      // Cast ray from mouse position
+      raycaster.setFromCamera(mouse, camera);
+      
+      // Find intersection with drag plane
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(dragPlane, intersection);
+      
+      if (intersection) {
+        // Apply the drag offset to maintain relative position
+        intersection.sub(dragOffset);
+        
+        // Only update X and Z positions (keep Y constant)
+        const newPosition: [number, number, number] = [
+          intersection.x,
+          position.y, // Keep Y position constant
+          intersection.z
+        ];
+        
+        // Call the drag callback with the new position
+        onDrag(inverterIndex, newPosition);
+      }
+    }
+  });
 
   // Improved click handler to ensure event propagation is stopped correctly
   const handleClick = useCallback((event: any) => {
@@ -46,12 +88,50 @@ export default function Inverter({
       onClick(event);
     }
   }, [inverterIndex, isSelected, onClick]);
+  
+  const handlePointerDown = (e: THREE.Event) => {
+    e.stopPropagation();
+    
+    if (onDragStart) {
+      onDragStart(inverterIndex);
+      
+      // Calculate and store the offset between the object position and the intersection point
+      if (groupRef.current) {
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+        raycaster.setFromCamera(mouse, camera);
+        
+        const intersection = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+        
+        if (intersection) {
+          // Store the offset from intersection to object position
+          setDragOffset(intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z)));
+        }
+      }
+    }
+  };
+  
+  const handlePointerUp = (e: THREE.Event) => {
+    e.stopPropagation();
+    
+    if (isDragging && onDragEnd) {
+      if (groupRef.current) {
+        const newPosition: [number, number, number] = [position.x, position.y, position.z];
+        onDragEnd(inverterIndex, newPosition);
+      }
+      setDragOffset(null);
+    }
+  };
 
   return (
     <group 
       position={position}
       onClick={handleClick}
       userData={{ type: 'inverter', inverterIndex }}
+      ref={groupRef}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerOut={handlePointerUp}
     >
       {/* Main inverter box */}
       <mesh 

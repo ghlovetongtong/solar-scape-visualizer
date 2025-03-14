@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -15,6 +16,13 @@ import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import Road from './Road';
+
+// New interface for draggable object state management
+interface DraggableObjectState {
+  type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
+  index?: number;
+  isDragging: boolean;
+}
 
 function Loader() {
   const { progress, errors, active, item } = useProgress();
@@ -147,6 +155,13 @@ export default function SceneContainer() {
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
   const [inverterPositions, setInverterPositions] = useState<[number, number, number][]>([]);
+  const [cameraPositions, setCameraPositions] = useState<[number, number, number][]>([]);
+  const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
+  const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
+  
+  // New state for tracking which object is being dragged
+  const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
+  
   const orbitControlsRef = useRef<any>(null);
   
   const {
@@ -173,9 +188,10 @@ export default function SceneContainer() {
 
   useEffect(() => {
     if (orbitControlsRef.current) {
-      orbitControlsRef.current.enabled = !drawingMode;
+      // Disable orbit controls when in drawing mode or when dragging an object
+      orbitControlsRef.current.enabled = !drawingMode && !draggingObject;
     }
-  }, [drawingMode]);
+  }, [drawingMode, draggingObject]);
 
   const calculatePanelCenter = useCallback((): [number, number, number] => {
     if (!panelPositions || panelPositions.length === 0) {
@@ -419,16 +435,36 @@ export default function SceneContainer() {
 
   const positions = calculateSecondaryPositions();
   const calculatedInverterPositions = positions.inverters;
-  const transformerPositions = positions.transformers;
-  const itHousePosition = positions.itHouse;
-  const cameraPositions = positions.cameras;
+  const calculatedTransformerPositions = positions.transformers;
+  const calculatedItHousePosition = positions.itHouse;
+  const calculatedCameraPositions = positions.cameras;
 
   useEffect(() => {
     if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
       setInverterPositions(calculatedInverterPositions);
       console.log("Initialized inverter positions:", calculatedInverterPositions);
     }
-  }, [calculatedInverterPositions, inverterPositions.length]);
+    
+    if (cameraPositions.length === 0 && calculatedCameraPositions.length > 0) {
+      setCameraPositions(calculatedCameraPositions);
+      console.log("Initialized camera positions:", calculatedCameraPositions);
+    }
+    
+    if (transformerPositions.length === 0 && calculatedTransformerPositions.length > 0) {
+      setTransformerPositions(calculatedTransformerPositions);
+      console.log("Initialized transformer positions:", calculatedTransformerPositions);
+    }
+    
+    if (!itHousePosition[0] && !itHousePosition[2] && calculatedItHousePosition[0] !== 0) {
+      setItHousePosition(calculatedItHousePosition);
+      console.log("Initialized IT house position:", calculatedItHousePosition);
+    }
+  }, [
+    calculatedInverterPositions, inverterPositions.length,
+    calculatedCameraPositions, cameraPositions.length,
+    calculatedTransformerPositions, transformerPositions.length,
+    calculatedItHousePosition, itHousePosition
+  ]);
 
   const handleUpdateInverterPosition = useCallback((index: number, deltaPosition: [number, number, number]) => {
     if (index === null || index < 0 || index >= inverterPositions.length) {
@@ -465,6 +501,60 @@ export default function SceneContainer() {
       return newPositions;
     });
   }, [inverterPositions]);
+  
+  // New handlers for drag operations
+  const handleStartDrag = useCallback((type: 'inverter' | 'camera' | 'transformer' | 'itHouse', index?: number) => {
+    setDraggingObject({ type, index, isDragging: true });
+    
+    // Deselect panel when starting to drag another object
+    selectPanel(null);
+    
+    if (type === 'inverter') {
+      setSelectedInverterIndex(index !== undefined ? index : null);
+    } else {
+      // When dragging non-inverter objects, deselect any inverter
+      setSelectedInverterIndex(null);
+    }
+    
+    console.log(`Started dragging ${type}${index !== undefined ? ' ' + (index + 1) : ''}`);
+  }, [selectPanel]);
+  
+  const handleEndDrag = useCallback(() => {
+    setDraggingObject(null);
+    console.log("Finished dragging object");
+  }, []);
+  
+  // Handle dragging inverter
+  const handleDragInverter = useCallback((index: number, newPosition: [number, number, number]) => {
+    setInverterPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  // Handle dragging camera
+  const handleDragCamera = useCallback((index: number, newPosition: [number, number, number]) => {
+    setCameraPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  // Handle dragging transformer
+  const handleDragTransformer = useCallback((index: number, newPosition: [number, number, number]) => {
+    setTransformerPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  // Handle dragging IT house
+  const handleDragITHouse = useCallback((newPosition: [number, number, number]) => {
+    setItHousePosition(newPosition);
+  }, []);
 
   const handleCanvasCreated = () => {
     console.log("Canvas created successfully");
@@ -650,6 +740,7 @@ export default function SceneContainer() {
               position={new THREE.Vector3(...position)}
               inverterIndex={index}
               isSelected={selectedInverterIndex === index}
+              isDragging={draggingObject?.type === 'inverter' && draggingObject.index === index}
               onClick={(e) => {
                 console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
                 // Toggle selection state
@@ -660,6 +751,9 @@ export default function SceneContainer() {
                 e.stopPropagation();
                 if (e.nativeEvent) e.nativeEvent.stopPropagation();
               }}
+              onDragStart={() => handleStartDrag('inverter', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragInverter}
             />
           ))}
           
@@ -668,6 +762,10 @@ export default function SceneContainer() {
               key={`camera-${index}`}
               position={new THREE.Vector3(...position)}
               cameraIndex={index}
+              isDragging={draggingObject?.type === 'camera' && draggingObject.index === index}
+              onDragStart={() => handleStartDrag('camera', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragCamera}
             />
           ))}
           
@@ -676,10 +774,20 @@ export default function SceneContainer() {
               key={`transformer-${index}`}
               position={new THREE.Vector3(...position)}
               transformerIndex={index}
+              isDragging={draggingObject?.type === 'transformer' && draggingObject.index === index}
+              onDragStart={() => handleStartDrag('transformer', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragTransformer}
             />
           ))}
           
-          <ITHouse position={new THREE.Vector3(...itHousePosition)} />
+          <ITHouse 
+            position={new THREE.Vector3(...itHousePosition)} 
+            isDragging={draggingObject?.type === 'itHouse'}
+            onDragStart={() => handleStartDrag('itHouse')}
+            onDragEnd={() => handleEndDrag()}
+            onDrag={handleDragITHouse}
+          />
           
           <OrbitControls 
             ref={orbitControlsRef}

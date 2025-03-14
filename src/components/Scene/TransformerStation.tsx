@@ -1,42 +1,115 @@
-
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { useThree, useFrame } from '@react-three/fiber';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
   transformerIndex: number;
+  isDragging?: boolean;
+  onDragStart?: (index: number) => void;
+  onDragEnd?: (index: number, position: [number, number, number]) => void;
+  onDrag?: (index: number, position: [number, number, number]) => void;
 }
 
-export default function TransformerStation({ position, transformerIndex }: TransformerStationProps) {
+export default function TransformerStation({ 
+  position, 
+  transformerIndex,
+  isDragging = false,
+  onDragStart,
+  onDragEnd,
+  onDrag
+}: TransformerStationProps) {
+  const groupRef = useRef<THREE.Group>(null);
+  const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
+  const { raycaster, camera, mouse, scene } = useThree();
+  
+  useFrame(() => {
+    if (isDragging && dragOffset && groupRef.current && onDrag) {
+      const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+      
+      raycaster.setFromCamera(mouse, camera);
+      
+      const intersection = new THREE.Vector3();
+      raycaster.ray.intersectPlane(dragPlane, intersection);
+      
+      if (intersection) {
+        intersection.sub(dragOffset);
+        
+        const newPosition: [number, number, number] = [
+          intersection.x,
+          position.y,
+          intersection.z
+        ];
+        
+        onDrag(transformerIndex, newPosition);
+      }
+    }
+  });
+  
+  const handlePointerDown = (e: THREE.Event) => {
+    e.stopPropagation();
+    
+    if (onDragStart) {
+      onDragStart(transformerIndex);
+      
+      if (groupRef.current) {
+        const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+        raycaster.setFromCamera(mouse, camera);
+        
+        const intersection = new THREE.Vector3();
+        raycaster.ray.intersectPlane(dragPlane, intersection);
+        
+        if (intersection) {
+          setDragOffset(intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z)));
+        }
+      }
+    }
+  };
+  
+  const handlePointerUp = (e: THREE.Event) => {
+    e.stopPropagation();
+    
+    if (isDragging && onDragEnd) {
+      if (groupRef.current) {
+        const newPosition: [number, number, number] = [position.x, position.y, position.z];
+        onDragEnd(transformerIndex, newPosition);
+      }
+      setDragOffset(null);
+    }
+  };
+
   return (
-    <group position={position}>
-      {/* Platform/base */}
+    <group 
+      position={position} 
+      ref={groupRef}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerOut={handlePointerUp}
+    >
       <mesh 
         receiveShadow 
         position={[0, 0.3, 0]}
       >
         <boxGeometry args={[10, 0.6, 8]} />
-        <meshStandardMaterial color="#555555" roughness={0.8} />
+        <meshStandardMaterial color={isDragging ? "#aaaaaa" : "#555555"} roughness={0.8} />
       </mesh>
       
-      {/* Main transformer cabinet */}
       <mesh 
         castShadow 
         receiveShadow 
         position={[0, 2.5, 0]}
       >
         <boxGeometry args={[6, 4, 4]} />
-        <meshStandardMaterial color="#8a898c" roughness={0.5} metalness={0.4} />
+        <meshStandardMaterial color={isDragging ? "#a9a8bc" : "#8a898c"} roughness={0.5} metalness={0.4} />
       </mesh>
       
-      {/* Cooling fins */}
       <mesh 
         castShadow 
         position={[-3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color="#777777" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial color={isDragging ? "#999999" : "#777777"} roughness={0.3} metalness={0.6} />
       </mesh>
       
       <mesh 
@@ -44,10 +117,9 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         position={[3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color="#777777" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial color={isDragging ? "#999999" : "#777777"} roughness={0.3} metalness={0.6} />
       </mesh>
       
-      {/* High voltage warning signs */}
       <mesh position={[0, 2.5, 2.01]}>
         <planeGeometry args={[2, 1.5]} />
         <meshBasicMaterial 
@@ -64,7 +136,6 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         />
       </mesh>
       
-      {/* Electrical poles/insulators */}
       <mesh 
         castShadow 
         position={[2, 5, 0]}
@@ -89,7 +160,6 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
-      {/* Transformer label */}
       <Text
         position={[0, 5, 2.5]}
         rotation={[0, 0, 0]}
