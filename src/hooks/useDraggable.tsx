@@ -52,10 +52,9 @@ export function useDraggable(
     // Get screen coordinates
     const x = (e.clientX / window.innerWidth) * 2 - 1;
     const y = -(e.clientY / window.innerHeight) * 2 + 1;
-    const screenPosition = new THREE.Vector2(x, y);
     
-    // Set up raycaster
-    raycaster.setFromCamera(screenPosition, camera);
+    // Set up raycaster with screen coordinates
+    raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
     
     // Find intersection with the horizontal plane
     const intersection = new THREE.Vector3();

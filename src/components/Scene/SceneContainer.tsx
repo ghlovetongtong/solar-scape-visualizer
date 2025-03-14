@@ -628,6 +628,38 @@ export default function SceneContainer() {
     }
   }, [selectedPanelId, selectedComponentType]);
 
+  const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setInverterPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Inverter ${id + 1} to new position`);
+  };
+  
+  const handleTransformerPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setTransformerPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Transformer ${id + 1} to new position`);
+  };
+  
+  const handleCameraPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setCameraPositionsState(prev => {
+      const newPositions = [...prev];
+      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
+      return newPositions;
+    });
+    toast.success(`Moved Camera ${id + 1} to new position`);
+  };
+  
+  const handleITHousePositionChange = (newPosition: THREE.Vector3) => {
+    setITHousePositionState([newPosition.x, newPosition.y, newPosition.z]);
+    toast.success('Moved IT House to new position');
+  };
+  
   const updateInverterPosition = (id: number, position: [number, number, number]) => {
     setInverterPositionsState(prev => 
       prev.map((pos, index) => 
@@ -668,38 +700,6 @@ export default function SceneContainer() {
           : pos
       )
     );
-  };
-  
-  const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setInverterPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Inverter ${id + 1} to new position`);
-  };
-  
-  const handleTransformerPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setTransformerPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Transformer ${id + 1} to new position`);
-  };
-  
-  const handleCameraPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setCameraPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Camera ${id + 1} to new position`);
-  };
-  
-  const handleITHousePositionChange = (newPosition: THREE.Vector3) => {
-    setITHousePositionState([newPosition.x, newPosition.y, newPosition.z]);
-    toast.success('Moved IT House to new position');
   };
   
   const updateInverterRotation = (id: number, rotation: [number, number, number]) => {
@@ -820,6 +820,7 @@ export default function SceneContainer() {
               isSelected={selectedInverterId === index && selectedComponentType === 'inverter'}
               onSelect={() => handleSelectInverter(index)}
               onPositionChange={(newPosition) => handleInverterPositionChange(index, newPosition)}
+              onRotationChange={(newRotation) => {}}
             />
           ))}
           
@@ -832,6 +833,7 @@ export default function SceneContainer() {
               isSelected={selectedTransformerId === index && selectedComponentType === 'transformer'}
               onSelect={() => handleSelectTransformer(index)}
               onPositionChange={(newPosition) => handleTransformerPositionChange(index, newPosition)}
+              onRotationChange={(newRotation) => {}}
             />
           ))}
           
@@ -844,6 +846,7 @@ export default function SceneContainer() {
               isSelected={selectedCameraId === index && selectedComponentType === 'camera'}
               onSelect={() => handleSelectCamera(index)}
               onPositionChange={(newPosition) => handleCameraPositionChange(index, newPosition)}
+              onRotationChange={(newRotation) => {}}
             />
           ))}
           
@@ -855,7 +858,8 @@ export default function SceneContainer() {
           />
           
           <Road 
-            center={panelCenter} 
+            center={panelCenter}
+            visible={false}
           />
           
           <OrbitControls
@@ -891,6 +895,9 @@ export default function SceneContainer() {
         updateTransformerPosition={updateTransformerPosition}
         updateCameraPosition={updateCameraPosition}
         onResetPanels={resetPanelPositions}
+        updateInverterRotation={updateInverterRotation}
+        updateTransformerRotation={updateTransformerRotation}
+        updateCameraRotation={updateCameraRotation}
       />
 
       {!sceneReady && <Loader />}

@@ -9,6 +9,7 @@ interface RoadProps {
   color?: string;
   elevation?: number;
   center?: [number, number, number];
+  visible?: boolean;
 }
 
 export default function Road({ 
@@ -16,10 +17,13 @@ export default function Road({
   width = 10, 
   color = '#2a2a2a',
   elevation = 0.1,
-  center = [0, 0, 0]
+  center = [0, 0, 0],
+  visible = false
 }: RoadProps) {
-  // Only render if we have at least 3 points to form a valid path or if center is provided
+  // Only render if visible flag is true and we have at least 3 points to form a valid path or if center is provided
   const roadMesh = useMemo(() => {
+    if (!visible) return null;
+    
     // Create a circular road around the center if no boundary is provided
     if (boundary.length < 3 && center) {
       // Create a circular path around the center
@@ -107,7 +111,7 @@ export default function Road({
     }
     
     return null;
-  }, [boundary, width, color, elevation, center]);
+  }, [boundary, width, color, elevation, center, visible]);
 
   if (!roadMesh) return null;
 
