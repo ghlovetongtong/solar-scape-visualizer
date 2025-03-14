@@ -19,7 +19,7 @@ export default function Inverter({
   
   // Define materials based on selection state
   const baseMaterial = isSelected
-    ? <meshPhysicalMaterial color="#0ea5e9" roughness={0.4} metalness={0.6} emissive="#0ea5e9" emissiveIntensity={0.5} />
+    ? <meshPhysicalMaterial color="#9b87f5" roughness={0.4} metalness={0.6} emissive="#9b87f5" emissiveIntensity={0.5} />
     : <meshPhysicalMaterial color="#2b2d42" roughness={0.6} metalness={0.4} />;
   
   const connectionMaterial = isSelected
@@ -95,8 +95,8 @@ export default function Inverter({
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
-          color={isSelected ? "#00ffaa" : "#00ff00"} 
-          emissive={isSelected ? "#00ffaa" : "#00ff00"}
+          color={isSelected ? "#9b87f5" : "#00ff00"} 
+          emissive={isSelected ? "#9b87f5" : "#00ff00"}
           emissiveIntensity={isSelected ? 1.5 : 1.0}
         />
       </mesh>
@@ -129,7 +129,7 @@ export default function Inverter({
         position={[0, 2.7, 0]}
         rotation={[0, 0, 0]}
         fontSize={0.5}
-        color={isSelected ? "#38bdf8" : "#ffffff"}
+        color={isSelected ? "#9b87f5" : "#ffffff"}
         anchorX="center"
         anchorY="middle"
         outlineWidth={0.06}

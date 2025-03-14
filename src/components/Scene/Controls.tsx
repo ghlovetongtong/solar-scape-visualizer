@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+import InverterControls from './InverterControls';
 
 interface ControlsProps {
   showStats: boolean;
@@ -17,6 +18,7 @@ interface ControlsProps {
   onDeselectInverter: () => void;
   onUpdatePanelPosition: (id: number, position: [number, number, number]) => void;
   onUpdatePanelRotation: (id: number, rotation: [number, number, number]) => void;
+  onUpdateInverterPosition?: (index: number, position: [number, number, number]) => void;
   drawingMode: boolean;
   setDrawingMode: (mode: boolean) => void;
   onSaveBoundary: () => void;
@@ -38,6 +40,7 @@ export default function Controls({
   onDeselectInverter,
   onUpdatePanelPosition,
   onUpdatePanelRotation,
+  onUpdateInverterPosition,
   drawingMode,
   setDrawingMode,
   onSaveBoundary,
@@ -122,17 +125,12 @@ export default function Controls({
         </div>
       )}
       
-      {selectedInverterIndex !== null && (
-        <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-          <div className="text-sm font-medium">Selected Inverter: #{selectedInverterIndex + 1}</div>
-          <Button 
-            size="sm" 
-            className="w-full"
-            onClick={onDeselectInverter}
-          >
-            Deselect Inverter
-          </Button>
-        </div>
+      {selectedInverterIndex !== null && onUpdateInverterPosition && (
+        <InverterControls
+          selectedInverterIndex={selectedInverterIndex}
+          onDeselectInverter={onDeselectInverter}
+          onUpdateInverterPosition={onUpdateInverterPosition}
+        />
       )}
       
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">

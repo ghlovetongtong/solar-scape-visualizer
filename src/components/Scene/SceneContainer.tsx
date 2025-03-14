@@ -146,6 +146,7 @@ export default function SceneContainer() {
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
+  const [inverterPositions, setInverterPositions] = useState<[number, number, number][]>([]);
   const orbitControlsRef = useRef<any>(null);
   
   const {
@@ -417,10 +418,53 @@ export default function SceneContainer() {
   }, [isInitialized, panelPositions]);
 
   const positions = calculateSecondaryPositions();
-  const inverterPositions = positions.inverters;
+  const calculatedInverterPositions = positions.inverters;
   const transformerPositions = positions.transformers;
   const itHousePosition = positions.itHouse;
   const cameraPositions = positions.cameras;
+
+  useEffect(() => {
+    if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
+      setInverterPositions(calculatedInverterPositions);
+      console.log("Initialized inverter positions:", calculatedInverterPositions);
+    }
+  }, [calculatedInverterPositions, inverterPositions.length]);
+
+  const handleUpdateInverterPosition = useCallback((index: number, deltaPosition: [number, number, number]) => {
+    if (index === null || index < 0 || index >= inverterPositions.length) {
+      toast.error("Invalid inverter index");
+      return;
+    }
+    
+    setInverterPositions(prevPositions => {
+      const newPositions = [...prevPositions];
+      
+      // Check if this is an absolute position (with all values set)
+      const isAbsolutePosition = 
+        deltaPosition[0] !== 0 && 
+        deltaPosition[1] !== 0 && 
+        deltaPosition[2] !== 0;
+      
+      if (isAbsolutePosition) {
+        // Set absolute position
+        newPositions[index] = deltaPosition;
+        console.log(`Setting inverter ${index + 1} to absolute position:`, deltaPosition);
+        toast.success(`Set inverter ${index + 1} position to [${deltaPosition.join(', ')}]`);
+      } else {
+        // Apply delta position
+        const currentPos = prevPositions[index];
+        newPositions[index] = [
+          currentPos[0] + deltaPosition[0],
+          currentPos[1] + deltaPosition[1],
+          currentPos[2] + deltaPosition[2]
+        ];
+        console.log(`Adjusted inverter ${index + 1} position by:`, deltaPosition);
+        toast.success(`Moved inverter ${index + 1}`);
+      }
+      
+      return newPositions;
+    });
+  }, [inverterPositions]);
 
   const handleCanvasCreated = () => {
     console.log("Canvas created successfully");
@@ -671,6 +715,7 @@ export default function SceneContainer() {
         onSaveLayout={handleSaveLayout}
         selectedInverterIndex={selectedInverterIndex}
         onDeselectInverter={() => setSelectedInverterIndex(null)}
+        onUpdateInverterPosition={handleUpdateInverterPosition}
       />
       
       <Loader />
