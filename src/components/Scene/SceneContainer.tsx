@@ -796,19 +796,11 @@ export default function SceneContainer() {
             savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
           />
           
-          {panelPositions.map((panel, index) => (
-            <SolarPanels
-              key={`panel-${panel.id}`}
-              position={new THREE.Vector3(...panel.position)}
-              rotation={new THREE.Euler(...panel.rotation)}
-              scale={panel.scale}
-              isSelected={selectedPanelId === panel.id}
-              panelId={panel.id}
-              onSelect={selectPanel}
-              onPositionChange={(id, newPos) => updatePanelPosition(id, newPos)}
-              onRotationChange={(id, newRot) => updatePanelRotation(id, newRot)}
-            />
-          ))}
+          <SolarPanels
+            panelPositions={panelPositions}
+            selectedPanelId={selectedPanelId}
+            onSelectPanel={selectPanel}
+          />
           
           {inverterPositions.map((position, index) => (
             <Inverter
@@ -855,7 +847,7 @@ export default function SceneContainer() {
             onDrag={(newPos) => handleDragITHouse(newPos)}
           />
           
-          <Road position={[0, 0, 0]} />
+          <Road boundary={[]} position={[0, 0, 0]} />
         </Suspense>
         
         <OrbitControls 
@@ -875,23 +867,24 @@ export default function SceneContainer() {
       
       <Controls 
         showStats={showStats}
-        onToggleStats={() => setShowStats(!showStats)}
+        setShowStats={setShowStats}
         timeOfDay={timeOfDay}
-        onTimeChange={setTimeOfDay}
+        setTimeOfDay={setTimeOfDay}
         drawingMode={drawingMode}
-        onToggleDrawingMode={() => setDrawingMode(!drawingMode)}
+        setDrawingMode={setDrawingMode}
         onSaveBoundary={handleSaveBoundary}
         onClearBoundary={handleClearBoundary}
         onClearAllBoundaries={handleClearAllBoundaries}
-        onGeneratePanels={handleGenerateNewPanelsInBoundary}
+        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onClearAllPanels={handleClearAllPanels}
         onSaveLayout={handleSaveLayout}
         selectedInverterIndex={selectedInverterIndex}
         selectedPanelId={selectedPanelId}
-        onSelectInverter={setSelectedInverterIndex}
-        onSelectPanel={selectPanel}
-        inverterPositions={inverterPositions}
+        onDeselectInverter={() => setSelectedInverterIndex(null)}
+        onUpdatePanelPosition={updatePanelPosition}
+        onUpdatePanelRotation={updatePanelRotation}
         onUpdateInverterPosition={handleUpdateInverterPosition}
+        onResetPanels={resetPanelPositions}
       />
       
       <Suspense fallback={<div>Loading...</div>}>

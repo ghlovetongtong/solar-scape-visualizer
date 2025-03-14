@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -123,14 +122,15 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const batchSize = 500;
   const panelBatches = useMemo(() => {
     const batches = [];
-    for (let i = 0; i < panelPositions.length; i += batchSize) {
-      batches.push(panelPositions.slice(i, i + batchSize));
+    if (panelPositions && panelPositions.length > 0) {
+      for (let i = 0; i < panelPositions.length; i += batchSize) {
+        batches.push(panelPositions.slice(i, i + batchSize));
+      }
     }
     return batches;
   }, [panelPositions, batchSize]);
   
   const handleClick = (event: any) => {
-    // Ensure this function really stops propagation
     event.stopPropagation();
     
     if (event.intersections && event.intersections.length > 0) {
@@ -140,7 +140,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         const batchIndex = Math.floor(intersection.object.userData.batchIndex);
         const panelId = batchIndex * batchSize + intersection.instanceId;
         
-        // Ensure the index is valid
         if (panelId < panelPositions.length) {
           const actualPanelId = panelPositions[panelId].id;
           console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
@@ -153,7 +152,6 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         onSelectPanel(panelId);
         event.nativeEvent.stopPropagation();
       } else {
-        // If clicked on panel group but not a specific panel
         console.log('Clicked on panel group but not a specific panel');
       }
     }
@@ -161,7 +159,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   
   const selectedPanel = useMemo(() => {
     if (selectedPanelId === null) return null;
-    return panelPositions.find(panel => panel.id === selectedPanelId) || null;
+    return panelPositions?.find(panel => panel.id === selectedPanelId) || null;
   }, [panelPositions, selectedPanelId]);
   
   const sunlitPanelRefs = useRef<THREE.InstancedMesh[]>([]);
@@ -169,6 +167,8 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   const bracketInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
   
   useEffect(() => {
+    if (!panelBatches.length) return;
+    
     panelBatches.forEach((batch, batchIndex) => {
       const sunlitPanelMesh = sunlitPanelRefs.current[batchIndex];
       const shadowedPanelMesh = shadowedPanelRefs.current[batchIndex];
@@ -211,6 +211,10 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       bracketMesh.instanceMatrix.needsUpdate = true;
     });
   }, [panelBatches, selectedPanelId, panelPositions]);
+  
+  if (!panelPositions || panelPositions.length === 0) {
+    return null;
+  }
   
   return (
     <group onClick={handleClick} userData={{ type: 'panel-group' }}>
