@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -135,9 +134,20 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       if (intersection.instanceId !== undefined) {
         const batchIndex = Math.floor(intersection.object.userData.batchIndex || 0);
         const panelId = batchIndex * batchSize + intersection.instanceId;
-        onSelectPanel(panelId);
+        
+        if (selectedPanelId === panelId) {
+          onSelectPanel(null);
+        } else {
+          onSelectPanel(panelId);
+        }
       } else if (intersection.object.userData.panelId !== undefined) {
-        onSelectPanel(intersection.object.userData.panelId);
+        if (selectedPanelId === intersection.object.userData.panelId) {
+          onSelectPanel(null);
+        } else {
+          onSelectPanel(intersection.object.userData.panelId);
+        }
+      } else {
+        onSelectPanel(null);
       }
     } else {
       onSelectPanel(null);

@@ -46,22 +46,16 @@ export default function Road({
     });
 
     return (
-      <group>
-        <mesh 
-          geometry={tubeGeometry} 
-          material={roadMaterial} 
-          receiveShadow 
-          position={[0, 0, 0]}
-        />
-      </group>
+      <mesh 
+        geometry={tubeGeometry} 
+        material={roadMaterial} 
+        receiveShadow 
+        position={[0, 0, 0]}
+      />
     );
   }, [boundary, width, color, elevation]);
 
   if (!roadMesh) return null;
 
-  return (
-    <group position={[0, 0, 0]}>
-      {roadMesh}
-    </group>
-  );
+  return roadMesh;
 }
