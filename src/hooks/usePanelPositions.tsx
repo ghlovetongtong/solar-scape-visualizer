@@ -11,26 +11,6 @@ const PANELS_PER_GROUP = 16; // 4x4 grid per group
 const PANEL_SPACING = 0; // Removed spacing between panels within a group
 const GROUP_SPACING = 0; // Removed spacing between groups
 
-// 存储默认面板布局的本地存储键
-const DEFAULT_LAYOUT_KEY = 'solar-station-default-panel-layout';
-const CURRENT_LAYOUT_KEY = 'solar-station-panel-layout';
-
-// 硬编码的默认面板布局数据
-// 这里将您当前的布局作为硬编码的初始化数据
-const DEFAULT_PANEL_LAYOUT: InstanceData[] = [
-  // 这里示例数据，您需要替换为您的实际面板数据
-  // 示例格式: { id: 0, position: [x, y, z], rotation: [x, y, z], scale: [1, 1, 1] }
-  { id: 0, position: [5, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 1, position: [8, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 2, position: [11, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 3, position: [14, 1.0, 5], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 4, position: [5, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 5, position: [8, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 6, position: [11, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  { id: 7, position: [14, 1.0, 9], rotation: [-Math.PI / 8, 0, 0], scale: [1, 1, 1] },
-  // 您可以添加更多面板...
-];
-
 // Utility function to check if a point is inside a polygon
 function isPointInPolygon(point: [number, number], polygon: BoundaryPoint[]): boolean {
   if (polygon.length < 3) return false;
@@ -63,86 +43,44 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // 初始化面板位置 - 使用硬编码的默认布局数据
+  // Initialize panel positions - now starts with empty array by default
   useEffect(() => {
-    console.log(`Initializing panels with hardcoded default layout`);
+    console.log(`Initializing panels with empty layout`);
     
+    // Try to load saved panel layout from localStorage
     try {
-      // 首先尝试加载用户保存的面板布局
-      const savedLayout = localStorage.getItem(CURRENT_LAYOUT_KEY);
-      
+      const savedLayout = localStorage.getItem('solar-station-panel-layout');
       if (savedLayout) {
-        try {
-          const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
-          
-          // Validate parsed data structure to ensure it's compatible
-          const isValidData = Array.isArray(parsedLayout) && 
-            parsedLayout.every(item => 
-              typeof item === 'object' && 
-              'id' in item && 
-              'position' in item && 
-              'rotation' in item && 
-              'scale' in item
-            );
-            
-          if (isValidData) {
-            setPanelPositions(parsedLayout);
-            setInitialPositions(parsedLayout);
-            
-            console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
-            toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
-          } else {
-            console.warn("Invalid panel layout data structure, using hardcoded default layout");
-            setPanelPositions(DEFAULT_PANEL_LAYOUT);
-            setInitialPositions(DEFAULT_PANEL_LAYOUT);
-            toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
-          }
-        } catch (parseError) {
-          console.error("Error parsing layout:", parseError);
-          setPanelPositions(DEFAULT_PANEL_LAYOUT);
-          setInitialPositions(DEFAULT_PANEL_LAYOUT);
-          toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
-        }
+        const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
+        setPanelPositions(parsedLayout);
+        setInitialPositions(parsedLayout);
+        console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
+        toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
       } else {
-        // 没有保存的布局时，使用硬编码的默认布局
-        console.log("No saved layout found, using hardcoded default layout");
-        setPanelPositions(DEFAULT_PANEL_LAYOUT);
-        setInitialPositions(DEFAULT_PANEL_LAYOUT);
-        toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
+        // Start with empty array if no saved layout
+        setPanelPositions([]);
+        setInitialPositions([]);
       }
       setIsInitialized(true);
     } catch (error) {
       console.error("Error initializing panel positions:", error);
-      // 出错时也使用硬编码的默认布局
-      setPanelPositions(DEFAULT_PANEL_LAYOUT);
-      setInitialPositions(DEFAULT_PANEL_LAYOUT);
+      // Fallback to empty array
+      setPanelPositions([]);
+      setInitialPositions([]);
       setIsInitialized(true);
-      toast.success(`Loaded ${DEFAULT_PANEL_LAYOUT.length} panels from default layout`);
     }
   }, []);
 
   // Function to save the current panel layout
   const saveCurrentLayout = useCallback(() => {
     try {
-      localStorage.setItem(CURRENT_LAYOUT_KEY, JSON.stringify(panelPositions));
+      localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
       toast.success(`Saved ${panelPositions.length} panels to layout`);
       setInitialPositions(panelPositions);
       console.log(`Saved ${panelPositions.length} panels to layout`);
     } catch (error) {
       console.error("Error saving panel layout:", error);
       toast.error("Failed to save panel layout");
-    }
-  }, [panelPositions]);
-
-  // 保存当前面板布局为默认布局 - 此功能仍保留但会保存到本地存储
-  const saveAsDefaultLayout = useCallback(() => {
-    try {
-      localStorage.setItem(DEFAULT_LAYOUT_KEY, JSON.stringify(panelPositions));
-      toast.success(`Saved ${panelPositions.length} panels as default layout`);
-      console.log(`Saved ${panelPositions.length} panels as default layout`);
-    } catch (error) {
-      console.error("Error saving default panel layout:", error);
-      toast.error("Failed to save default panel layout");
     }
   }, [panelPositions]);
 
@@ -240,9 +178,6 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const clearAllPanels = useCallback(() => {
     setPanelPositions([]);
     setSelectedPanelId(null);
-    // Also clear localStorage to prevent future issues
-    localStorage.removeItem(CURRENT_LAYOUT_KEY);
-    toast.success("All panels cleared and saved data removed");
   }, []);
 
   // Function to update a single panel's position
@@ -301,7 +236,6 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
     isInitialized,
     addNewPanelsInBoundary,
     clearAllPanels,
-    saveCurrentLayout,
-    saveAsDefaultLayout
+    saveCurrentLayout
   };
 }

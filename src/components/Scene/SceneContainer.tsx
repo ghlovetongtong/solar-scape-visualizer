@@ -4,7 +4,6 @@ import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { toast } from 'sonner';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import { ThreeEvent } from '@react-three/fiber/dist/declarations/src/core/events';
 
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
@@ -148,19 +147,6 @@ export default function SceneContainer() {
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const orbitControlsRef = useRef<any>(null);
   
-  const [selectedComponentType, setSelectedComponentType] = useState<'panel' | 'inverter' | 'transformer' | 'camera' | null>(null);
-  const [selectedInverterId, setSelectedInverterId] = useState<number | null>(null);
-  const [selectedTransformerId, setSelectedTransformerId] = useState<number | null>(null);
-  const [selectedCameraId, setSelectedCameraId] = useState<number | null>(null);
-  
-  const [inverterPositionsState, setInverterPositionsState] = useState<Array<[number, number, number]>>([]);
-  const [transformerPositionsState, setTransformerPositionsState] = useState<Array<[number, number, number]>>([]);
-  const [cameraPositionsState, setCameraPositionsState] = useState<Array<[number, number, number]>>([]);
-  
-  const [inverterRotations, setInverterRotations] = useState<Array<[number, number, number]>>([]);
-  const [transformerRotations, setTransformerRotations] = useState<Array<[number, number, number]>>([]);
-  const [cameraRotations, setCameraRotations] = useState<Array<[number, number, number]>>([]);
-  
   const {
     panelPositions,
     selectedPanelId,
@@ -171,8 +157,7 @@ export default function SceneContainer() {
     isInitialized,
     addNewPanelsInBoundary,
     clearAllPanels,
-    saveCurrentLayout,
-    saveAsDefaultLayout
+    saveCurrentLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
   
   useEffect(() => {
@@ -216,13 +201,13 @@ export default function SceneContainer() {
     const hasPanels = isInitialized && panelPositions.length > 0;
 
     const defaultPositions = {
-      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]] as [number, number, number][],
-      transformers: [[0, 0, 0], [30, 0, 0]] as [number, number, number][],
-      itHouse: [0, 0, 0] as [number, number, number],
+      inverters: [[0, 0, 0], [30, 0, 0], [60, 0, 0], [90, 0, 0], [120, 0, 0], [150, 0, 0], [180, 0, 0]],
+      transformers: [[0, 0, 0], [30, 0, 0]],
+      itHouse: [0, 0, 0],
       cameras: [
         [0, 8, 0], [30, 8, 0], [60, 8, 0], [90, 8, 0], [120, 8, 0], [150, 8, 0],
         [180, 8, 0], [210, 8, 0], [240, 8, 0], [270, 8, 0], [300, 8, 0], [330, 8, 0]
-      ] as [number, number, number][]
+      ]
     };
 
     if (!hasPanels) {
@@ -248,10 +233,12 @@ export default function SceneContainer() {
     const width = maxX - minX;
     const depth = maxZ - minZ;
 
-    const rowTolerance = 1.0;
+    // Identify panel rows with higher precision
+    const rowTolerance = 1.0; // Smaller tolerance for more accurate row detection
     const rows = [];
     const processedZCoordinates = new Set();
 
+    // Find all distinct rows
     for (const panel of panelPositions) {
       const z = Math.round(panel.position[2] / rowTolerance) * rowTolerance;
       if (!processedZCoordinates.has(z)) {
@@ -261,8 +248,12 @@ export default function SceneContainer() {
         );
         
         if (rowPanels.length > 0) {
-          const rowMinX = Math.min(...rowPanels.map(p => p.position[0]));
-          const rowMaxX = Math.max(...rowPanels.map(p => p.position[0]));
+          // Find min and max X for this row
+          let rowMinX = Infinity, rowMaxX = -Infinity;
+          for (const p of rowPanels) {
+            rowMinX = Math.min(rowMinX, p.position[0]);
+            rowMaxX = Math.max(rowMaxX, p.position[0]);
+          }
           
           rows.push({
             z,
@@ -275,23 +266,30 @@ export default function SceneContainer() {
       }
     }
 
+    // Sort rows by Z coordinate
     rows.sort((a, b) => a.z - b.z);
     
-    const inverterPositions: [number, number, number][] = [];
+    console.log(`Found ${rows.length} panel rows`);
+
+    // Generate inverter positions specifically in gaps between rows
+    const inverterPositions = [];
     
+    // Skip isolated rows with few panels
     const significantRows = rows.filter(row => row.panelCount >= 3 && row.width > 5);
     significantRows.sort((a, b) => b.panelCount - a.panelCount);
     
     if (significantRows.length >= 2) {
+      // Identify gaps between rows
       const gaps = [];
       for (let i = 0; i < significantRows.length - 1; i++) {
         const currentRow = significantRows[i];
         const nextRow = significantRows[i + 1];
         const gapSize = Math.abs(currentRow.z - nextRow.z);
         
+        // Only consider proper gaps (not too small, not too large)
         if (gapSize > 3 && gapSize < 20) {
           gaps.push({
-            zPosition: (currentRow.z + nextRow.z) / 2,
+            zPosition: (currentRow.z + nextRow.z) / 2, // Center of gap
             size: gapSize,
             width: Math.min(currentRow.width, nextRow.width),
             minX: Math.max(currentRow.minX, nextRow.minX), 
@@ -301,21 +299,26 @@ export default function SceneContainer() {
         }
       }
       
+      // Sort gaps by size (larger gaps first)
       gaps.sort((a, b) => b.size - a.size);
       
+      // Place inverters in the gaps
       if (gaps.length > 0) {
         for (let i = 0; i < Math.min(7, gaps.length); i++) {
           const gap = gaps[i % gaps.length];
           
+          // Calculate how many inverters to place in this gap
           const maxInvertersPerGap = Math.min(3, Math.floor(gap.width / 5));
           
           for (let j = 0; j < maxInvertersPerGap; j++) {
             if (inverterPositions.length >= 7) break;
             
+            // Place inverters evenly along the gap's width
             const xPos = gap.minX + (j + 1) * (gap.width / (maxInvertersPerGap + 1));
             
+            // Check if this position would overlap with a panel
             let tooCloseToPanel = false;
-            const minDistanceToPanel = 1.5;
+            const minDistanceToPanel = 1.5; // Minimum required distance to any panel
             
             for (const panel of panelPositions) {
               const dx = Math.abs(panel.position[0] - xPos);
@@ -334,13 +337,16 @@ export default function SceneContainer() {
       }
     }
     
+    // If we have significant rows but couldn't place inverters in gaps, distribute evenly inside the panel area
     if (significantRows.length > 0 && inverterPositions.length < 7) {
+      // Select the largest rows
       const mainRows = significantRows.slice(0, Math.min(4, significantRows.length));
       
       for (let r = 0; r < mainRows.length; r++) {
         const row = mainRows[r];
         const rowCenter = row.z;
         
+        // Place inverters along the row, avoiding panel positions
         const segmentCount = Math.min(4, Math.ceil(row.width / 15));
         const segmentWidth = row.width / segmentCount;
         
@@ -348,9 +354,10 @@ export default function SceneContainer() {
           if (inverterPositions.length >= 7) break;
           
           const xPos = row.minX + (i + 0.5) * segmentWidth;
-          const zOffset = (r % 2 === 0) ? 2.5 : -2.5;
+          const zOffset = (r % 2 === 0) ? 2.5 : -2.5; // Alternate offset to avoid aligned inverters
           const zPos = rowCenter + zOffset;
           
+          // Check if this position would overlap with any panel
           let overlapsPanel = false;
           for (const panel of panelPositions) {
             const dx = Math.abs(panel.position[0] - xPos);
@@ -368,8 +375,9 @@ export default function SceneContainer() {
       }
     }
     
+    // If we still don't have enough inverters, add them at the perimeter of the panel area
     if (inverterPositions.length < 7) {
-      const perimeterPositions: [number, number, number][] = [
+      const perimeterPositions = [
         [minX + width * 0.25, 0, minZ - 5],
         [minX + width * 0.75, 0, minZ - 5],
         [maxX + 5, 0, minZ + depth * 0.25],
@@ -384,14 +392,14 @@ export default function SceneContainer() {
       }
     }
 
-    const transformerPositions: [number, number, number][] = [
+    const transformerPositions = [
       [maxX + 20, 0, centerZ - depth * 0.25],
       [maxX + 20, 0, centerZ + depth * 0.25]
     ];
 
-    const itHousePosition: [number, number, number] = [minX - 20, 0, centerZ];
+    const itHousePosition = [minX - 20, 0, centerZ];
 
-    const cameraPositions: [number, number, number][] = [
+    const cameraPositions = [
       [minX, 8, minZ], [maxX, 8, minZ], [minX, 8, maxZ], [maxX, 8, maxZ],
       [centerX - width * 0.3, 8, minZ], [centerX + width * 0.3, 8, minZ],
       [centerX - width * 0.3, 8, maxZ], [centerX + width * 0.3, 8, maxZ],
@@ -502,12 +510,6 @@ export default function SceneContainer() {
     }
   }, [saveCurrentLayout]);
 
-  const handleSaveAsDefaultLayout = useCallback(() => {
-    if (saveAsDefaultLayout) {
-      saveAsDefaultLayout();
-    }
-  }, [saveAsDefaultLayout]);
-
   useEffect(() => {
     const savedData = localStorage.getItem('solar-station-boundaries');
     if (savedData) {
@@ -520,172 +522,6 @@ export default function SceneContainer() {
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (positions) {
-      if (inverterRotations.length === 0 && positions.inverters.length > 0) {
-        setInverterRotations(positions.inverters.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (transformerRotations.length === 0 && positions.transformers.length > 0) {
-        setTransformerRotations(positions.transformers.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (cameraRotations.length === 0 && positions.cameras.length > 0) {
-        setCameraRotations(positions.cameras.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (inverterPositionsState.length === 0) {
-        setInverterPositionsState([...positions.inverters]);
-      }
-      
-      if (transformerPositionsState.length === 0) {
-        setTransformerPositionsState([...positions.transformers]);
-      }
-      
-      if (cameraPositionsState.length === 0) {
-        setCameraPositionsState([...positions.cameras]);
-      }
-    }
-  }, [positions, inverterRotations.length, transformerRotations.length, cameraRotations.length, 
-      inverterPositionsState.length, transformerPositionsState.length, cameraPositionsState.length]);
-
-  const handleSelectInverter = useCallback((index: number) => {
-    console.log("Selecting inverter:", index);
-    if (index === selectedInverterId && selectedComponentType === 'inverter') {
-      setSelectedInverterId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedInverterId(index);
-      setSelectedComponentType('inverter');
-      setSelectedTransformerId(null);
-      setSelectedCameraId(null);
-      if (selectPanel) {
-        selectPanel(null);
-      }
-    }
-  }, [selectedInverterId, selectedComponentType, selectPanel]);
-
-  const handleSelectTransformer = (index: number | null) => {
-    if (index === selectedTransformerId && selectedComponentType === 'transformer') {
-      setSelectedTransformerId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedTransformerId(index);
-      setSelectedComponentType('transformer');
-      setSelectedInverterId(null);
-      setSelectedCameraId(null);
-      selectPanel(null);
-    }
-  };
-  
-  const handleSelectCamera = (index: number | null) => {
-    if (index === selectedCameraId && selectedComponentType === 'camera') {
-      setSelectedCameraId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedCameraId(index);
-      setSelectedComponentType('camera');
-      setSelectedInverterId(null);
-      setSelectedTransformerId(null);
-      selectPanel(null);
-    }
-  };
-  
-  useEffect(() => {
-    if (selectedPanelId !== null) {
-      setSelectedComponentType('panel');
-      setSelectedInverterId(null);
-      setSelectedTransformerId(null);
-      setSelectedCameraId(null);
-    } else if (selectedComponentType === 'panel') {
-      setSelectedComponentType(null);
-    }
-  }, [selectedPanelId, selectedComponentType]);
-
-  const updateInverterPosition = (id: number, position: [number, number, number]) => {
-    setInverterPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateInverterRotation = (id: number, rotation: [number, number, number]) => {
-    setInverterRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
-  
-  const updateTransformerPosition = (id: number, position: [number, number, number]) => {
-    setTransformerPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateTransformerRotation = (id: number, rotation: [number, number, number]) => {
-    setTransformerRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
-  
-  const updateCameraPosition = (id: number, position: [number, number, number]) => {
-    setCameraPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateCameraRotation = (id: number, rotation: [number, number, number]) => {
-    setCameraRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
 
   return (
     <div className="h-full w-full relative">
@@ -706,34 +542,6 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
-        onClick={(event) => {
-          const threeEvent = event as unknown as ThreeEvent<MouseEvent>;
-          
-          if (!threeEvent.intersections || threeEvent.intersections.length === 0) {
-            setSelectedComponentType(null);
-            setSelectedInverterId(null);
-            setSelectedTransformerId(null);
-            setSelectedCameraId(null);
-            if (selectPanel) {
-              selectPanel(null);
-            }
-            return;
-          }
-          
-          const hitSelectable = threeEvent.intersections.some(
-            intersection => intersection.object.userData?.type === 'selectable'
-          );
-          
-          if (!hitSelectable) {
-            setSelectedComponentType(null);
-            setSelectedInverterId(null);
-            setSelectedTransformerId(null);
-            setSelectedCameraId(null);
-            if (selectPanel) {
-              selectPanel(null);
-            }
-          }
-        }}
       >
         <CustomEnvironment timeOfDay={timeOfDay} />
         
@@ -752,14 +560,11 @@ export default function SceneContainer() {
             onSelectPanel={selectPanel}
           />
           
-          {inverterPositionsState.map((position, index) => (
+          {inverterPositions.map((position, index) => (
             <Inverter 
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(inverterRotations[index] || [0,0,0]))}
               inverterIndex={index}
-              isSelected={selectedInverterId === index}
-              onSelect={() => handleSelectInverter(index)}
             />
           ))}
           
@@ -767,10 +572,7 @@ export default function SceneContainer() {
             <Camera 
               key={`camera-${index}`}
               position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(cameraRotations[index] || [0,0,0]))}
               cameraIndex={index}
-              isSelected={selectedCameraId === index}
-              onSelect={() => handleSelectCamera(index)}
             />
           ))}
           
@@ -778,10 +580,7 @@ export default function SceneContainer() {
             <TransformerStation 
               key={`transformer-${index}`}
               position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(transformerRotations[index] || [0,0,0]))}
               transformerIndex={index}
-              isSelected={selectedTransformerId === index}
-              onSelect={() => handleSelectTransformer(index)}
             />
           ))}
           
@@ -808,24 +607,9 @@ export default function SceneContainer() {
         timeOfDay={timeOfDay}
         setTimeOfDay={setTimeOfDay}
         onResetPanels={resetPanelPositions}
-        
         selectedPanelId={selectedPanelId}
         onUpdatePanelPosition={updatePanelPosition}
         onUpdatePanelRotation={updatePanelRotation}
-        
-        selectedComponentType={selectedComponentType}
-        selectedInverterId={selectedInverterId}
-        onUpdateInverterPosition={updateInverterPosition}
-        onUpdateInverterRotation={updateInverterRotation}
-        
-        selectedTransformerId={selectedTransformerId}
-        onUpdateTransformerPosition={updateTransformerPosition}
-        onUpdateTransformerRotation={updateTransformerRotation}
-        
-        selectedCameraId={selectedCameraId}
-        onUpdateCameraPosition={updateCameraPosition}
-        onUpdateCameraRotation={updateCameraRotation}
-        
         drawingMode={drawingMode}
         setDrawingMode={setDrawingMode}
         onSaveBoundary={handleSaveBoundary}
@@ -834,7 +618,6 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
-        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
       />
       
       <Loader />
