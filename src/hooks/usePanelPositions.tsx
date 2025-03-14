@@ -112,7 +112,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       // Panel size is exactly 3 units wide and 2 units deep
       // No spacing between panels in a row, increased spacing between rows
       const spacingX = 3; // No extra spacing between panels in a row (exactly panel width)
-      const spacingZ = 5; // Increased spacing between rows (increased from 3 to 5)
+      const spacingZ = 4; // Slightly smaller spacing between rows (reduced from 5 to 4)
       
       // Calculate grid size
       const gridSizeX = Math.floor(boundaryWidth / spacingX);
