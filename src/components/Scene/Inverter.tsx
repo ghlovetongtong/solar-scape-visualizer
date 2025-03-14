@@ -1,3 +1,4 @@
+
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -12,6 +13,17 @@ interface InverterProps {
   onDragStart?: (index: number) => void;
   onDragEnd?: (index: number, position: [number, number, number]) => void;
   onDrag?: (index: number, position: [number, number, number]) => void;
+  // Additional technical properties
+  power?: number; // Power rating in kW
+  efficiency?: number; // Efficiency percentage
+  mpptChannels?: number; // Number of MPPT channels
+  status?: 'online' | 'offline' | 'warning' | 'error'; // Operational status
+  temperature?: number; // Temperature in Celsius
+  dailyEnergy?: number; // Daily energy production in kWh
+  totalEnergy?: number; // Total energy produced in MWh
+  serialNumber?: string; // Serial number
+  manufacturer?: string; // Manufacturer name
+  model?: string; // Model identifier
 }
 
 export default function Inverter({ 
@@ -22,12 +34,34 @@ export default function Inverter({
   onClick,
   onDragStart,
   onDragEnd,
-  onDrag
+  onDrag,
+  // Default values for technical properties
+  power = 50,
+  efficiency = 98.2,
+  mpptChannels = 6,
+  status = 'online',
+  temperature = 45.2,
+  dailyEnergy = 256.8,
+  totalEnergy = 1250.6,
+  serialNumber = '',
+  manufacturer = 'SolarTech',
+  model = 'ST-50K'
 }: InverterProps) {
   
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
+  
+  // Define status-based colors
+  const getStatusColor = () => {
+    switch(status) {
+      case 'online': return "#00ff00";
+      case 'offline': return "#ff0000";
+      case 'warning': return "#ffaa00";
+      case 'error': return "#ff0000";
+      default: return "#00ff00";
+    }
+  };
   
   // Define materials based on selection and dragging state
   const baseMaterial = isSelected
@@ -135,11 +169,31 @@ export default function Inverter({
     }
   };
 
+  // Create a userData object with all inverter properties for the popup
+  const inverterData = {
+    type: 'inverter',
+    inverterIndex,
+    details: {
+      name: `Inverter ${inverterIndex + 1}`,
+      power,
+      efficiency,
+      mpptChannels,
+      status,
+      temperature,
+      dailyEnergy,
+      totalEnergy,
+      serialNumber: serialNumber || `INV-${100000 + inverterIndex}`,
+      manufacturer,
+      model,
+      position: [position.x, position.y, position.z]
+    }
+  };
+
   return (
     <group 
       position={position}
       onClick={handleClick}
-      userData={{ type: 'inverter', inverterIndex }}
+      userData={inverterData}
       ref={groupRef}
       onPointerDown={handlePointerDown}
     >
@@ -148,7 +202,7 @@ export default function Inverter({
         castShadow 
         receiveShadow
         position={[0, 1, 0]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
@@ -159,7 +213,7 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 1, 0.95]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
@@ -170,7 +224,7 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 0, 0]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
@@ -180,13 +234,13 @@ export default function Inverter({
       {/* Status indicator light */}
       <mesh
         position={[1.1, 1.6, 0.95]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
-          color={isSelected ? "#9b87f5" : "#00ff00"} 
-          emissive={isSelected ? "#9b87f5" : "#00ff00"}
+          color={isSelected ? "#9b87f5" : getStatusColor()} 
+          emissive={isSelected ? "#9b87f5" : getStatusColor()}
           emissiveIntensity={isSelected ? 1.5 : 1.0}
         />
       </mesh>
@@ -194,7 +248,7 @@ export default function Inverter({
       {/* Ventilation grille */}
       <mesh
         position={[-1.0, 1.6, 0.95]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <boxGeometry args={[1.0, 1.0, 0.08]} />
@@ -207,7 +261,7 @@ export default function Inverter({
       {/* Cables */}
       <mesh
         position={[0, 0.3, 0.9]}
-        userData={{ type: 'inverter', inverterIndex }}
+        userData={inverterData}
         onClick={handleClick}
       >
         <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
