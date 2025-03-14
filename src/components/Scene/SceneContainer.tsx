@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -157,7 +156,7 @@ export default function SceneContainer() {
     isInitialized,
     addNewPanelsInBoundary,
     clearAllPanels
-  } = usePanelPositions({ initialCount: 2000, boundaries: savedBoundaries });
+  } = usePanelPositions({ initialCount: 2000, boundaries: [] });
   
   useEffect(() => {
     const timer = setTimeout(() => {

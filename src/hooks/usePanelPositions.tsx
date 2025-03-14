@@ -41,79 +41,14 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
   const [initialPositions, setInitialPositions] = useState<InstanceData[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Initialize panel positions in groups or within boundaries
+  // Initialize panel positions with default panel groups, not using boundaries
   useEffect(() => {
-    console.log(`Initializing panels with boundaries:`, boundaries);
+    console.log(`Initializing panels with default layout`);
     try {
       const instances: InstanceData[] = [];
       
-      // If we have boundaries, place panels within them
-      if (boundaries.length > 0) {
-        let panelId = 0;
-        
-        // Process each boundary as a separate area for panels
-        boundaries.forEach((boundary) => {
-          if (boundary.length < 3) return; // Skip invalid boundaries
-          
-          // Find the bounding box of the boundary
-          let minX = Number.POSITIVE_INFINITY;
-          let maxX = Number.NEGATIVE_INFINITY;
-          let minZ = Number.POSITIVE_INFINITY;
-          let maxZ = Number.NEGATIVE_INFINITY;
-          
-          boundary.forEach(([x, z]) => {
-            minX = Math.min(minX, x);
-            maxX = Math.max(maxX, x);
-            minZ = Math.min(minZ, z);
-            maxZ = Math.max(maxZ, z);
-          });
-          
-          // Calculate grid dimensions based on boundary size
-          const boundaryWidth = maxX - minX;
-          const boundaryDepth = maxZ - minZ;
-          
-          // Determine spacing based on boundary size
-          const spacing = Math.min(PANEL_SPACING * 1.5, boundaryWidth / 8, boundaryDepth / 8);
-          
-          // Calculate grid size
-          const gridSizeX = Math.floor(boundaryWidth / spacing);
-          const gridSizeZ = Math.floor(boundaryDepth / spacing);
-          
-          // Create panels within the grid, but only if they're inside the boundary
-          for (let i = 0; i < gridSizeX; i++) {
-            for (let j = 0; j < gridSizeZ; j++) {
-              const x = minX + (i + 0.5) * spacing;
-              const z = minZ + (j + 0.5) * spacing;
-              
-              // Check if this position is inside the boundary
-              if (isPointInPolygon([x, z], boundary)) {
-                // Get ground height at this position
-                const groundHeight = getHeightAtPosition(x, z);
-                
-                // Create the panel with a slight randomization to rotation
-                const rotationY = (Math.random() - 0.5) * 0.2;
-                
-                instances.push({
-                  id: panelId++,
-                  position: [x, 1.0 + groundHeight, z],
-                  rotation: [-Math.PI / 8, rotationY, 0],
-                  scale: [1, 1, 1]
-                });
-              }
-            }
-          }
-        });
-        
-        // If we didn't place any panels (boundaries might be too small), place a minimum number
-        if (instances.length === 0) {
-          console.log("Boundaries too small, placing default panels");
-          // Place default panels as a fallback
-          createDefaultPanels(instances, initialCount);
-        }
-      } else {
-        // No boundaries, place panels in the default pattern
-        createDefaultPanels(instances, initialCount);
-      }
+      // Create default panels in a grid pattern
+      createDefaultPanels(instances, initialCount);
       
       console.log(`Placed ${instances.length} panels`);
       setPanelPositions(instances);
@@ -122,7 +57,7 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     } catch (error) {
       console.error("Error initializing panel positions:", error);
     }
-  }, [initialCount, boundaries]);
+  }, [initialCount]);
 
   // Helper function to create default panels in groups
   const createDefaultPanels = (instances: InstanceData[], count: number) => {
