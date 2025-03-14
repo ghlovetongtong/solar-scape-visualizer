@@ -31,7 +31,7 @@ function isPointInPolygon(point: [number, number], polygon: BoundaryPoint[]): bo
   return inside;
 }
 
-interface UsePanelPositionsProps {
+export interface UsePanelPositionsProps {
   initialCount?: number;
   boundaries?: BoundaryPoint[][];
 }

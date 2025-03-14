@@ -154,7 +154,7 @@ export default function SceneContainer() {
     selectPanel,
     resetPanelPositions,
     isInitialized
-  } = usePanelPositions(2000);
+  } = usePanelPositions({ initialCount: 2000, boundaries: savedBoundaries });
   
   useEffect(() => {
     const timer = setTimeout(() => {
