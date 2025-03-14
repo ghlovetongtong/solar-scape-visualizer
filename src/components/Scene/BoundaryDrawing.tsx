@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useDrawBoundary, type BoundaryPoint } from '@/hooks/useDrawBoundary';
+import { Line } from '@react-three/drei';
 
 interface BoundaryDrawingProps {
   enabled: boolean;
@@ -21,37 +22,28 @@ export default function BoundaryDrawing({
     onComplete 
   });
 
-  // Create a geometry for the line from the points
-  const lineGeometry = useMemo(() => {
-    if (points.length < 2) return null;
+  // Create points for the line with a slight y-offset to position above the ground
+  const linePoints = useMemo(() => {
+    if (points.length < 2) return [];
     
-    const geometry = new THREE.BufferGeometry();
-    
-    // Create vertices with a slight y-offset to position above the ground
-    const vertices = points.flatMap(([x, z]) => [x, 0.05, z]);
+    // Create line points with a slight y-offset
+    const vertices = points.map(([x, z]) => new THREE.Vector3(x, 0.05, z));
     
     // Add the first point again to close the loop if we're not drawing
     if (!isDrawing && points.length > 2) {
-      vertices.push(points[0][0], 0.05, points[0][1]);
+      vertices.push(new THREE.Vector3(points[0][0], 0.05, points[0][1]));
     }
     
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-    return geometry;
+    return vertices;
   }, [points, isDrawing]);
 
-  // Create a material for the line
-  const lineMaterial = useMemo(() => {
-    return new THREE.LineBasicMaterial({ 
-      color: new THREE.Color(color),
-      linewidth: lineWidth,
-      opacity: 1,
-      transparent: true,
-    });
-  }, [color, lineWidth]);
-
-  if (!lineGeometry) return null;
+  if (linePoints.length < 2) return null;
 
   return (
-    <line geometry={lineGeometry} material={lineMaterial} />
+    <Line
+      points={linePoints}
+      color={color}
+      lineWidth={lineWidth}
+    />
   );
 }
