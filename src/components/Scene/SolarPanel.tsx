@@ -1,131 +1,303 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { ThreeEvent } from '@react-three/fiber';
-import { Instance, Instances } from '@react-three/drei';
-import { InstanceData } from '@/lib/instancedMesh';
-import { useDraggable } from '@/hooks/useDraggable';
+import { useFrame } from '@react-three/fiber';
+import { useTexture } from '@react-three/drei';
+import { createInstancedMesh, updateInstancedMesh, type InstanceData, getShadowIntensity } from '@/lib/instancedMesh';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
-export interface SolarPanelsProps {
+interface SolarPanelsProps {
   panelPositions: InstanceData[];
   selectedPanelId: number | null;
-  onPanelSelected?: (id: number | null) => void;
-  onPanelPositionUpdate?: (id: number, position: [number, number, number]) => void;
-  onPanelRotationUpdate?: (id: number, rotation: [number, number, number]) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
+  onSelectPanel: (id: number | null) => void;
 }
 
-function PanelInstance({
-  id,
-  position,
-  rotation,
-  scale,
-  isSelected,
-  onSelected,
-  onPositionChange,
-  onDragStart,
-  onDragEnd
-}: InstanceData & {
-  isSelected: boolean;
-  onSelected: (id: number) => void;
-  onPositionChange?: (id: number, position: THREE.Vector3) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
-}) {
-  const meshRef = useRef<THREE.Group>(null);
+export default function SolarPanels({ panelPositions, selectedPanelId, onSelectPanel }: SolarPanelsProps) {
+  const panelGeometry = useMemo(() => {
+    const baseGeometry = new THREE.BoxGeometry(3, 0.1, 2);
+    return baseGeometry;
+  }, []);
   
-  // Convert array position to Vector3
-  const positionVector = new THREE.Vector3(position[0], position[1], position[2]);
-  const eulerRotation = new THREE.Euler(rotation[0], rotation[1], rotation[2]);
+  const bracketGeometry = useMemo(() => {
+    const bracketGroup = new THREE.Group();
+    
+    const pole = new THREE.CylinderGeometry(0.1, 0.1, 1.5, 8);
+    const poleMesh = new THREE.Mesh(pole);
+    poleMesh.position.y = -0.75;
+    bracketGroup.add(poleMesh);
+    
+    const beam = new THREE.BoxGeometry(2.8, 0.1, 0.1);
+    const beamMesh = new THREE.Mesh(beam);
+    beamMesh.position.y = -0.05;
+    bracketGroup.add(beamMesh);
+    
+    const base = new THREE.CylinderGeometry(0.3, 0.3, 0.1, 16);
+    const baseMesh = new THREE.Mesh(base);
+    baseMesh.position.y = -1.5;
+    bracketGroup.add(baseMesh);
+    
+    const bracketBufferGeometry = new THREE.BufferGeometry();
+    const meshes: THREE.BufferGeometry[] = [];
+    
+    bracketGroup.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        child.updateMatrix();
+        meshes.push(child.geometry.clone().applyMatrix4(child.matrix));
+      }
+    });
+    
+    const mergedGeometry = mergeGeometries(meshes);
+    
+    return mergedGeometry;
+  }, []);
   
-  const { bind } = useDraggable({
-    enabled: isSelected,
-    onDragStart,
-    onDragEnd: (newPosition) => {
-      if (onPositionChange) {
-        onPositionChange(id, newPosition);
-      }
-      if (onDragEnd) {
-        onDragEnd();
-      }
+  const panelTexture = useTexture('https://i.imgur.com/kDucSwd.jpeg');
+  
+  useMemo(() => {
+    if (panelTexture) {
+      panelTexture.wrapS = panelTexture.wrapT = THREE.RepeatWrapping;
+      panelTexture.repeat.set(1, 1);
     }
+  }, [panelTexture]);
+  
+  const sunDirection = useRef<THREE.Vector3>(new THREE.Vector3(0, 1, 0));
+  
+  useFrame(({ scene }) => {
+    let foundDirectionalLight = false;
+    scene.traverse((object) => {
+      if (object instanceof THREE.DirectionalLight && !foundDirectionalLight) {
+        sunDirection.current.copy(object.position).normalize();
+        foundDirectionalLight = true;
+      }
+    });
   });
   
-  const handleClick = (e: ThreeEvent<MouseEvent>) => {
-    e.stopPropagation();
-    if (e.nativeEvent) {
-      e.nativeEvent.stopPropagation();
-    }
-    onSelected(id);
-  };
+  const materials = useMemo(() => {
+    const sunlitPanelMaterial = new THREE.MeshStandardMaterial({
+      map: panelTexture,
+      color: new THREE.Color('#60A5FA'),
+      metalness: 0.8,
+      roughness: 0.2,
+      emissive: new THREE.Color('#3F6CA3'),
+      emissiveIntensity: 0.2
+    });
+    
+    const shadowedPanelMaterial = new THREE.MeshStandardMaterial({
+      map: panelTexture,
+      color: new THREE.Color('#353638'),
+      metalness: 0.5,
+      roughness: 0.4,
+      emissive: new THREE.Color('#F1F1F1'),
+      emissiveIntensity: 0.05
+    });
+    
+    const frameMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#8e9196'),
+      roughness: 0.4,
+      metalness: 0.6
+    });
+    
+    const bracketMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#565c64'),
+      roughness: 0.3,
+      metalness: 0.7
+    });
+    
+    const selectedMaterial = new THREE.MeshStandardMaterial({
+      color: new THREE.Color('#0ea5e9'),
+      emissive: new THREE.Color('#0ea5e9'),
+      emissiveIntensity: 0.5,
+      roughness: 0.3,
+      metalness: 0.8
+    });
+    
+    return { 
+      sunlitPanelMaterial, 
+      shadowedPanelMaterial, 
+      frameMaterial, 
+      bracketMaterial, 
+      selectedMaterial 
+    };
+  }, [panelTexture]);
   
-  return (
-    <group 
-      position={positionVector}
-      rotation={eulerRotation}
-      onClick={handleClick}
-      onPointerDown={bind.onPointerDown}
-      userData={{ type: 'selectable', id, category: 'panel' }}
-      ref={bind.ref}
-    >
-      {/* Fixed the color prop to use a string color value instead of object */}
-      <Instance 
-        scale={scale} 
-        color={isSelected ? '#88ccff' : '#3388cc'} 
-      />
+  const batchSize = 500;
+  const panelBatches = useMemo(() => {
+    const batches = [];
+    for (let i = 0; i < panelPositions.length; i += batchSize) {
+      batches.push(panelPositions.slice(i, i + batchSize));
+    }
+    return batches;
+  }, [panelPositions, batchSize]);
+  
+  const handleClick = (event: any) => {
+    // Ensure this function really stops propagation
+    event.stopPropagation();
+    
+    if (event.intersections && event.intersections.length > 0) {
+      const intersection = event.intersections[0];
       
-      {isSelected && (
-        <mesh position={[0, 1, 0]}>
-          <sphereGeometry args={[0.2, 16, 16]} />
-          <meshBasicMaterial color="#ffaa00" wireframe />
-        </mesh>
-      )}
-    </group>
-  );
-}
-
-export default function SolarPanels({
-  panelPositions,
-  selectedPanelId,
-  onPanelSelected,
-  onPanelPositionUpdate,
-  onPanelRotationUpdate,
-  onDragStart,
-  onDragEnd
-}: SolarPanelsProps) {
-  const handleSelect = (id: number) => {
-    if (onPanelSelected) {
-      if (id === selectedPanelId) {
-        onPanelSelected(null);
+      if (intersection.instanceId !== undefined && intersection.object.userData.batchIndex !== undefined) {
+        const batchIndex = Math.floor(intersection.object.userData.batchIndex);
+        const panelId = batchIndex * batchSize + intersection.instanceId;
+        
+        // Ensure the index is valid
+        if (panelId < panelPositions.length) {
+          const actualPanelId = panelPositions[panelId].id;
+          console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
+          onSelectPanel(actualPanelId);
+          event.nativeEvent.stopPropagation();
+        }
+      } else if (intersection.object.userData.panelId !== undefined) {
+        const panelId = intersection.object.userData.panelId;
+        console.log(`Selected panel clicked: panelId=${panelId}`);
+        onSelectPanel(panelId);
+        event.nativeEvent.stopPropagation();
       } else {
-        onPanelSelected(id);
+        // If clicked on panel group but not a specific panel
+        console.log('Clicked on panel group but not a specific panel');
       }
     }
   };
   
-  const handlePositionChange = (id: number, newPosition: THREE.Vector3) => {
-    if (onPanelPositionUpdate) {
-      onPanelPositionUpdate(id, [newPosition.x, newPosition.y, newPosition.z]);
-    }
-  };
+  const selectedPanel = useMemo(() => {
+    if (selectedPanelId === null) return null;
+    return panelPositions.find(panel => panel.id === selectedPanelId) || null;
+  }, [panelPositions, selectedPanelId]);
+  
+  const sunlitPanelRefs = useRef<THREE.InstancedMesh[]>([]);
+  const shadowedPanelRefs = useRef<THREE.InstancedMesh[]>([]);
+  const bracketInstancedMeshRefs = useRef<THREE.InstancedMesh[]>([]);
+  
+  useEffect(() => {
+    panelBatches.forEach((batch, batchIndex) => {
+      const sunlitPanelMesh = sunlitPanelRefs.current[batchIndex];
+      const shadowedPanelMesh = shadowedPanelRefs.current[batchIndex];
+      const bracketMesh = bracketInstancedMeshRefs.current[batchIndex];
+      
+      if (!sunlitPanelMesh || !shadowedPanelMesh || !bracketMesh) return;
+      
+      batch.forEach((panel, index) => {
+        const matrix = new THREE.Matrix4();
+        const position = new THREE.Vector3(...panel.position);
+        const rotation = new THREE.Euler(...panel.rotation);
+        const quaternion = new THREE.Quaternion().setFromEuler(rotation);
+        const scale = new THREE.Vector3(1, 1, 1);
+        
+        matrix.compose(position, quaternion, scale);
+        
+        if (panel.id === selectedPanelId) {
+          const invisibleMatrix = new THREE.Matrix4().makeScale(0, 0, 0);
+          sunlitPanelMesh.setMatrixAt(index, invisibleMatrix);
+          shadowedPanelMesh.setMatrixAt(index, invisibleMatrix);
+          bracketMesh.setMatrixAt(index, invisibleMatrix);
+        } else {
+          const shadowIntensity = getShadowIntensity(panel.rotation, sunDirection.current);
+          const isInShadow = shadowIntensity < 0.15;
+          
+          if (isInShadow) {
+            shadowedPanelMesh.setMatrixAt(index, matrix);
+            sunlitPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
+          } else {
+            sunlitPanelMesh.setMatrixAt(index, matrix);
+            shadowedPanelMesh.setMatrixAt(index, new THREE.Matrix4().makeScale(0, 0, 0));
+          }
+          
+          bracketMesh.setMatrixAt(index, matrix);
+        }
+      });
+      
+      sunlitPanelMesh.instanceMatrix.needsUpdate = true;
+      shadowedPanelMesh.instanceMatrix.needsUpdate = true;
+      bracketMesh.instanceMatrix.needsUpdate = true;
+    });
+  }, [panelBatches, selectedPanelId, panelPositions]);
   
   return (
-    <Instances limit={5000} castShadow receiveShadow>
-      <boxGeometry args={[1.6, 0.1, 1]} />
-      <meshStandardMaterial roughness={0.5} metalness={0.8} />
-      
-      {panelPositions.map((panel) => (
-        <PanelInstance
-          key={`panel-${panel.id}`}
-          {...panel}
-          isSelected={selectedPanelId === panel.id}
-          onSelected={handleSelect}
-          onPositionChange={handlePositionChange}
-          onDragStart={onDragStart}
-          onDragEnd={onDragEnd}
-        />
+    <group onClick={handleClick} userData={{ type: 'panel-group' }}>
+      {panelBatches.map((batch, batchIndex) => (
+        <group key={`batch-${batchIndex}`}>
+          <instancedMesh
+            ref={(mesh) => {
+              if (mesh) sunlitPanelRefs.current[batchIndex] = mesh;
+            }}
+            args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
+            castShadow
+            receiveShadow
+            userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
+          />
+          
+          <instancedMesh
+            ref={(mesh) => {
+              if (mesh) shadowedPanelRefs.current[batchIndex] = mesh;
+            }}
+            args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
+            castShadow
+            receiveShadow
+            userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
+          />
+          
+          <instancedMesh
+            ref={(mesh) => {
+              if (mesh) bracketInstancedMeshRefs.current[batchIndex] = mesh;
+            }}
+            args={[bracketGeometry, materials.bracketMaterial, batch.length]}
+            castShadow
+            receiveShadow
+            userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
+          />
+        </group>
       ))}
-    </Instances>
+      
+      {selectedPanel && (
+        <group>
+          <mesh
+            position={new THREE.Vector3(...selectedPanel.position)}
+            rotation={new THREE.Euler(...selectedPanel.rotation)}
+            scale={new THREE.Vector3(1, 1, 1)}
+            castShadow
+            receiveShadow
+            userData={{ type: 'panel', panelId: selectedPanel.id }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectPanel(selectedPanel.id);
+            }}
+          >
+            <boxGeometry args={[3, 0.1, 2]} />
+            <meshStandardMaterial 
+              map={panelTexture}
+              color='#38BDF8'
+              metalness={0.8}
+              roughness={0.2}
+              emissive='#38BDF8'
+              emissiveIntensity={0.6}
+            />
+          </mesh>
+          
+          <mesh
+            position={[selectedPanel.position[0], selectedPanel.position[1] - 0.75, selectedPanel.position[2]]}
+            rotation={new THREE.Euler(...selectedPanel.rotation)}
+            userData={{ type: 'panel', panelId: selectedPanel.id }}
+            castShadow
+            receiveShadow
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectPanel(selectedPanel.id);
+            }}
+          >
+            <primitive object={bracketGeometry} />
+            <meshStandardMaterial 
+              color='#565c64'
+              emissive='#222222'
+              emissiveIntensity={0.3}
+              metalness={0.7}
+              roughness={0.3}
+            />
+          </mesh>
+        </group>
+      )}
+    </group>
   );
 }

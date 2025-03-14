@@ -4,7 +4,6 @@ import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
 import { toast } from 'sonner';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import { ThreeEvent } from '@react-three/fiber/dist/declarations/src/core/events';
 
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
@@ -16,7 +15,13 @@ import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import Road from './Road';
-import { useDraggable } from '@/hooks/useDraggable';
+
+// New interface for draggable object state management
+interface DraggableObjectState {
+  type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
+  index?: number;
+  isDragging: boolean;
+}
 
 function Loader() {
   const { progress, errors, active, item } = useProgress();
@@ -147,22 +152,15 @@ export default function SceneContainer() {
   const [drawingMode, setDrawingMode] = useState(false);
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
+  const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
+  const [inverterPositions, setInverterPositions] = useState<[number, number, number][]>([]);
+  const [cameraPositions, setCameraPositions] = useState<[number, number, number][]>([]);
+  const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
+  const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
+  
+  const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
+  
   const orbitControlsRef = useRef<any>(null);
-  
-  const [selectedComponentType, setSelectedComponentType] = useState<'panel' | 'inverter' | 'transformer' | 'camera' | 'itHouse' | null>(null);
-  const [selectedInverterId, setSelectedInverterId] = useState<number | null>(null);
-  const [selectedTransformerId, setSelectedTransformerId] = useState<number | null>(null);
-  const [selectedCameraId, setSelectedCameraId] = useState<number | null>(null);
-  const [isITHouseSelected, setIsITHouseSelected] = useState<boolean>(false);
-  
-  const [inverterPositionsState, setInverterPositionsState] = useState<Array<[number, number, number]>>([]);
-  const [transformerPositionsState, setTransformerPositionsState] = useState<Array<[number, number, number]>>([]);
-  const [cameraPositionsState, setCameraPositionsState] = useState<Array<[number, number, number]>>([]);
-  const [itHousePositionState, setITHousePositionState] = useState<[number, number, number]>([0, 0, 0]);
-  
-  const [inverterRotations, setInverterRotations] = useState<Array<[number, number, number]>>([]);
-  const [transformerRotations, setTransformerRotations] = useState<Array<[number, number, number]>>([]);
-  const [cameraRotations, setCameraRotations] = useState<Array<[number, number, number]>>([]);
   
   const {
     panelPositions,
@@ -174,12 +172,9 @@ export default function SceneContainer() {
     isInitialized,
     addNewPanelsInBoundary,
     clearAllPanels,
-    saveCurrentLayout,
-    saveAsDefaultLayout
+    saveCurrentLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
-
-  const [isDraggingComponent, setIsDraggingComponent] = useState(false);
-
+  
   useEffect(() => {
     const timer = setTimeout(() => {
       setSceneReady(true);
@@ -191,9 +186,9 @@ export default function SceneContainer() {
 
   useEffect(() => {
     if (orbitControlsRef.current) {
-      orbitControlsRef.current.enabled = !drawingMode;
+      orbitControlsRef.current.enabled = !drawingMode && !draggingObject;
     }
-  }, [drawingMode]);
+  }, [drawingMode, draggingObject]);
 
   const calculatePanelCenter = useCallback((): [number, number, number] => {
     if (!panelPositions || panelPositions.length === 0) {
@@ -253,10 +248,12 @@ export default function SceneContainer() {
     const width = maxX - minX;
     const depth = maxZ - minZ;
 
-    const rowTolerance = 1.0;
+    // Identify panel rows with higher precision
+    const rowTolerance = 1.0; // Smaller tolerance for more accurate row detection
     const rows = [];
     const processedZCoordinates = new Set();
 
+    // Find all distinct rows
     for (const panel of panelPositions) {
       const z = Math.round(panel.position[2] / rowTolerance) * rowTolerance;
       if (!processedZCoordinates.has(z)) {
@@ -266,8 +263,12 @@ export default function SceneContainer() {
         );
         
         if (rowPanels.length > 0) {
-          const rowMinX = Math.min(...rowPanels.map(p => p.position[0]));
-          const rowMaxX = Math.max(...rowPanels.map(p => p.position[0]));
+          // Find min and max X for this row
+          let rowMinX = Infinity, rowMaxX = -Infinity;
+          for (const p of rowPanels) {
+            rowMinX = Math.min(rowMinX, p.position[0]);
+            rowMaxX = Math.max(rowMaxX, p.position[0]);
+          }
           
           rows.push({
             z,
@@ -280,23 +281,30 @@ export default function SceneContainer() {
       }
     }
 
+    // Sort rows by Z coordinate
     rows.sort((a, b) => a.z - b.z);
     
+    console.log(`Found ${rows.length} panel rows`);
+
+    // Generate inverter positions specifically in gaps between rows
     const inverterPositions: [number, number, number][] = [];
     
+    // Skip isolated rows with few panels
     const significantRows = rows.filter(row => row.panelCount >= 3 && row.width > 5);
     significantRows.sort((a, b) => b.panelCount - a.panelCount);
     
     if (significantRows.length >= 2) {
+      // Identify gaps between rows
       const gaps = [];
       for (let i = 0; i < significantRows.length - 1; i++) {
         const currentRow = significantRows[i];
         const nextRow = significantRows[i + 1];
         const gapSize = Math.abs(currentRow.z - nextRow.z);
         
+        // Only consider proper gaps (not too small, not too large)
         if (gapSize > 3 && gapSize < 20) {
           gaps.push({
-            zPosition: (currentRow.z + nextRow.z) / 2,
+            zPosition: (currentRow.z + nextRow.z) / 2, // Center of gap
             size: gapSize,
             width: Math.min(currentRow.width, nextRow.width),
             minX: Math.max(currentRow.minX, nextRow.minX), 
@@ -306,21 +314,26 @@ export default function SceneContainer() {
         }
       }
       
+      // Sort gaps by size (larger gaps first)
       gaps.sort((a, b) => b.size - a.size);
       
+      // Place inverters in the gaps
       if (gaps.length > 0) {
         for (let i = 0; i < Math.min(7, gaps.length); i++) {
           const gap = gaps[i % gaps.length];
           
+          // Calculate how many inverters to place in this gap
           const maxInvertersPerGap = Math.min(3, Math.floor(gap.width / 5));
           
           for (let j = 0; j < maxInvertersPerGap; j++) {
             if (inverterPositions.length >= 7) break;
             
+            // Place inverters evenly along the gap's width
             const xPos = gap.minX + (j + 1) * (gap.width / (maxInvertersPerGap + 1));
             
+            // Check if this position would overlap with a panel
             let tooCloseToPanel = false;
-            const minDistanceToPanel = 1.5;
+            const minDistanceToPanel = 1.5; // Minimum required distance to any panel
             
             for (const panel of panelPositions) {
               const dx = Math.abs(panel.position[0] - xPos);
@@ -339,13 +352,16 @@ export default function SceneContainer() {
       }
     }
     
+    // If we have significant rows but couldn't place inverters in gaps, distribute evenly inside the panel area
     if (significantRows.length > 0 && inverterPositions.length < 7) {
+      // Select the largest rows
       const mainRows = significantRows.slice(0, Math.min(4, significantRows.length));
       
       for (let r = 0; r < mainRows.length; r++) {
         const row = mainRows[r];
         const rowCenter = row.z;
         
+        // Place inverters along the row, avoiding panel positions
         const segmentCount = Math.min(4, Math.ceil(row.width / 15));
         const segmentWidth = row.width / segmentCount;
         
@@ -353,9 +369,10 @@ export default function SceneContainer() {
           if (inverterPositions.length >= 7) break;
           
           const xPos = row.minX + (i + 0.5) * segmentWidth;
-          const zOffset = (r % 2 === 0) ? 2.5 : -2.5;
+          const zOffset = (r % 2 === 0) ? 2.5 : -2.5; // Alternate offset to avoid aligned inverters
           const zPos = rowCenter + zOffset;
           
+          // Check if this position would overlap with any panel
           let overlapsPanel = false;
           for (const panel of panelPositions) {
             const dx = Math.abs(panel.position[0] - xPos);
@@ -373,6 +390,7 @@ export default function SceneContainer() {
       }
     }
     
+    // If we still don't have enough inverters, add them at the perimeter of the panel area
     if (inverterPositions.length < 7) {
       const perimeterPositions: [number, number, number][] = [
         [minX + width * 0.25, 0, minZ - 5],
@@ -413,10 +431,122 @@ export default function SceneContainer() {
   }, [isInitialized, panelPositions]);
 
   const positions = calculateSecondaryPositions();
-  const inverterPositions = positions.inverters;
-  const transformerPositions = positions.transformers;
-  const itHousePosition = positions.itHouse;
-  const cameraPositions = positions.cameras;
+  const calculatedInverterPositions = positions.inverters;
+  const calculatedTransformerPositions = positions.transformers;
+  const calculatedItHousePosition = positions.itHouse;
+  const calculatedCameraPositions = positions.cameras;
+
+  useEffect(() => {
+    if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
+      setInverterPositions(calculatedInverterPositions);
+      console.log("Initialized inverter positions:", calculatedInverterPositions);
+    }
+    
+    if (cameraPositions.length === 0 && calculatedCameraPositions.length > 0) {
+      setCameraPositions(calculatedCameraPositions);
+      console.log("Initialized camera positions:", calculatedCameraPositions);
+    }
+    
+    if (transformerPositions.length === 0 && calculatedTransformerPositions.length > 0) {
+      setTransformerPositions(calculatedTransformerPositions);
+      console.log("Initialized transformer positions:", calculatedTransformerPositions);
+    }
+    
+    if (!itHousePosition[0] && !itHousePosition[2] && calculatedItHousePosition[0] !== 0) {
+      setItHousePosition(calculatedItHousePosition);
+      console.log("Initialized IT house position:", calculatedItHousePosition);
+    }
+  }, [
+    calculatedInverterPositions, inverterPositions.length,
+    calculatedCameraPositions, cameraPositions.length,
+    calculatedTransformerPositions, transformerPositions.length,
+    calculatedItHousePosition, itHousePosition
+  ]);
+
+  const handleUpdateInverterPosition = useCallback((index: number, deltaPosition: [number, number, number]) => {
+    if (index === null || index < 0 || index >= inverterPositions.length) {
+      toast.error("Invalid inverter index");
+      return;
+    }
+    
+    setInverterPositions(prevPositions => {
+      const newPositions = [...prevPositions];
+      
+      // Check if this is an absolute position (with all values set)
+      const isAbsolutePosition = 
+        deltaPosition[0] !== 0 && 
+        deltaPosition[1] !== 0 && 
+        deltaPosition[2] !== 0;
+      
+      if (isAbsolutePosition) {
+        // Set absolute position
+        newPositions[index] = deltaPosition;
+        console.log(`Setting inverter ${index + 1} to absolute position:`, deltaPosition);
+        toast.success(`Set inverter ${index + 1} position to [${deltaPosition.join(', ')}]`);
+      } else {
+        // Apply delta position
+        const currentPos = prevPositions[index];
+        newPositions[index] = [
+          currentPos[0] + deltaPosition[0],
+          currentPos[1] + deltaPosition[1],
+          currentPos[2] + deltaPosition[2]
+        ];
+        console.log(`Adjusted inverter ${index + 1} position by:`, deltaPosition);
+        toast.success(`Moved inverter ${index + 1}`);
+      }
+      
+      return newPositions;
+    });
+  }, [inverterPositions]);
+  
+  const handleStartDrag = useCallback((type: 'inverter' | 'camera' | 'transformer' | 'itHouse', index?: number) => {
+    setDraggingObject({ type, index, isDragging: true });
+    
+    // Deselect panel when starting to drag another object
+    selectPanel(null);
+    
+    if (type === 'inverter') {
+      setSelectedInverterIndex(index !== undefined ? index : null);
+    } else {
+      // When dragging non-inverter objects, deselect any inverter
+      setSelectedInverterIndex(null);
+    }
+    
+    console.log(`Started dragging ${type}${index !== undefined ? ' ' + (index + 1) : ''}`);
+  }, [selectPanel]);
+  
+  const handleEndDrag = useCallback(() => {
+    setDraggingObject(null);
+    console.log("Finished dragging object");
+  }, []);
+  
+  const handleDragInverter = useCallback((index: number, newPosition: [number, number, number]) => {
+    setInverterPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  const handleDragCamera = useCallback((index: number, newPosition: [number, number, number]) => {
+    setCameraPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  const handleDragTransformer = useCallback((index: number, newPosition: [number, number, number]) => {
+    setTransformerPositions(prev => {
+      const updated = [...prev];
+      updated[index] = newPosition;
+      return updated;
+    });
+  }, []);
+  
+  const handleDragITHouse = useCallback((newPosition: [number, number, number]) => {
+    setItHousePosition(newPosition);
+  }, []);
 
   const handleCanvasCreated = () => {
     console.log("Canvas created successfully");
@@ -507,12 +637,6 @@ export default function SceneContainer() {
     }
   }, [saveCurrentLayout]);
 
-  const handleSaveAsDefaultLayout = useCallback(() => {
-    if (saveAsDefaultLayout) {
-      saveAsDefaultLayout();
-    }
-  }, [saveAsDefaultLayout]);
-
   useEffect(() => {
     const savedData = localStorage.getItem('solar-station-boundaries');
     if (savedData) {
@@ -526,247 +650,43 @@ export default function SceneContainer() {
     }
   }, []);
 
-  useEffect(() => {
-    if (positions) {
-      if (inverterRotations.length === 0 && positions.inverters.length > 0) {
-        setInverterRotations(positions.inverters.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (transformerRotations.length === 0 && positions.transformers.length > 0) {
-        setTransformerRotations(positions.transformers.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (cameraRotations.length === 0 && positions.cameras.length > 0) {
-        setCameraRotations(positions.cameras.map(() => [0, 0, 0] as [number, number, number]));
-      }
-      
-      if (inverterPositionsState.length === 0) {
-        setInverterPositionsState([...positions.inverters]);
-      }
-      
-      if (transformerPositionsState.length === 0) {
-        setTransformerPositionsState([...positions.transformers]);
-      }
-      
-      if (cameraPositionsState.length === 0) {
-        setCameraPositionsState([...positions.cameras]);
-      }
-      
-      if (itHousePositionState[0] === 0 && itHousePositionState[1] === 0 && itHousePositionState[2] === 0) {
-        setITHousePositionState([...positions.itHouse]);
-      }
+  const handleSceneObjectClick = useCallback((event: any) => {
+    console.log("Scene click detected", event.object?.userData);
+    
+    if (!event.object) {
+      setSelectedInverterIndex(null);
+      selectPanel(null);
+      return;
     }
-  }, [positions, inverterRotations.length, transformerRotations.length, cameraRotations.length, 
-      inverterPositionsState.length, transformerPositionsState.length, cameraPositionsState.length, itHousePositionState]);
-
-  const handleSelectInverter = useCallback((index: number) => {
-    console.log("Selecting inverter:", index);
-    if (index === selectedInverterId && selectedComponentType === 'inverter') {
-      setSelectedInverterId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedInverterId(index);
-      setSelectedComponentType('inverter');
-      setSelectedTransformerId(null);
-      setSelectedCameraId(null);
-      setIsITHouseSelected(false);
-      if (selectPanel) {
+    
+    const userData = event.object.userData;
+    if (!userData) return;
+    
+    if (userData.type === 'inverter') {
+      console.log(`Inverter ${userData.inverterIndex} selected`);
+      
+      // Toggle selection - if already selected, deselect it
+      if (selectedInverterIndex === userData.inverterIndex) {
+        setSelectedInverterIndex(null);
+      } else {
+        setSelectedInverterIndex(userData.inverterIndex);
+        // Deselect any panels when selecting an inverter
         selectPanel(null);
       }
+      
+      // Prevent propagation
+      event.stopPropagation();
+    } 
+    else if (userData.type === 'panel' || userData.type === 'panel-instance') {
+      // Deselect inverter when selecting a panel
+      setSelectedInverterIndex(null);
     }
-  }, [selectedInverterId, selectedComponentType, selectPanel]);
-
-  const handleSelectTransformer = (index: number | null) => {
-    if (index === selectedTransformerId && selectedComponentType === 'transformer') {
-      setSelectedTransformerId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedTransformerId(index);
-      setSelectedComponentType('transformer');
-      setSelectedInverterId(null);
-      setSelectedCameraId(null);
-      setIsITHouseSelected(false);
+    else {
+      // For other objects, clear selections
+      setSelectedInverterIndex(null);
       selectPanel(null);
     }
-  };
-  
-  const handleSelectCamera = (index: number | null) => {
-    if (index === selectedCameraId && selectedComponentType === 'camera') {
-      setSelectedCameraId(null);
-      setSelectedComponentType(null);
-    } else {
-      setSelectedCameraId(index);
-      setSelectedComponentType('camera');
-      setSelectedInverterId(null);
-      setSelectedTransformerId(null);
-      setIsITHouseSelected(false);
-      selectPanel(null);
-    }
-  };
-  
-  const handleSelectITHouse = () => {
-    if (isITHouseSelected && selectedComponentType === 'itHouse') {
-      setIsITHouseSelected(false);
-      setSelectedComponentType(null);
-    } else {
-      setIsITHouseSelected(true);
-      setSelectedComponentType('itHouse');
-      setSelectedInverterId(null);
-      setSelectedTransformerId(null);
-      setSelectedCameraId(null);
-      selectPanel(null);
-    }
-  };
-  
-  useEffect(() => {
-    if (selectedPanelId !== null) {
-      setSelectedComponentType('panel');
-      setSelectedInverterId(null);
-      setSelectedTransformerId(null);
-      setSelectedCameraId(null);
-      setIsITHouseSelected(false);
-    } else if (selectedComponentType === 'panel') {
-      setSelectedComponentType(null);
-    }
-  }, [selectedPanelId, selectedComponentType]);
-
-  const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setIsDraggingComponent(false);
-    setInverterPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Inverter ${id + 1} to new position`);
-  };
-  
-  const handleTransformerPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setIsDraggingComponent(false);
-    setTransformerPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Transformer ${id + 1} to new position`);
-  };
-  
-  const handleCameraPositionChange = (id: number, newPosition: THREE.Vector3) => {
-    setIsDraggingComponent(false);
-    setCameraPositionsState(prev => {
-      const newPositions = [...prev];
-      newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
-      return newPositions;
-    });
-    toast.success(`Moved Camera ${id + 1} to new position`);
-  };
-  
-  const handleITHousePositionChange = (newPosition: THREE.Vector3) => {
-    setIsDraggingComponent(false);
-    setITHousePositionState([newPosition.x, newPosition.y, newPosition.z]);
-    toast.success('Moved IT House to new position');
-  };
-  
-  const updateInverterPosition = (id: number, position: [number, number, number]) => {
-    setInverterPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateTransformerPosition = (id: number, position: [number, number, number]) => {
-    setTransformerPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateCameraPosition = (id: number, position: [number, number, number]) => {
-    setCameraPositionsState(prev => 
-      prev.map((pos, index) => 
-        index === id 
-          ? [
-              pos[0] + position[0], 
-              pos[1] + position[1], 
-              pos[2] + position[2]
-            ] as [number, number, number]
-          : pos
-      )
-    );
-  };
-  
-  const updateInverterRotation = (id: number, rotation: [number, number, number]) => {
-    setInverterRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
-  
-  const updateTransformerRotation = (id: number, rotation: [number, number, number]) => {
-    setTransformerRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
-  
-  const updateCameraRotation = (id: number, rotation: [number, number, number]) => {
-    setCameraRotations(prev => 
-      prev.map((rot, index) => 
-        index === id 
-          ? [
-              rot[0] + rotation[0], 
-              rot[1] + rotation[1], 
-              rot[2] + rotation[2]
-            ] as [number, number, number]
-          : rot
-      )
-    );
-  };
-
-  const handleComponentDragStart = useCallback(() => {
-    console.log("Component drag started");
-    setIsDraggingComponent(true);
-    if (orbitControlsRef.current) {
-      orbitControlsRef.current.enabled = false;
-    }
-  }, []);
-
-  useEffect(() => {
-    if (orbitControlsRef.current) {
-      if (drawingMode || isDraggingComponent) {
-        orbitControlsRef.current.enabled = false;
-      } else {
-        orbitControlsRef.current.enabled = true;
-      }
-    }
-  }, [drawingMode, isDraggingComponent]);
+  }, [selectPanel, selectedInverterIndex]);
 
   return (
     <div className="h-full w-full relative">
@@ -787,153 +707,118 @@ export default function SceneContainer() {
         }}
         onCreated={handleCanvasCreated}
         onError={handleCanvasError}
-        onClick={(event) => {
-          const threeEvent = event as unknown as ThreeEvent<MouseEvent>;
-          
-          if (!threeEvent.intersections || threeEvent.intersections.length === 0) {
-            setSelectedComponentType(null);
-            setSelectedInverterId(null);
-            setSelectedTransformerId(null);
-            setSelectedCameraId(null);
-            setIsITHouseSelected(false);
-            if (selectPanel) {
-              selectPanel(null);
-            }
-            return;
-          }
-          
-          const hitSelectable = threeEvent.intersections.some(
-            intersection => intersection.object.userData?.type === 'selectable'
-          );
-          
-          if (!hitSelectable) {
-            setSelectedComponentType(null);
-            setSelectedInverterId(null);
-            setSelectedTransformerId(null);
-            setSelectedCameraId(null);
-            setIsITHouseSelected(false);
-            if (selectPanel) {
-              selectPanel(null);
-            }
-          }
-        }}
+        onClick={handleSceneObjectClick}
       >
         <CustomEnvironment timeOfDay={timeOfDay} />
         
+        <SkyBox timeOfDay={timeOfDay} />
+        
         <Suspense fallback={null}>
-          <OrbitControls 
-            ref={orbitControlsRef}
-            enableDamping
-            dampingFactor={0.05}
-            rotateSpeed={0.5}
-            minDistance={10}
-            maxDistance={500}
-            target={new THREE.Vector3(...panelCenter)}
+          <Terrain 
+            drawingEnabled={drawingMode}
+            onBoundaryComplete={handleBoundaryComplete}
+            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
           />
-          
-          <SkyBox timeOfDay={timeOfDay} />
-          
-          <Terrain />
           
           <SolarPanels 
-            panelPositions={panelPositions}
+            panelPositions={panelPositions} 
             selectedPanelId={selectedPanelId}
-            onPanelSelected={selectPanel}
-            onPanelPositionUpdate={updatePanelPosition}
-            onPanelRotationUpdate={updatePanelRotation}
-            onDragStart={handleComponentDragStart}
-            onDragEnd={() => setIsDraggingComponent(false)}
+            onSelectPanel={selectPanel}
           />
           
-          {inverterPositionsState.map((position, index) => (
+          {inverterPositions.map((position, index) => (
             <Inverter 
               key={`inverter-${index}`}
-              id={index}
-              position={position} 
-              rotation={inverterRotations[index] || [0, 0, 0]}
-              isSelected={selectedComponentType === 'inverter' && selectedInverterId === index}
-              onSelect={handleSelectInverter}
-              onPositionChange={handleInverterPositionChange}
-              onDragStart={handleComponentDragStart}
+              position={new THREE.Vector3(...position)}
+              inverterIndex={index}
+              isSelected={selectedInverterIndex === index}
+              isDragging={draggingObject?.type === 'inverter' && draggingObject.index === index}
+              onClick={(e) => {
+                console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
+                // Toggle selection state
+                setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
+                // Deselect any panels when selecting an inverter
+                selectPanel(null);
+                // Prevent propagation
+                e.stopPropagation();
+                if (e.nativeEvent) e.nativeEvent.stopPropagation();
+              }}
+              onDragStart={() => handleStartDrag('inverter', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragInverter}
             />
           ))}
           
-          {transformerPositionsState.map((position, index) => (
-            <TransformerStation 
-              key={`transformer-${index}`}
-              id={index}
-              position={position} 
-              rotation={transformerRotations[index] || [0, 0, 0]}
-              isSelected={selectedComponentType === 'transformer' && selectedTransformerId === index}
-              onSelect={handleSelectTransformer}
-              onPositionChange={handleTransformerPositionChange}
-              onDragStart={handleComponentDragStart}
-            />
-          ))}
-          
-          {cameraPositionsState.map((position, index) => (
+          {cameraPositions.map((position, index) => (
             <Camera 
               key={`camera-${index}`}
-              id={index}
-              position={position} 
-              rotation={cameraRotations[index] || [0, 0, 0]}
-              isSelected={selectedComponentType === 'camera' && selectedCameraId === index}
-              onSelect={handleSelectCamera}
-              onPositionChange={handleCameraPositionChange}
-              onDragStart={handleComponentDragStart}
+              position={new THREE.Vector3(...position)}
+              cameraIndex={index}
+              isDragging={draggingObject?.type === 'camera' && draggingObject.index === index}
+              onDragStart={() => handleStartDrag('camera', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragCamera}
+            />
+          ))}
+          
+          {transformerPositions.map((position, index) => (
+            <TransformerStation 
+              key={`transformer-${index}`}
+              position={new THREE.Vector3(...position)}
+              transformerIndex={index}
+              isDragging={draggingObject?.type === 'transformer' && draggingObject.index === index}
+              onDragStart={() => handleStartDrag('transformer', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragTransformer}
             />
           ))}
           
           <ITHouse 
-            position={itHousePositionState}
-            isSelected={selectedComponentType === 'itHouse' && isITHouseSelected}
-            onSelect={handleSelectITHouse}
-            onPositionChange={handleITHousePositionChange}
-            onDragStart={handleComponentDragStart}
+            position={new THREE.Vector3(...itHousePosition)} 
+            isDragging={draggingObject?.type === 'itHouse'}
+            onDragStart={() => handleStartDrag('itHouse')}
+            onDragEnd={() => handleEndDrag()}
+            onDrag={handleDragITHouse}
           />
           
-          <Road />
+          <OrbitControls 
+            ref={orbitControlsRef}
+            enableDamping 
+            dampingFactor={0.05} 
+            maxDistance={800}
+            minDistance={10}
+            maxPolarAngle={Math.PI / 2 - 0.1}
+            minPolarAngle={0.1}
+            target={new THREE.Vector3(...panelCenter)}
+          />
+          
+          {showStats && <Stats />}
         </Suspense>
-        
-        {showStats && <Stats />}
       </Canvas>
       
       <Controls 
-        setTimeOfDay={setTimeOfDay}
+        showStats={showStats}
+        setShowStats={setShowStats}
         timeOfDay={timeOfDay}
+        setTimeOfDay={setTimeOfDay}
+        onResetPanels={resetPanelPositions}
+        selectedPanelId={selectedPanelId}
+        onUpdatePanelPosition={updatePanelPosition}
+        onUpdatePanelRotation={updatePanelRotation}
         drawingMode={drawingMode}
         setDrawingMode={setDrawingMode}
-        currentBoundary={currentBoundary}
-        onBoundaryComplete={handleBoundaryComplete}
         onSaveBoundary={handleSaveBoundary}
         onClearBoundary={handleClearBoundary}
         onClearAllBoundaries={handleClearAllBoundaries}
-        savedBoundariesCount={savedBoundaries.length}
-        onGeneratePanels={handleGenerateNewPanelsInBoundary}
         onClearAllPanels={handleClearAllPanels}
+        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
-        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
-        selectedComponentType={selectedComponentType}
-        selectedComponentId={
-          selectedComponentType === 'inverter' 
-            ? selectedInverterId 
-            : selectedComponentType === 'transformer'
-              ? selectedTransformerId
-              : selectedComponentType === 'camera'
-                ? selectedCameraId
-                : selectedPanelId
-        }
-        showStats={showStats}
-        setShowStats={setShowStats}
-        updateInverterPosition={updateInverterPosition}
-        updateTransformerPosition={updateTransformerPosition}
-        updateCameraPosition={updateCameraPosition}
-        updateInverterRotation={updateInverterRotation}
-        updateTransformerRotation={updateTransformerRotation}
-        updateCameraRotation={updateCameraRotation}
+        selectedInverterIndex={selectedInverterIndex}
+        onDeselectInverter={() => setSelectedInverterIndex(null)}
+        onUpdateInverterPosition={handleUpdateInverterPosition}
       />
       
-      {!sceneReady && <Loader />}
+      <Loader />
     </div>
   );
 }

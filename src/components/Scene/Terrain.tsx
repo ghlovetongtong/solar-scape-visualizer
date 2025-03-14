@@ -1,8 +1,9 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
 import BoundaryDrawing from './BoundaryDrawing';
+import Road from './Road';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 interface TerrainProps {
@@ -16,22 +17,40 @@ export default function Terrain({
   onBoundaryComplete,
   savedBoundaries = []
 }: TerrainProps) {
-  // Create a safe callback wrapper that won't cause errors
+  // State to store the road boundary
+  const [roadBoundary, setRoadBoundary] = useState<BoundaryPoint[]>([]);
+  
+  // Create a safe callback wrapper that won't cause "lov" errors
   const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
     if (onBoundaryComplete && points.length > 2) {
       // Ensure we're dealing with a valid boundary before calling the callback
       try {
+        // If we don't have a road yet, use the first boundary as a road
+        if (roadBoundary.length === 0) {
+          setRoadBoundary(points);
+          console.log('Road boundary set with', points.length, 'points');
+        }
         onBoundaryComplete(points);
       } catch (error) {
         console.error("Error in boundary completion callback:", error);
       }
     }
-  }, [onBoundaryComplete]);
+  }, [onBoundaryComplete, roadBoundary]);
 
   return (
     <group>
       <Ground size={400} savedBoundaries={savedBoundaries} />
       <Vegetation />
+      
+      {/* Render road if we have a road boundary - increased elevation and width */}
+      {roadBoundary.length > 2 && (
+        <Road 
+          boundary={roadBoundary} 
+          width={8} 
+          color="#555555" 
+          elevation={0.15} 
+        />
+      )}
       
       {drawingEnabled && (
         <BoundaryDrawing 
