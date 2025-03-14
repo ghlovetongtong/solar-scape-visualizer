@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -77,7 +78,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       color: new THREE.Color('#60A5FA'),
       metalness: 0.8,
       roughness: 0.2,
-      emissive: new THREE.Color('#60A5FA'),
+      emissive: new THREE.Color('#3F6CA3'),
       emissiveIntensity: 0.2
     });
     
