@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -894,10 +895,10 @@ export default function SceneContainer() {
         updateInverterPosition={updateInverterPosition}
         updateTransformerPosition={updateTransformerPosition}
         updateCameraPosition={updateCameraPosition}
-        onResetPanels={resetPanelPositions}
         updateInverterRotation={updateInverterRotation}
         updateTransformerRotation={updateTransformerRotation}
         updateCameraRotation={updateCameraRotation}
+        onResetPanels={resetPanelPositions}
       />
 
       {!sceneReady && <Loader />}
