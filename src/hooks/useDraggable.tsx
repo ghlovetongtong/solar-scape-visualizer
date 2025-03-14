@@ -37,6 +37,7 @@ export function useDraggable(
     setIsDragging(true);
     gl.domElement.style.cursor = 'grabbing';
     
+    // Save the original position for reference during dragging
     originalPosition.current = groupRef.current.position.clone();
     dragStartPoint.current = new THREE.Vector3(e.point.x, e.point.y, e.point.z);
     
@@ -84,7 +85,7 @@ export function useDraggable(
     setIsDragging(false);
     gl.domElement.style.cursor = 'auto';
     
-    if (onDragEnd && originalPosition.current) {
+    if (onDragEnd && groupRef.current) {
       onDragEnd(groupRef.current.position.clone());
     }
     

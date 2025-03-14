@@ -18,44 +18,96 @@ export default function Road({
   elevation = 0.1,
   center = [0, 0, 0]
 }: RoadProps) {
-  // Only render if we have at least 3 points to form a valid path
+  // Only render if we have at least 3 points to form a valid path or if center is provided
   const roadMesh = useMemo(() => {
-    if (boundary.length < 3) return null;
+    // Create a circular road around the center if no boundary is provided
+    if (boundary.length < 3 && center) {
+      // Create a circular path around the center
+      const segments = 36;
+      const radius = 40;
+      const circlePoints: BoundaryPoint[] = [];
+      
+      for (let i = 0; i < segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const x = center[0] + Math.cos(angle) * radius;
+        const z = center[2] + Math.sin(angle) * radius;
+        circlePoints.push([x, z]);
+      }
+      
+      // Create a path from the circular points
+      const path = new THREE.CatmullRomCurve3(
+        circlePoints.map(([x, z]) => new THREE.Vector3(x, elevation, z))
+      );
+      
+      // Close the loop
+      path.closed = true;
 
-    // Create a path from the boundary points
-    const path = new THREE.CatmullRomCurve3(
-      boundary.map(([x, z]) => new THREE.Vector3(x, elevation, z))
-    );
+      // Create the road geometry
+      const tubeGeometry = new THREE.TubeGeometry(
+        path,
+        segments * 2,
+        width / 2,
+        18,
+        true
+      );
+
+      // Create road material
+      const roadMaterial = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.7,
+        metalness: 0.2,
+        side: THREE.DoubleSide,
+      });
+
+      return (
+        <mesh 
+          geometry={tubeGeometry} 
+          material={roadMaterial} 
+          receiveShadow 
+          position={[0, 0, 0]}
+        />
+      );
+    }
     
-    // Close the loop by connecting back to the start
-    path.closed = true;
+    // Use the provided boundary points if available
+    if (boundary.length >= 3) {
+      // Create a path from the boundary points
+      const path = new THREE.CatmullRomCurve3(
+        boundary.map(([x, z]) => new THREE.Vector3(x, elevation, z))
+      );
+      
+      // Close the loop by connecting back to the start
+      path.closed = true;
 
-    // Create the road geometry - increase segments for smoother appearance
-    const tubeGeometry = new THREE.TubeGeometry(
-      path,
-      boundary.length * 8, // Further increased segments for smoother curve
-      width / 2, // radius - half the desired road width
-      18, // Increased radial segments for smoother tube
-      true // closed path
-    );
+      // Create the road geometry - increase segments for smoother appearance
+      const tubeGeometry = new THREE.TubeGeometry(
+        path,
+        boundary.length * 8, // Further increased segments for smoother curve
+        width / 2, // radius - half the desired road width
+        18, // Increased radial segments for smoother tube
+        true // closed path
+      );
 
-    // Create road material with better visibility
-    const roadMaterial = new THREE.MeshStandardMaterial({
-      color: color,
-      roughness: 0.7,
-      metalness: 0.2,
-      side: THREE.DoubleSide,
-    });
+      // Create road material with better visibility
+      const roadMaterial = new THREE.MeshStandardMaterial({
+        color: color,
+        roughness: 0.7,
+        metalness: 0.2,
+        side: THREE.DoubleSide,
+      });
 
-    return (
-      <mesh 
-        geometry={tubeGeometry} 
-        material={roadMaterial} 
-        receiveShadow 
-        position={[0, 0, 0]}
-      />
-    );
-  }, [boundary, width, color, elevation]);
+      return (
+        <mesh 
+          geometry={tubeGeometry} 
+          material={roadMaterial} 
+          receiveShadow 
+          position={[0, 0, 0]}
+        />
+      );
+    }
+    
+    return null;
+  }, [boundary, width, color, elevation, center]);
 
   if (!roadMesh) return null;
 

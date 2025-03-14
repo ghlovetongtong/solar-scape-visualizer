@@ -54,7 +54,6 @@ export default function Inverter({
         castShadow 
         receiveShadow
         position={[0, 1, 0]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         <meshPhysicalMaterial 
@@ -70,7 +69,6 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 1, 0.95]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
         <meshPhysicalMaterial 
@@ -84,7 +82,6 @@ export default function Inverter({
       <mesh 
         castShadow 
         position={[0, 0, 0]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
         <meshPhysicalMaterial 
@@ -97,7 +94,6 @@ export default function Inverter({
       {/* Status indicator light */}
       <mesh
         position={[1.1, 1.6, 0.95]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
@@ -110,7 +106,6 @@ export default function Inverter({
       {/* Ventilation grille */}
       <mesh
         position={[-1.0, 1.6, 0.95]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <boxGeometry args={[1.0, 1.0, 0.08]} />
         <meshStandardMaterial 
@@ -122,7 +117,6 @@ export default function Inverter({
       {/* Cables */}
       <mesh
         position={[0, 0.3, 0.9]}
-        userData={{ type: 'selectable', componentType: 'inverter' }}
       >
         <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
         <meshStandardMaterial color="#111111" />
