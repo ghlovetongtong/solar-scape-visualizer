@@ -1,3 +1,4 @@
+
 import React, { useRef } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -100,6 +101,7 @@ export default function Camera({
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerOut={handlePointerUp}
+      scale={[2.2, 2.2, 2.2]} // Increase the scale of the entire camera
     >
       {/* Camera mount/pole */}
       <mesh castShadow position={[0, -5, 0]}>
