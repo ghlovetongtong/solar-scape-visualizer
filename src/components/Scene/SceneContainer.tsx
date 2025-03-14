@@ -392,7 +392,7 @@ export default function SceneContainer() {
     
     // If we still don't have enough inverters, add them at the perimeter of the panel area
     if (inverterPositions.length < 7) {
-      const perimeterPositions = [
+      const perimeterPositions: [number, number, number][] = [
         [minX + width * 0.25, 0, minZ - 5],
         [minX + width * 0.75, 0, minZ - 5],
         [maxX + 5, 0, minZ + depth * 0.25],
