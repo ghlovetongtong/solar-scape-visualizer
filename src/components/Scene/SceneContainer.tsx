@@ -253,8 +253,8 @@ export default function SceneContainer() {
       toast.success('Boundary saved successfully');
       
       try {
-        const savedData = JSON.stringify([...savedBoundaries, currentBoundary]);
-        localStorage.setItem('solar-station-boundaries', savedData);
+        const allBoundaries = [...savedBoundaries, currentBoundary];
+        localStorage.setItem('solar-station-boundaries', JSON.stringify(allBoundaries));
       } catch (error) {
         console.error("Error saving boundary to localStorage:", error);
         toast.error('Failed to save boundary data');
@@ -298,19 +298,19 @@ export default function SceneContainer() {
       return;
     }
     
-    const latestBoundary = allBoundaries[allBoundaries.length - 1];
+    let totalPanelsAdded = 0;
     
-    if (latestBoundary.length < 3) {
-      toast.error('The latest boundary is invalid. Create a new boundary.');
-      return;
+    for (const boundary of allBoundaries) {
+      if (boundary.length < 3) continue;
+      
+      const panelsAdded = addNewPanelsInBoundary(boundary);
+      totalPanelsAdded += panelsAdded;
     }
     
-    const panelsAdded = addNewPanelsInBoundary(latestBoundary);
-    
-    if (panelsAdded > 0) {
-      toast.success(`Generated ${panelsAdded} new solar panels within boundary`);
+    if (totalPanelsAdded > 0) {
+      toast.success(`Generated ${totalPanelsAdded} new solar panels within boundaries`);
     } else {
-      toast.info('No new panels could be added. The boundary may already be filled or too small.');
+      toast.info('No new panels could be added. The boundaries may already be filled or too small.');
     }
   }, [savedBoundaries, addNewPanelsInBoundary]);
 

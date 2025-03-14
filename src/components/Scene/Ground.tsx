@@ -53,7 +53,7 @@ export default function Ground({
     }
   }, [groundGeometry]);
 
-  // Create boundary line geometries
+  // Create boundary line geometries for each saved boundary
   const boundaryLines = useMemo(() => {
     return savedBoundaries.map((boundary, boundaryIndex) => {
       if (boundary.length < 3) return null;
@@ -67,12 +67,17 @@ export default function Ground({
       // Create a geometry for the line
       const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
       
+      // Use different colors for different boundaries
+      const colors = ["#00ff00", "#ff0000", "#0000ff", "#ffff00", "#ff00ff", "#00ffff"];
+      const colorIndex = boundaryIndex % colors.length;
+      const color = colors[colorIndex];
+      
       return (
         <primitive 
           key={`boundary-${boundaryIndex}`} 
           object={new THREE.Line(
             geometry,
-            new THREE.LineBasicMaterial({ color: "#00ff00", linewidth: 2 })
+            new THREE.LineBasicMaterial({ color, linewidth: 2 })
           )} 
         />
       );
@@ -95,7 +100,7 @@ export default function Ground({
         />
       </mesh>
 
-      {/* Render saved boundaries */}
+      {/* Render all saved boundaries */}
       <group>{boundaryLines}</group>
     </>
   );

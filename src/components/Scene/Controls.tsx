@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,6 @@ export default function Controls({
     const scaledValue = (adjustValue - 0.5) * (isRotation ? 0.2 : 2);
     
     if (isRotation) {
-      // Create a new rotation array based on the axis
       const rotation: [number, number, number] = [0, 0, 0];
       if (axis === 'x') rotation[0] = scaledValue;
       if (axis === 'y') rotation[1] = scaledValue;
@@ -60,7 +58,6 @@ export default function Controls({
       
       onUpdatePanelRotation(selectedPanelId, rotation);
     } else {
-      // Create a new position array based on the axis
       const position: [number, number, number] = [0, 0, 0];
       if (axis === 'x') position[0] = scaledValue;
       if (axis === 'y') position[1] = scaledValue;
@@ -71,7 +68,7 @@ export default function Controls({
   };
   
   const getTimeLabel = (timeValue: number) => {
-    const hoursFloat = 5 + timeValue * 14; // 5:00 AM to 7:00 PM
+    const hoursFloat = 5 + timeValue * 14;
     const hours = Math.floor(hoursFloat);
     const minutes = Math.floor((hoursFloat - hours) * 60);
     const period = hours >= 12 ? 'PM' : 'AM';
@@ -83,7 +80,6 @@ export default function Controls({
     <div className="absolute left-4 bottom-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-xs space-y-4 border border-gray-200 dark:border-gray-700">
       <div className="text-lg font-bold">Solar Panel Controls</div>
       
-      {/* Time of Day Control */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">Time of Day</label>
@@ -98,7 +94,6 @@ export default function Controls({
         />
       </div>
       
-      {/* Selected Panel Controls */}
       {selectedPanelId !== null && (
         <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
           <div className="text-sm font-medium">Selected Panel: #{selectedPanelId}</div>
@@ -120,7 +115,6 @@ export default function Controls({
         </div>
       )}
       
-      {/* Drawing Mode Controls */}
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">Boundary Drawing Mode</label>
@@ -137,32 +131,28 @@ export default function Controls({
           </div>
         )}
         
-        {/* New Panel Generation Button */}
-        {!drawingMode && (
-          <div className="grid grid-cols-1 gap-1">
-            {onGenerateNewPanelsInBoundary && (
-              <Button 
-                className="w-full" 
-                onClick={onGenerateNewPanelsInBoundary}
-                variant="default"
-              >
-                Generate New Panels in Boundary
-              </Button>
-            )}
-            {onClearAllBoundaries && (
-              <Button 
-                className="w-full" 
-                variant="outline" 
-                onClick={onClearAllBoundaries}
-              >
-                Clear All Boundaries
-              </Button>
-            )}
-          </div>
-        )}
+        <div className="grid grid-cols-1 gap-1 mt-2">
+          {onGenerateNewPanelsInBoundary && (
+            <Button 
+              className="w-full" 
+              onClick={onGenerateNewPanelsInBoundary}
+              variant="default"
+            >
+              Generate Panels in All Boundaries
+            </Button>
+          )}
+          {onClearAllBoundaries && (
+            <Button 
+              className="w-full" 
+              variant="outline" 
+              onClick={onClearAllBoundaries}
+            >
+              Clear All Boundaries
+            </Button>
+          )}
+        </div>
       </div>
       
-      {/* Panel Management Controls */}
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
         <div className="text-sm font-medium">Panel Management</div>
         <div className="grid grid-cols-2 gap-1">
@@ -179,7 +169,6 @@ export default function Controls({
         </div>
       </div>
       
-      {/* Misc Controls */}
       <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">
         <div className="flex items-center space-x-2">
           <Switch
