@@ -28,6 +28,7 @@ export default function Terrain({
         // If we don't have a road yet, use the first boundary as a road
         if (roadBoundary.length === 0) {
           setRoadBoundary(points);
+          console.log('Road boundary set with', points.length, 'points');
         }
         onBoundaryComplete(points);
       } catch (error) {
@@ -40,10 +41,17 @@ export default function Terrain({
     <group>
       <Ground size={400} savedBoundaries={savedBoundaries} />
       <Vegetation />
-      {/* Render road if we have a road boundary */}
+      
+      {/* Render road if we have a road boundary - increased elevation and width */}
       {roadBoundary.length > 2 && (
-        <Road boundary={roadBoundary} width={5} color="#333333" elevation={0.05} />
+        <Road 
+          boundary={roadBoundary} 
+          width={8} 
+          color="#555555" 
+          elevation={0.15} 
+        />
       )}
+      
       {drawingEnabled && (
         <BoundaryDrawing 
           enabled={drawingEnabled} 

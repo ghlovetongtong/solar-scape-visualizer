@@ -28,26 +28,26 @@ export default function Road({
     // Close the loop by connecting back to the start
     path.closed = true;
 
-    // Create the road geometry
+    // Create the road geometry - increase segments for smoother appearance
     const tubeGeometry = new THREE.TubeGeometry(
       path,
-      boundary.length * 2, // segments - more segments = smoother curve
+      boundary.length * 4, // Increased segments for smoother curve
       width / 2, // radius - half the desired road width
-      12, // radial segments - more = smoother tube
+      16, // Increased radial segments for smoother tube
       true // closed path
     );
 
-    // Create road material with some texture
+    // Create road material with better visibility
     const roadMaterial = new THREE.MeshStandardMaterial({
       color: color,
-      roughness: 0.8,
-      metalness: 0.2,
+      roughness: 0.6,
+      metalness: 0.4,
       side: THREE.DoubleSide,
     });
 
     return (
-      <mesh geometry={tubeGeometry} material={roadMaterial} receiveShadow>
-        <meshStandardMaterial attach="material" color={color} roughness={0.8} metalness={0.2} />
+      <mesh geometry={tubeGeometry} material={roadMaterial} receiveShadow position={[0, 0.1, 0]}>
+        {/* Removed duplicate material since it's already defined above */}
       </mesh>
     );
   }, [boundary, width, color, elevation]);
