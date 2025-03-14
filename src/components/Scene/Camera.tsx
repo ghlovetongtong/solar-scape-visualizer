@@ -52,12 +52,12 @@ export default function Camera({
   
   return (
     <group 
-      ref={bind.ref}
       position={positionVector}
       rotation={eulerRotation}
       onClick={handleClick}
       onPointerDown={bind.onPointerDown}
       userData={{ type: 'selectable', id, category: 'camera' }}
+      ref={bind.ref}
     >
       <mesh castShadow receiveShadow>
         <boxGeometry args={[0.5, 0.5, 1]} />

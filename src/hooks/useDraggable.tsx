@@ -13,7 +13,7 @@ export function useDraggable(options: DraggableOptions = {}) {
   const { camera, gl } = useThree();
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(new THREE.Vector3());
-  const dragRef = useRef<THREE.Object3D | null>(null);
+  const dragRef = useRef<THREE.Group>(null);
   const initialPositionRef = useRef(new THREE.Vector3());
   const offsetRef = useRef(new THREE.Vector3());
   const planeRef = useRef(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
@@ -116,10 +116,12 @@ export function useDraggable(options: DraggableOptions = {}) {
     };
   }, [isDragging]);
   
-  const bind = {
-    ref: dragRef,
-    onPointerDown: handleDragStart,
+  return {
+    bind: {
+      ref: dragRef,
+      onPointerDown: handleDragStart,
+    },
+    isDragging,
+    position
   };
-  
-  return { bind, isDragging, position };
 }

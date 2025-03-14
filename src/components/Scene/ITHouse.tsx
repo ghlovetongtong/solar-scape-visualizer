@@ -47,11 +47,11 @@ export default function ITHouse({
   
   return (
     <group 
-      ref={bind.ref}
       position={positionVector}
       onClick={handleClick}
       onPointerDown={bind.onPointerDown}
       userData={{ type: 'selectable', category: 'itHouse' }}
+      ref={bind.ref}
     >
       <mesh castShadow receiveShadow>
         <boxGeometry args={[5, 3, 4]} />

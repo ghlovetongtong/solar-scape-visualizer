@@ -52,12 +52,12 @@ export default function TransformerStation({
   
   return (
     <group 
-      ref={bind.ref}
       position={positionVector}
       rotation={eulerRotation}
       onClick={handleClick}
       onPointerDown={bind.onPointerDown}
       userData={{ type: 'selectable', id, category: 'transformer' }}
+      ref={bind.ref}
     >
       <mesh castShadow receiveShadow>
         <boxGeometry args={[3, 2.5, 2]} />

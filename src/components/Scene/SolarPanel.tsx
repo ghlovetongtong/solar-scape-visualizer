@@ -33,7 +33,7 @@ function PanelInstance({
   onDragStart?: () => void;
   onDragEnd?: () => void;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const meshRef = useRef<THREE.Group>(null);
   
   // Convert array position to Vector3
   const positionVector = new THREE.Vector3(position[0], position[1], position[2]);
@@ -62,12 +62,12 @@ function PanelInstance({
   
   return (
     <group 
-      ref={bind.ref}
       position={positionVector}
       rotation={eulerRotation}
       onClick={handleClick}
       onPointerDown={bind.onPointerDown}
       userData={{ type: 'selectable', id, category: 'panel' }}
+      ref={bind.ref}
     >
       <Instance 
         scale={scale} 

@@ -52,12 +52,12 @@ export default function Inverter({
   
   return (
     <group 
-      ref={bind.ref}
       position={positionVector}
       rotation={eulerRotation}
       onClick={handleClick}
       onPointerDown={bind.onPointerDown}
       userData={{ type: 'selectable', id, category: 'inverter' }}
+      ref={bind.ref}
     >
       <mesh castShadow receiveShadow>
         <boxGeometry args={[2, 1.5, 1]} />
