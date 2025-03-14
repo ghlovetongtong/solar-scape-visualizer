@@ -21,8 +21,8 @@ export default function BoundaryDrawing({
     onComplete 
   });
   
-  // Create a ref for the line to avoid recreating it
-  const lineRef = useRef<THREE.Line>(null);
+  // Using proper type annotation for Three.js Object3D
+  const lineRef = useRef<THREE.Object3D>();
 
   // Create points for the line with a slight y-offset to position above the ground
   const linePoints = useMemo(() => {
@@ -39,37 +39,24 @@ export default function BoundaryDrawing({
     return vertices;
   }, [points, isDrawing]);
 
-  // Update the line geometry when points change
-  useMemo(() => {
-    if (lineRef.current && linePoints.length >= 2) {
-      const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
-      
-      if (lineRef.current.geometry) {
-        // Update the existing geometry
-        lineRef.current.geometry.setAttribute(
-          'position', 
-          new THREE.BufferAttribute(positions, 3)
-        );
-        lineRef.current.geometry.attributes.position.needsUpdate = true;
-      }
-    }
+  // Create the buffer geometry once when points change
+  const geometry = useMemo(() => {
+    if (linePoints.length < 2) return null;
+    
+    const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    return geometry;
   }, [linePoints]);
 
-  if (linePoints.length < 2) return null;
+  if (!geometry || linePoints.length < 2) return null;
 
   return (
     <group>
-      <line ref={lineRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            count={linePoints.length}
-            array={new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]))}
-            itemSize={3}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial color={color} linewidth={lineWidth} />
-      </line>
+      <primitive object={new THREE.Line(
+        geometry,
+        new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
+      )} ref={lineRef} />
     </group>
   );
 }

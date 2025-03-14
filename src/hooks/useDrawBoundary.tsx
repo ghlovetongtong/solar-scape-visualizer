@@ -13,7 +13,7 @@ interface UseDrawBoundaryProps {
 export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
   const [isDrawing, setIsDrawing] = useState(false);
   const [points, setPoints] = useState<BoundaryPoint[]>([]);
-  const { camera, raycaster, scene, gl } = useThree();
+  const { camera, raycaster, gl } = useThree();
   
   // Store onComplete in a ref to avoid stale closure issues
   const onCompleteRef = useRef(onComplete);

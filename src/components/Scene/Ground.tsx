@@ -53,32 +53,28 @@ export default function Ground({
     }
   }, [groundGeometry]);
 
-  // Create boundary line geometries - using Line instead of LineSegments for continuous drawing
+  // Create boundary line geometries
   const boundaryLines = useMemo(() => {
     return savedBoundaries.map((boundary, boundaryIndex) => {
       if (boundary.length < 3) return null;
       
       // Create points for the boundary with elevation
-      const points = boundary.map(([x, z]) => new THREE.Vector3(x, 0.1, z));
+      const linePoints = boundary.map(([x, z]) => new THREE.Vector3(x, 0.1, z));
       
       // Add the first point again to close the loop
-      points.push(new THREE.Vector3(boundary[0][0], 0.1, boundary[0][1]));
+      linePoints.push(new THREE.Vector3(boundary[0][0], 0.1, boundary[0][1]));
       
-      // Create positions array for buffer geometry
-      const positions = new Float32Array(points.flatMap(p => [p.x, p.y, p.z]));
+      // Create a geometry for the line
+      const geometry = new THREE.BufferGeometry().setFromPoints(linePoints);
       
       return (
-        <line key={`boundary-${boundaryIndex}`}>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={points.length}
-              array={positions}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color="#00ff00" linewidth={2} />
-        </line>
+        <primitive 
+          key={`boundary-${boundaryIndex}`} 
+          object={new THREE.Line(
+            geometry,
+            new THREE.LineBasicMaterial({ color: "#00ff00", linewidth: 2 })
+          )} 
+        />
       );
     }).filter(Boolean);
   }, [savedBoundaries]);
