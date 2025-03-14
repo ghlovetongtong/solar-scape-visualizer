@@ -486,7 +486,8 @@ export default function SceneContainer() {
   const calculatedCameraPositions = positions.cameras;
 
   useEffect(() => {
-    // Try to load complete layout data first
+    // Always try to load from localStorage first
+    let loadedFromStorage = false;
     try {
       const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
       if (savedLayoutData) {
@@ -494,36 +495,59 @@ export default function SceneContainer() {
         
         // Set camera positions directly from saved layout if available
         if (parsedLayout.cameras && parsedLayout.cameras.length > 0) {
-          console.log("Setting camera positions directly from saved layout:", parsedLayout.cameras);
+          console.log("Setting camera positions directly from saved layout:", JSON.stringify(parsedLayout.cameras, null, 2));
           setCameraPositions(parsedLayout.cameras);
-          return; // Exit early after setting positions from saved layout
+          loadedFromStorage = true;
         }
       }
     } catch (error) {
       console.error("Error loading camera positions from complete layout:", error);
     }
     
-    // Only use calculated positions if we don't have saved positions
-    if (cameraPositions.length === 0 && calculatedCameraPositions.length > 0) {
+    // Only use calculated positions if we didn't load from storage
+    if (!loadedFromStorage && calculatedCameraPositions.length > 0) {
+      console.log("Using calculated camera positions:", calculatedCameraPositions);
       setCameraPositions(calculatedCameraPositions);
-      console.log("Initialized camera positions from calculation:", calculatedCameraPositions);
     }
   }, [calculatedCameraPositions]);
 
   useEffect(() => {
+    // Try to load from localStorage first
+    try {
+      const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
+      if (savedLayoutData) {
+        const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
+        
+        // Only set inverter positions if we don't have them already
+        if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
+          setInverterPositions(parsedLayout.inverters);
+        }
+        
+        // Only set transformer positions if we don't have them already
+        if (parsedLayout.transformers.length > 0 && transformerPositions.length === 0) {
+          setTransformerPositions(parsedLayout.transformers);
+        }
+        
+        // Only set IT house position if we don't have it already
+        if (parsedLayout.itHouse && (!itHousePosition[0] && !itHousePosition[2])) {
+          setItHousePosition(parsedLayout.itHouse);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading equipment positions from complete layout:", error);
+    }
+    
+    // Fall back to calculated positions if needed
     if (inverterPositions.length === 0 && calculatedInverterPositions.length > 0) {
       setInverterPositions(calculatedInverterPositions);
-      console.log("Initialized inverter positions:", calculatedInverterPositions);
     }
     
     if (transformerPositions.length === 0 && calculatedTransformerPositions.length > 0) {
       setTransformerPositions(calculatedTransformerPositions);
-      console.log("Initialized transformer positions:", calculatedTransformerPositions);
     }
     
     if (!itHousePosition[0] && !itHousePosition[2] && calculatedItHousePosition[0] !== 0) {
       setItHousePosition(calculatedItHousePosition);
-      console.log("Initialized IT house position:", calculatedItHousePosition);
     }
   }, [
     calculatedInverterPositions, inverterPositions.length,
@@ -701,6 +725,7 @@ export default function SceneContainer() {
 
   const handleSaveLayout = useCallback(() => {
     if (saveCurrentLayout) {
+      // Make sure we're passing the CURRENT camera positions
       const completeLayout: CompleteLayoutData = {
         panels: panelPositions,
         inverters: inverterPositions,
@@ -709,6 +734,7 @@ export default function SceneContainer() {
         itHouse: itHousePosition
       };
       
+      console.log("Saving layout with cameras at positions:", JSON.stringify(cameraPositions, null, 2));
       saveCurrentLayout(completeLayout);
     }
   }, [saveCurrentLayout, panelPositions, inverterPositions, transformerPositions, cameraPositions, itHousePosition]);
@@ -733,24 +759,24 @@ export default function SceneContainer() {
         
         // Set camera positions directly if available
         if (parsedLayout.cameras && parsedLayout.cameras.length > 0) {
-          console.log("Setting cameras directly from saved layout:", parsedLayout.cameras);
+          console.log("Setting cameras directly from saved layout:", JSON.stringify(parsedLayout.cameras, null, 2));
           setCameraPositions(parsedLayout.cameras);
         }
         
         // Only set other equipment positions if we don't have them already
         if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
           setInverterPositions(parsedLayout.inverters);
-          console.log("Loaded inverter positions from saved layout:", parsedLayout.inverters);
+          console.log("Loaded inverter positions from saved layout:", JSON.stringify(parsedLayout.inverters, null, 2));
         }
         
         if (parsedLayout.transformers.length > 0 && transformerPositions.length === 0) {
           setTransformerPositions(parsedLayout.transformers);
-          console.log("Loaded transformer positions from saved layout:", parsedLayout.transformers);
+          console.log("Loaded transformer positions from saved layout:", JSON.stringify(parsedLayout.transformers, null, 2));
         }
         
         if (parsedLayout.itHouse && (!itHousePosition[0] && !itHousePosition[2])) {
           setItHousePosition(parsedLayout.itHouse);
-          console.log("Loaded IT house position from saved layout:", parsedLayout.itHouse);
+          console.log("Loaded IT house position from saved layout:", JSON.stringify(parsedLayout.itHouse, null, 2));
         }
         
       } catch (error) {

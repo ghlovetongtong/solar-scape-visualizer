@@ -64,6 +64,8 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
         setPanelPositions(parsedLayout.panels);
         setInitialPositions(parsedLayout.panels);
         console.log(`Loaded ${parsedLayout.panels.length} panels from saved layout`);
+        console.log(`Layout also contains ${parsedLayout.cameras.length} cameras at positions:`, 
+          JSON.stringify(parsedLayout.cameras));
         toast.success(`Loaded complete layout with ${parsedLayout.panels.length} panels`);
       } else {
         // Try to load legacy panel-only layout
@@ -94,7 +96,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   const saveCurrentLayout = useCallback((completeLayout?: CompleteLayoutData) => {
     try {
       if (completeLayout) {
-        // Ensure all array data is properly formatted
+        // Ensure all array data is properly formatted and cameras is included
         const sanitizedLayout: CompleteLayoutData = {
           panels: completeLayout.panels || [],
           inverters: completeLayout.inverters || [],
@@ -103,7 +105,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
           itHouse: completeLayout.itHouse || [0, 0, 0]
         };
         
-        console.log("Saving complete layout:", sanitizedLayout);
+        console.log("Saving complete layout with cameras:", sanitizedLayout.cameras);
         
         // Save complete layout with all components
         localStorage.setItem('solar-station-complete-layout', JSON.stringify(sanitizedLayout));
