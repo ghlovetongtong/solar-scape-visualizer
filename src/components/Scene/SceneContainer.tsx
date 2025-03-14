@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -174,6 +173,28 @@ export default function SceneContainer() {
       orbitControlsRef.current.enabled = !drawingMode;
     }
   }, [drawingMode]);
+
+  const calculatePanelCenter = useCallback(() => {
+    if (!panelPositions || panelPositions.length === 0) {
+      return [0, 0, 0];
+    }
+    
+    let sumX = 0, sumY = 0, sumZ = 0;
+    
+    for (const panel of panelPositions) {
+      sumX += panel.position[0];
+      sumY += panel.position[1];
+      sumZ += panel.position[2];
+    }
+    
+    const centerX = sumX / panelPositions.length;
+    const centerY = sumY / panelPositions.length;
+    const centerZ = sumZ / panelPositions.length;
+    
+    return [centerX, centerY, centerZ];
+  }, [panelPositions]);
+  
+  const panelCenter = calculatePanelCenter();
 
   const calculateSecondaryPositions = useCallback(() => {
     const hasPanels = isInitialized && panelPositions.length > 0;
@@ -357,7 +378,7 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [100, 80, 100], // More natural camera angle
+          position: [100, 80, 100],
           fov: 45,
           near: 1,
           far: 1000
@@ -423,7 +444,7 @@ export default function SceneContainer() {
             minDistance={10}
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
-            target={[0, 0, 0]} // Center target
+            target={panelCenter}
           />
           
           {showStats && <Stats />}

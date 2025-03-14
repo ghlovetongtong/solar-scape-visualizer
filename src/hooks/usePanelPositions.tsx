@@ -118,6 +118,10 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       const gridSizeX = Math.floor(boundaryWidth / spacingX);
       const gridSizeZ = Math.floor(boundaryDepth / spacingZ);
       
+      // Center the panels within the boundary
+      const startOffsetX = minX + (boundaryWidth - (gridSizeX * spacingX)) / 2;
+      const startOffsetZ = minZ + (boundaryDepth - (gridSizeZ * spacingZ)) / 2;
+      
       const newPanels: InstanceData[] = [];
       const nextPanelId = panelPositions.length > 0 
         ? Math.max(...panelPositions.map(panel => panel.id)) + 1 
@@ -128,8 +132,8 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       // Create panels within the grid, but only if they're inside the boundary
       for (let i = 0; i < gridSizeX; i++) {
         for (let j = 0; j < gridSizeZ; j++) {
-          const x = minX + (i * spacingX) + (spacingX / 2);
-          const z = minZ + (j * spacingZ) + (spacingZ / 2);
+          const x = startOffsetX + (i * spacingX) + (spacingX / 2);
+          const z = startOffsetZ + (j * spacingZ) + (spacingZ / 2);
           
           // Check if this position is inside the boundary
           if (isPointInPolygon([x, z], boundary)) {
@@ -143,15 +147,11 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
             
             // Only place a new panel if there isn't already one here
             if (!existingPanel) {
-              // Get ground height at this position
-              const groundHeight = getHeightAtPosition(x, z);
-              
-              // Create the panel with NO randomization to rotation to prevent visual distortion
-              // Removed the random rotation that was causing visual inconsistency
+              // Ground height is now always 0 (flat ground)
               
               newPanels.push({
                 id: nextPanelId + panelCount,
-                position: [x, 1.0 + groundHeight, z],
+                position: [x, 1.0, z], // Height is fixed at 1.0 since ground is flat
                 rotation: [-Math.PI / 8, 0, 0], // Fixed rotation without random variation
                 scale: [1, 1, 1] // Ensure uniform scale for all panels
               });
