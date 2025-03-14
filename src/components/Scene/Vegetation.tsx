@@ -10,12 +10,12 @@ interface VegetationProps {
 }
 
 export default function Vegetation({ 
-  count = 500, 
+  count = 1000, // Significantly increase the default count for more vegetation
   minRadius = 120, 
   maxRadius = 180 
 }: VegetationProps) {
-  // Increase the default count for more vegetation
-  const actualCount = count * 2; // Double the vegetation density
+  // Double the vegetation density again
+  const actualCount = count * 2;
   
   const instancedGrass = useRef<THREE.InstancedMesh>(null);
   const instancedRocks = useRef<THREE.InstancedMesh>(null);
@@ -26,19 +26,19 @@ export default function Vegetation({
   const grassPositions = useMemo(() => {
     const positions = [];
     for (let i = 0; i < actualCount; i++) {
-      // Position grass mainly in the outer areas and along borders
+      // Position grass more densely across the terrain
       let x, z;
       
-      // Distribute vegetation along edges of the solar panel area
+      // Distribute vegetation widely across the whole terrain
       const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
+      const radius = Math.random() * maxRadius; // Allow grass to appear anywhere
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
       
-      // Add some irregularity by introducing patches/clusters
-      x += (Math.random() - 0.5) * 20;
-      z += (Math.random() - 0.5) * 20;
+      // Add more irregularity and natural clustering
+      x += (Math.random() - 0.5) * 40;
+      z += (Math.random() - 0.5) * 40;
       
       // If we randomly generated a position inside the solar panel area, skip it
       const distanceFromCenter = Math.sqrt(x * x + z * z);
@@ -52,28 +52,27 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, maxRadius]);
   
   // Generate positions for tall grass (a different type of grass)
   const tallGrassPositions = useMemo(() => {
     const positions = [];
-    const tallGrassCount = Math.floor(actualCount / 3);
+    const tallGrassCount = Math.floor(actualCount / 2); // Increase tall grass proportion
     
     for (let i = 0; i < tallGrassCount; i++) {
       let x, z;
       
-      // Create patches of tall grass in specific areas
+      // Create more patches of tall grass across the terrain
       const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius * 0.9 + Math.random() * (maxRadius - minRadius * 0.9);
+      const radius = Math.random() * maxRadius;
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
       
       // Create more defined clusters for tall grass
-      if (Math.random() > 0.5) {
-        // Create clusters
-        x += (Math.random() - 0.5) * 15;
-        z += (Math.random() - 0.5) * 15;
+      if (Math.random() > 0.3) { // Increase cluster probability
+        x += (Math.random() - 0.5) * 25;
+        z += (Math.random() - 0.5) * 25;
       }
       
       // Avoid solar panel area
@@ -87,30 +86,28 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, maxRadius]);
   
   // Generate positions for rocks
   const rockPositions = useMemo(() => {
     const positions = [];
-    // Use fewer rocks than grass
-    const rockCount = Math.floor(actualCount / 5);
+    // Increase rock count
+    const rockCount = Math.floor(actualCount / 3);
     
     for (let i = 0; i < rockCount; i++) {
-      // Position rocks in similar areas to grass but with different distribution
       let x, z;
       
-      // Distribute rocks more randomly but still mainly in outer areas
+      // Distribute rocks more widely
       const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius * 0.8 + Math.random() * (maxRadius - minRadius * 0.8);
+      const radius = Math.random() * maxRadius;
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
       
-      // Create occasional clusters of rocks
-      if (Math.random() > 0.7) {
-        // Create a small cluster
-        x += (Math.random() - 0.5) * 30;
-        z += (Math.random() - 0.5) * 30;
+      // Create more clusters of rocks
+      if (Math.random() > 0.5) {
+        x += (Math.random() - 0.5) * 50;
+        z += (Math.random() - 0.5) * 50;
       }
       
       // Avoid solar panel area
@@ -120,33 +117,32 @@ export default function Vegetation({
         continue;
       }
       
-      // Use flat ground (y = 0)
       const y = 0;
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, maxRadius]);
   
   // Generate positions for small rocks
   const smallRockPositions = useMemo(() => {
     const positions = [];
-    // Use more small rocks for detail
-    const smallRockCount = Math.floor(actualCount / 3);
+    // Use even more small rocks for detail
+    const smallRockCount = Math.floor(actualCount / 2);
     
     for (let i = 0; i < smallRockCount; i++) {
       let x, z;
       
       // Small rocks can be more widespread
       const angle = Math.random() * Math.PI * 2;
-      const radius = (minRadius * 0.7) + Math.random() * (maxRadius - minRadius * 0.7);
+      const radius = Math.random() * maxRadius;
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
       
       // Small rocks tend to appear in larger groups
-      if (Math.random() > 0.4) {
-        x += (Math.random() - 0.5) * 40; 
-        z += (Math.random() - 0.5) * 40;
+      if (Math.random() > 0.3) { // Increase clustering
+        x += (Math.random() - 0.5) * 60; 
+        z += (Math.random() - 0.5) * 60;
       }
       
       // Avoid solar panel area
@@ -160,7 +156,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, maxRadius]);
   
   // Update instanced grass mesh matrices
   useMemo(() => {
@@ -170,9 +166,9 @@ export default function Vegetation({
       grassPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Random scale for each grass tuft - make them all smaller than default to match reference
-        const scale = 0.4 + Math.random() * 0.6;
-        dummy.scale.set(scale, scale + Math.random() * 0.5, scale);
+        // Random scale for grass tufts with more variation
+        const scale = 0.3 + Math.random() * 0.8;
+        dummy.scale.set(scale, scale + Math.random() * 0.7, scale);
         
         // Random rotation
         dummy.rotation.y = Math.random() * Math.PI * 2;
@@ -181,7 +177,7 @@ export default function Vegetation({
         instancedGrass.current.setMatrixAt(i, dummy.matrix);
       });
       
-      // Only update if needed - prevents unnecessary renders
+      // Only update if needed
       if (instancedGrass.current.instanceMatrix) {
         instancedGrass.current.instanceMatrix.needsUpdate = true;
       }
@@ -196,9 +192,9 @@ export default function Vegetation({
       tallGrassPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Tall grass should be taller but thinner
-        const baseScale = 0.3 + Math.random() * 0.4;
-        const heightScale = 1.2 + Math.random() * 0.8;
+        // Tall grass should be taller but thinner with more variation
+        const baseScale = 0.25 + Math.random() * 0.5;
+        const heightScale = 1.0 + Math.random() * 1.2; // More height variation
         dummy.scale.set(baseScale, heightScale, baseScale);
         
         // Random rotation
@@ -222,13 +218,13 @@ export default function Vegetation({
       rockPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Random scale for each rock - some bigger, some smaller
-        const scale = 0.3 + Math.random() * 0.7;
-        // Slightly varied scales for x, y, z to make rocks less uniform
+        // Random scale for rocks with more variation
+        const scale = 0.25 + Math.random() * 0.9;
+        // Varied scales for x, y, z to make rocks less uniform
         dummy.scale.set(
-          scale * (0.8 + Math.random() * 0.4), 
           scale * (0.7 + Math.random() * 0.6), 
-          scale * (0.8 + Math.random() * 0.4)
+          scale * (0.6 + Math.random() * 0.8), 
+          scale * (0.7 + Math.random() * 0.6)
         );
         
         // Random rotation for natural look
@@ -240,7 +236,6 @@ export default function Vegetation({
         instancedRocks.current.setMatrixAt(i, dummy.matrix);
       });
       
-      // Only update if needed
       if (instancedRocks.current.instanceMatrix) {
         instancedRocks.current.instanceMatrix.needsUpdate = true;
       }
@@ -255,12 +250,12 @@ export default function Vegetation({
       smallRockPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Small rocks should be actually small
-        const scale = 0.1 + Math.random() * 0.3;
+        // Small rocks with more variation
+        const scale = 0.08 + Math.random() * 0.4;
         dummy.scale.set(
-          scale * (0.9 + Math.random() * 0.2),
-          scale * (0.7 + Math.random() * 0.6),
-          scale * (0.9 + Math.random() * 0.2)
+          scale * (0.8 + Math.random() * 0.4),
+          scale * (0.6 + Math.random() * 0.8),
+          scale * (0.8 + Math.random() * 0.4)
         );
         
         // Random rotation for variety
@@ -298,7 +293,7 @@ export default function Vegetation({
       {/* Instanced tall grass */}
       <instancedMesh
         ref={instancedTallGrass}
-        args={[undefined, undefined, Math.floor(actualCount / 3)]}
+        args={[undefined, undefined, Math.floor(actualCount / 2)]} // Increased count
         castShadow
         receiveShadow
       >
@@ -313,7 +308,7 @@ export default function Vegetation({
       {/* Instanced rocks */}
       <instancedMesh
         ref={instancedRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 5)]}
+        args={[undefined, undefined, Math.floor(actualCount / 3)]} // Increased count
         castShadow
         receiveShadow
       >
@@ -329,7 +324,7 @@ export default function Vegetation({
       {/* Instanced small rocks */}
       <instancedMesh
         ref={instancedSmallRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 3)]}
+        args={[undefined, undefined, Math.floor(actualCount / 2)]} // Increased count
         castShadow
         receiveShadow
       >
