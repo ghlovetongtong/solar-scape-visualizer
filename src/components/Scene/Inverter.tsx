@@ -1,3 +1,4 @@
+
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -75,6 +76,48 @@ export default function Inverter({
     ? <meshPhysicalMaterial color="#6e7494" roughness={0.2} metalness={0.8} emissive="#6e7494" emissiveIntensity={0.3} />
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
+  // Create a userData object with all inverter properties for the popup
+  const inverterData = {
+    type: 'inverter',
+    inverterIndex,
+    details: {
+      name: `Inverter ${inverterIndex + 1}`,
+      power,
+      efficiency,
+      mpptChannels,
+      status,
+      temperature,
+      dailyEnergy,
+      totalEnergy,
+      serialNumber: serialNumber || `INV-${100000 + inverterIndex}`,
+      manufacturer,
+      model,
+      position: [position.x, position.y, position.z]
+    }
+  };
+
+  // Improved click handler to ensure event propagation is stopped correctly
+  const handleClick = useCallback((event: any) => {
+    // Stop propagation at all levels to prevent scene click
+    event.stopPropagation();
+    if (event.nativeEvent) {
+      event.nativeEvent.stopPropagation();
+    }
+    
+    // Log the click for debugging
+    console.log(`Inverter ${inverterIndex + 1} clicked with isSelected=${isSelected}`);
+    
+    // Ensure the userData is available on the event.object
+    if (!event.object.userData) {
+      event.object.userData = inverterData;
+    }
+    
+    // Call the parent's onClick if provided
+    if (onClick) {
+      onClick(event);
+    }
+  }, [inverterIndex, isSelected, onClick, inverterData]);
+
   // Setup scene-level event listeners for dragging
   useEffect(() => {
     if (!isDragging) return;
@@ -128,28 +171,6 @@ export default function Inverter({
       window.removeEventListener('mouseup', handleGlobalMouseUp);
     };
   }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, inverterIndex, dragOffset, gl.domElement]);
-
-  // Improved click handler to ensure event propagation is stopped correctly
-  const handleClick = useCallback((event: any) => {
-    // Stop propagation at all levels to prevent scene click
-    event.stopPropagation();
-    if (event.nativeEvent) {
-      event.nativeEvent.stopPropagation();
-    }
-    
-    // Log the click for debugging
-    console.log(`Inverter ${inverterIndex + 1} clicked with isSelected=${isSelected}`);
-    
-    // Ensure the userData is available on the event.object
-    if (!event.object.userData) {
-      event.object.userData = inverterData;
-    }
-    
-    // Call the parent's onClick if provided
-    if (onClick) {
-      onClick(event);
-    }
-  }, [inverterIndex, isSelected, onClick, inverterData]);
   
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
@@ -170,26 +191,6 @@ export default function Inverter({
           setDragOffset(intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z)));
         }
       }
-    }
-  };
-
-  // Create a userData object with all inverter properties for the popup
-  const inverterData = {
-    type: 'inverter',
-    inverterIndex,
-    details: {
-      name: `Inverter ${inverterIndex + 1}`,
-      power,
-      efficiency,
-      mpptChannels,
-      status,
-      temperature,
-      dailyEnergy,
-      totalEnergy,
-      serialNumber: serialNumber || `INV-${100000 + inverterIndex}`,
-      manufacturer,
-      model,
-      position: [position.x, position.y, position.z]
     }
   };
 
