@@ -5,12 +5,29 @@ import { Text } from '@react-three/drei';
 
 interface InverterProps {
   position: THREE.Vector3;
+  rotation?: THREE.Euler;
   inverterIndex: number;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export default function Inverter({ position, inverterIndex }: InverterProps) {
+export default function Inverter({ 
+  position, 
+  rotation = new THREE.Euler(), 
+  inverterIndex, 
+  isSelected = false, 
+  onSelect 
+}: InverterProps) {
+  
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect();
+    }
+  };
+  
   return (
-    <group position={position}>
+    <group position={position} rotation={rotation} onClick={handleClick}>
       {/* Main inverter box */}
       <mesh 
         castShadow 
@@ -19,9 +36,11 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         <meshPhysicalMaterial 
-          color="#2b2d42" 
+          color={isSelected ? "#38BDF8" : "#2b2d42"} 
           roughness={0.6} 
           metalness={0.4}
+          emissive={isSelected ? "#38BDF8" : "#000000"}
+          emissiveIntensity={isSelected ? 0.4 : 0}
         />
       </mesh>
       
@@ -32,7 +51,7 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
         <meshPhysicalMaterial 
-          color="#4a4e69" 
+          color={isSelected ? "#60a5fa" : "#4a4e69"} 
           roughness={0.3} 
           metalness={0.7}
         />
@@ -45,7 +64,7 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
         <meshPhysicalMaterial 
-          color="#222222" 
+          color={isSelected ? "#3b82f6" : "#222222"} 
           roughness={0.5} 
           metalness={0.5}
         />
@@ -57,9 +76,9 @@ export default function Inverter({ position, inverterIndex }: InverterProps) {
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
-          color="#00ff00" 
-          emissive="#00ff00"
-          emissiveIntensity={1.0}
+          color={isSelected ? "#ffffff" : "#00ff00"} 
+          emissive={isSelected ? "#ffffff" : "#00ff00"}
+          emissiveIntensity={isSelected ? 1.5 : 1.0}
         />
       </mesh>
 

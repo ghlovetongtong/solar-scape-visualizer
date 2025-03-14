@@ -5,19 +5,41 @@ import { Text } from '@react-three/drei';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
+  rotation?: THREE.Euler;
   transformerIndex: number;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
-export default function TransformerStation({ position, transformerIndex }: TransformerStationProps) {
+export default function TransformerStation({ 
+  position, 
+  rotation = new THREE.Euler(), 
+  transformerIndex, 
+  isSelected = false, 
+  onSelect 
+}: TransformerStationProps) {
+  
+  const handleClick = (e: any) => {
+    e.stopPropagation();
+    if (onSelect) {
+      onSelect();
+    }
+  };
+  
   return (
-    <group position={position}>
+    <group position={position} rotation={rotation} onClick={handleClick}>
       {/* Platform/base */}
       <mesh 
         receiveShadow 
         position={[0, 0.3, 0]}
       >
         <boxGeometry args={[10, 0.6, 8]} />
-        <meshStandardMaterial color="#555555" roughness={0.8} />
+        <meshStandardMaterial 
+          color={isSelected ? "#94a3b8" : "#555555"} 
+          roughness={0.8} 
+          emissive={isSelected ? "#94a3b8" : "#000000"}
+          emissiveIntensity={isSelected ? 0.2 : 0}
+        />
       </mesh>
       
       {/* Main transformer cabinet */}
@@ -27,7 +49,13 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         position={[0, 2.5, 0]}
       >
         <boxGeometry args={[6, 4, 4]} />
-        <meshStandardMaterial color="#8a898c" roughness={0.5} metalness={0.4} />
+        <meshStandardMaterial 
+          color={isSelected ? "#60a5fa" : "#8a898c"} 
+          roughness={0.5} 
+          metalness={0.4}
+          emissive={isSelected ? "#60a5fa" : "#000000"}
+          emissiveIntensity={isSelected ? 0.4 : 0}
+        />
       </mesh>
       
       {/* Cooling fins */}
@@ -36,7 +64,11 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         position={[-3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color="#777777" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial 
+          color={isSelected ? "#93c5fd" : "#777777"} 
+          roughness={0.3} 
+          metalness={0.6}
+        />
       </mesh>
       
       <mesh 
@@ -44,7 +76,11 @@ export default function TransformerStation({ position, transformerIndex }: Trans
         position={[3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color="#777777" roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial 
+          color={isSelected ? "#93c5fd" : "#777777"} 
+          roughness={0.3} 
+          metalness={0.6}
+        />
       </mesh>
       
       {/* High voltage warning signs */}
