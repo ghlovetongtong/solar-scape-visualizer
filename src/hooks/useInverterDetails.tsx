@@ -21,6 +21,7 @@ export default function useInverterDetails() {
   const [selectedInverterData, setSelectedInverterData] = useState<InverterData | null>(null);
 
   const openInverterDetails = (inverterData: InverterData) => {
+    console.log("Opening inverter details:", inverterData);
     setSelectedInverterData(inverterData);
     setIsDetailsPopupOpen(true);
   };
@@ -34,7 +35,10 @@ export default function useInverterDetails() {
     const userData = event.object?.userData;
     
     if (userData?.type === 'inverter' && userData.details) {
+      console.log("Inverter clicked with details:", userData.details);
       openInverterDetails(userData.details);
+    } else {
+      console.log("Inverter clicked but no details found in userData:", userData);
     }
   };
 

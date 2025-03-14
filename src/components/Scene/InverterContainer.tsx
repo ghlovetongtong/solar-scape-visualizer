@@ -49,7 +49,8 @@ export default function InverterContainer({
       onSelectInverter(index);
     }
     
-    // Then show the details popup
+    // Then directly handle the click event to show the details popup
+    console.log("Handling inverter select event:", event);
     handleInverterClick(event);
   };
 

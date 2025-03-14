@@ -1,4 +1,3 @@
-
 import React, { useCallback, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -141,11 +140,16 @@ export default function Inverter({
     // Log the click for debugging
     console.log(`Inverter ${inverterIndex + 1} clicked with isSelected=${isSelected}`);
     
+    // Ensure the userData is available on the event.object
+    if (!event.object.userData) {
+      event.object.userData = inverterData;
+    }
+    
     // Call the parent's onClick if provided
     if (onClick) {
       onClick(event);
     }
-  }, [inverterIndex, isSelected, onClick]);
+  }, [inverterIndex, isSelected, onClick, inverterData]);
   
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
@@ -272,11 +276,11 @@ export default function Inverter({
       <Text
         position={[0, 2.7, 0]}
         rotation={[0, 0, 0]}
-        fontSize={1.2}
+        fontSize={1.5}
         color={isSelected ? "#9b87f5" : "#ffffff"}
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.12}
+        outlineWidth={0.15}
         outlineColor="#000000"
       >
         {`Inverter ${inverterIndex + 1}`}
