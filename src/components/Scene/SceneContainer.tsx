@@ -13,7 +13,7 @@ import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
-import { usePanelPositions } from '@/hooks/usePanelPositions';
+import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
 // New interface for draggable object state management
@@ -633,9 +633,17 @@ export default function SceneContainer() {
 
   const handleSaveLayout = useCallback(() => {
     if (saveCurrentLayout) {
-      saveCurrentLayout();
+      const completeLayout: CompleteLayoutData = {
+        panels: panelPositions,
+        inverters: inverterPositions,
+        transformers: transformerPositions,
+        cameras: cameraPositions,
+        itHouse: itHousePosition
+      };
+      
+      saveCurrentLayout(completeLayout);
     }
-  }, [saveCurrentLayout]);
+  }, [saveCurrentLayout, panelPositions, inverterPositions, transformerPositions, cameraPositions, itHousePosition]);
 
   useEffect(() => {
     const savedData = localStorage.getItem('solar-station-boundaries');
@@ -646,6 +654,38 @@ export default function SceneContainer() {
         toast.success(`Loaded ${parsedData.length} saved boundaries`);
       } catch (error) {
         console.error('Error loading saved boundaries:', error);
+      }
+    }
+    
+    // Check for complete layout data
+    const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
+    if (savedLayoutData) {
+      try {
+        const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
+        
+        // Only set equipment positions if we have data and current positions are default/empty
+        if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
+          setInverterPositions(parsedLayout.inverters);
+          console.log("Loaded inverter positions from saved layout:", parsedLayout.inverters);
+        }
+        
+        if (parsedLayout.transformers.length > 0 && transformerPositions.length === 0) {
+          setTransformerPositions(parsedLayout.transformers);
+          console.log("Loaded transformer positions from saved layout:", parsedLayout.transformers);
+        }
+        
+        if (parsedLayout.cameras.length > 0 && cameraPositions.length === 0) {
+          setCameraPositions(parsedLayout.cameras);
+          console.log("Loaded camera positions from saved layout:", parsedLayout.cameras);
+        }
+        
+        if (parsedLayout.itHouse && !itHousePosition[0] && !itHousePosition[2]) {
+          setItHousePosition(parsedLayout.itHouse);
+          console.log("Loaded IT house position from saved layout:", parsedLayout.itHouse);
+        }
+        
+      } catch (error) {
+        console.error("Error loading complete layout data:", error);
       }
     }
   }, []);

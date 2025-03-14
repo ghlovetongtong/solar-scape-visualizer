@@ -11,6 +11,15 @@ const PANELS_PER_GROUP = 16; // 4x4 grid per group
 const PANEL_SPACING = 0; // Removed spacing between panels within a group
 const GROUP_SPACING = 0; // Removed spacing between groups
 
+// Complete layout interface
+export interface CompleteLayoutData {
+  panels: InstanceData[];
+  inverters: Array<[number, number, number]>;
+  transformers: Array<[number, number, number]>;
+  cameras: Array<[number, number, number]>;
+  itHouse: [number, number, number];
+}
+
 // Utility function to check if a point is inside a polygon
 function isPointInPolygon(point: [number, number], polygon: BoundaryPoint[]): boolean {
   if (polygon.length < 3) return false;
@@ -49,17 +58,27 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
     
     // Try to load saved panel layout from localStorage
     try {
-      const savedLayout = localStorage.getItem('solar-station-panel-layout');
+      const savedLayout = localStorage.getItem('solar-station-complete-layout');
       if (savedLayout) {
-        const parsedLayout = JSON.parse(savedLayout) as InstanceData[];
-        setPanelPositions(parsedLayout);
-        setInitialPositions(parsedLayout);
-        console.log(`Loaded ${parsedLayout.length} panels from saved layout`);
-        toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+        const parsedLayout = JSON.parse(savedLayout) as CompleteLayoutData;
+        setPanelPositions(parsedLayout.panels);
+        setInitialPositions(parsedLayout.panels);
+        console.log(`Loaded ${parsedLayout.panels.length} panels from saved layout`);
+        toast.success(`Loaded complete layout with ${parsedLayout.panels.length} panels`);
       } else {
-        // Start with empty array if no saved layout
-        setPanelPositions([]);
-        setInitialPositions([]);
+        // Try to load legacy panel-only layout
+        const legacyLayout = localStorage.getItem('solar-station-panel-layout');
+        if (legacyLayout) {
+          const parsedLayout = JSON.parse(legacyLayout) as InstanceData[];
+          setPanelPositions(parsedLayout);
+          setInitialPositions(parsedLayout);
+          console.log(`Loaded ${parsedLayout.length} panels from legacy layout`);
+          toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+        } else {
+          // Start with empty array if no saved layout
+          setPanelPositions([]);
+          setInitialPositions([]);
+        }
       }
       setIsInitialized(true);
     } catch (error) {
@@ -72,15 +91,24 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
   }, []);
 
   // Function to save the current panel layout
-  const saveCurrentLayout = useCallback(() => {
+  const saveCurrentLayout = useCallback((completeLayout?: CompleteLayoutData) => {
     try {
-      localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
-      toast.success(`Saved ${panelPositions.length} panels to layout`);
-      setInitialPositions(panelPositions);
-      console.log(`Saved ${panelPositions.length} panels to layout`);
+      if (completeLayout) {
+        // Save complete layout with all components
+        localStorage.setItem('solar-station-complete-layout', JSON.stringify(completeLayout));
+        toast.success(`Saved complete layout with ${completeLayout.panels.length} panels and all equipment`);
+        setInitialPositions(completeLayout.panels);
+        console.log(`Saved complete layout with ${completeLayout.panels.length} panels`);
+      } else {
+        // Legacy save (panels only)
+        localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
+        toast.success(`Saved ${panelPositions.length} panels to layout`);
+        setInitialPositions(panelPositions);
+        console.log(`Saved ${panelPositions.length} panels to layout`);
+      }
     } catch (error) {
-      console.error("Error saving panel layout:", error);
-      toast.error("Failed to save panel layout");
+      console.error("Error saving layout:", error);
+      toast.error("Failed to save layout");
     }
   }, [panelPositions]);
 

@@ -188,14 +188,14 @@ export default function Controls({
           )}
         </div>
         
-        {/* Add the Save Layout button */}
+        {/* Update the Save Layout button */}
         {onSaveLayout && (
           <Button 
             className="w-full mt-2" 
             variant="default"
             onClick={onSaveLayout}
           >
-            Save Current Layout
+            Save Complete Layout
           </Button>
         )}
       </div>
