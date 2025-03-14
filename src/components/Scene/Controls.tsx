@@ -13,6 +13,8 @@ interface ControlsProps {
   setTimeOfDay: (time: number) => void;
   onResetPanels: () => void;
   selectedPanelId: number | null;
+  selectedInverterIndex: number | null;
+  onDeselectInverter: () => void;
   onUpdatePanelPosition: (id: number, position: [number, number, number]) => void;
   onUpdatePanelRotation: (id: number, rotation: [number, number, number]) => void;
   drawingMode: boolean;
@@ -32,6 +34,8 @@ export default function Controls({
   setTimeOfDay,
   onResetPanels,
   selectedPanelId,
+  selectedInverterIndex,
+  onDeselectInverter,
   onUpdatePanelPosition,
   onUpdatePanelRotation,
   drawingMode,
@@ -115,6 +119,19 @@ export default function Controls({
             <Button size="sm" onClick={() => handlePanelAdjustment('y', true)}>Rotate Y</Button>
             <Button size="sm" onClick={() => handlePanelAdjustment('z', true)}>Rotate Z</Button>
           </div>
+        </div>
+      )}
+      
+      {selectedInverterIndex !== null && (
+        <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
+          <div className="text-sm font-medium">Selected Inverter: #{selectedInverterIndex + 1}</div>
+          <Button 
+            size="sm" 
+            className="w-full"
+            onClick={onDeselectInverter}
+          >
+            Deselect Inverter
+          </Button>
         </div>
       )}
       
