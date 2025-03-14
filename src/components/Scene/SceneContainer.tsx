@@ -793,4 +793,110 @@ export default function SceneContainer() {
           <Terrain 
             drawingEnabled={drawingMode}
             onBoundaryComplete={handleBoundaryComplete}
-            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])
+            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
+          />
+          
+          {panelPositions.map((panel, index) => (
+            <SolarPanels
+              key={`panel-${panel.id}`}
+              position={new THREE.Vector3(...panel.position)}
+              rotation={new THREE.Euler(...panel.rotation)}
+              scale={panel.scale}
+              isSelected={selectedPanelId === panel.id}
+              panelId={panel.id}
+              onSelect={selectPanel}
+              onPositionChange={(id, newPos) => updatePanelPosition(id, newPos)}
+              onRotationChange={(id, newRot) => updatePanelRotation(id, newRot)}
+            />
+          ))}
+          
+          {inverterPositions.map((position, index) => (
+            <Inverter
+              key={`inverter-${index}`}
+              position={new THREE.Vector3(...position)}
+              inverterIndex={index}
+              isSelected={selectedInverterIndex === index}
+              isDragging={draggingObject?.type === 'inverter' && draggingObject?.index === index}
+              onDragStart={() => handleStartDrag('inverter', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={(idx, newPos) => handleDragInverter(idx, newPos)}
+            />
+          ))}
+          
+          {cameraPositions.map((position, index) => (
+            <Camera
+              key={`camera-${index}`}
+              position={new THREE.Vector3(...position)}
+              cameraIndex={index}
+              isDragging={draggingObject?.type === 'camera' && draggingObject?.index === index}
+              onDragStart={() => handleStartDrag('camera', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={(idx, newPos) => handleDragCamera(idx, newPos)}
+            />
+          ))}
+          
+          {transformerPositions.map((position, index) => (
+            <TransformerStation
+              key={`transformer-${index}`}
+              position={new THREE.Vector3(...position)}
+              transformerIndex={index}
+              isDragging={draggingObject?.type === 'transformer' && draggingObject?.index === index}
+              onDragStart={() => handleStartDrag('transformer', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={(idx, newPos) => handleDragTransformer(idx, newPos)}
+            />
+          ))}
+          
+          <ITHouse
+            position={new THREE.Vector3(...itHousePosition)}
+            isDragging={draggingObject?.type === 'itHouse'}
+            onDragStart={() => handleStartDrag('itHouse')}
+            onDragEnd={() => handleEndDrag()}
+            onDrag={(newPos) => handleDragITHouse(newPos)}
+          />
+          
+          <Road position={[0, 0, 0]} />
+        </Suspense>
+        
+        <OrbitControls 
+          ref={orbitControlsRef}
+          enableDamping={true}
+          dampingFactor={0.1}
+          rotateSpeed={0.5}
+          minDistance={1}
+          maxDistance={500}
+          minPolarAngle={0.1}
+          maxPolarAngle={Math.PI / 2 - 0.05}
+          enabled={!drawingMode && !draggingObject}
+        />
+        
+        {showStats && <Stats />}
+      </Canvas>
+      
+      <Controls 
+        showStats={showStats}
+        onToggleStats={() => setShowStats(!showStats)}
+        timeOfDay={timeOfDay}
+        onTimeChange={setTimeOfDay}
+        drawingMode={drawingMode}
+        onToggleDrawingMode={() => setDrawingMode(!drawingMode)}
+        onSaveBoundary={handleSaveBoundary}
+        onClearBoundary={handleClearBoundary}
+        onClearAllBoundaries={handleClearAllBoundaries}
+        onGeneratePanels={handleGenerateNewPanelsInBoundary}
+        onClearAllPanels={handleClearAllPanels}
+        onSaveLayout={handleSaveLayout}
+        selectedInverterIndex={selectedInverterIndex}
+        selectedPanelId={selectedPanelId}
+        onSelectInverter={setSelectedInverterIndex}
+        onSelectPanel={selectPanel}
+        inverterPositions={inverterPositions}
+        onUpdateInverterPosition={handleUpdateInverterPosition}
+      />
+      
+      <Suspense fallback={<div>Loading...</div>}>
+        <Loader />
+      </Suspense>
+    </div>
+  );
+}
