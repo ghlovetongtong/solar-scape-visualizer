@@ -177,7 +177,7 @@ export default function SceneContainer() {
     saveCurrentLayout,
     saveAsDefaultLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setSceneReady(true);
@@ -816,16 +816,10 @@ export default function SceneContainer() {
               key={`inverter-${index}`}
               position={new THREE.Vector3(...position)}
               rotation={new THREE.Euler(...(inverterRotations[index] || [0,0,0]))}
+              inverterIndex={index}
               isSelected={selectedInverterId === index && selectedComponentType === 'inverter'}
               onSelect={() => handleSelectInverter(index)}
               onPositionChange={(newPosition) => handleInverterPositionChange(index, newPosition)}
-              onRotationChange={(euler) => {
-                setInverterRotations(prev => {
-                  const rotations = [...prev];
-                  rotations[index] = [euler.x, euler.y, euler.z];
-                  return rotations;
-                });
-              }}
             />
           ))}
           
@@ -834,16 +828,10 @@ export default function SceneContainer() {
               key={`transformer-${index}`}
               position={new THREE.Vector3(...position)}
               rotation={new THREE.Euler(...(transformerRotations[index] || [0,0,0]))}
+              transformerIndex={index}
               isSelected={selectedTransformerId === index && selectedComponentType === 'transformer'}
               onSelect={() => handleSelectTransformer(index)}
               onPositionChange={(newPosition) => handleTransformerPositionChange(index, newPosition)}
-              onRotationChange={(euler) => {
-                setTransformerRotations(prev => {
-                  const rotations = [...prev];
-                  rotations[index] = [euler.x, euler.y, euler.z];
-                  return rotations;
-                });
-              }}
             />
           ))}
           
@@ -852,16 +840,10 @@ export default function SceneContainer() {
               key={`camera-${index}`}
               position={new THREE.Vector3(...position)}
               rotation={new THREE.Euler(...(cameraRotations[index] || [0,0,0]))}
+              cameraIndex={index}
               isSelected={selectedCameraId === index && selectedComponentType === 'camera'}
               onSelect={() => handleSelectCamera(index)}
               onPositionChange={(newPosition) => handleCameraPositionChange(index, newPosition)}
-              onRotationChange={(euler) => {
-                setCameraRotations(prev => {
-                  const rotations = [...prev];
-                  rotations[index] = [euler.x, euler.y, euler.z];
-                  return rotations;
-                });
-              }}
             />
           ))}
           
@@ -872,7 +854,9 @@ export default function SceneContainer() {
             onPositionChange={handleITHousePositionChange}
           />
           
-          <Road position={panelCenter} />
+          <Road 
+            center={panelCenter} 
+          />
           
           <OrbitControls
             ref={orbitControlsRef}
@@ -906,10 +890,10 @@ export default function SceneContainer() {
         updateInverterPosition={updateInverterPosition}
         updateTransformerPosition={updateTransformerPosition}
         updateCameraPosition={updateCameraPosition}
+        onResetPanels={resetPanelPositions}
       />
 
       {!sceneReady && <Loader />}
     </div>
   );
 }
-

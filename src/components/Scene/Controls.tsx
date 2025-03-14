@@ -10,25 +10,25 @@ interface ControlsProps {
   setShowStats: (show: boolean) => void;
   timeOfDay: number;
   setTimeOfDay: (time: number) => void;
-  onResetPanels: () => void;
+  onResetPanels?: () => void;
   
-  selectedPanelId: number | null;
-  onUpdatePanelPosition: (id: number, position: [number, number, number]) => void;
-  onUpdatePanelRotation: (id: number, rotation: [number, number, number]) => void;
+  selectedPanelId?: number | null;
+  onUpdatePanelPosition?: (id: number, position: [number, number, number]) => void;
+  onUpdatePanelRotation?: (id: number, rotation: [number, number, number]) => void;
   
-  selectedComponentType: 'panel' | 'inverter' | 'transformer' | 'camera' | null;
+  selectedComponentType: 'panel' | 'inverter' | 'transformer' | 'camera' | 'itHouse' | null;
   
-  selectedInverterId: number | null;
-  onUpdateInverterPosition: (id: number, position: [number, number, number]) => void;
-  onUpdateInverterRotation: (id: number, rotation: [number, number, number]) => void;
+  selectedInverterId?: number | null;
+  onUpdateInverterPosition?: (id: number, position: [number, number, number]) => void;
+  onUpdateInverterRotation?: (id: number, rotation: [number, number, number]) => void;
   
-  selectedTransformerId: number | null;
-  onUpdateTransformerPosition: (id: number, position: [number, number, number]) => void;
-  onUpdateTransformerRotation: (id: number, rotation: [number, number, number]) => void;
+  selectedTransformerId?: number | null;
+  onUpdateTransformerPosition?: (id: number, position: [number, number, number]) => void;
+  onUpdateTransformerRotation?: (id: number, rotation: [number, number, number]) => void;
   
-  selectedCameraId: number | null;
-  onUpdateCameraPosition: (id: number, position: [number, number, number]) => void;
-  onUpdateCameraRotation: (id: number, rotation: [number, number, number]) => void;
+  selectedCameraId?: number | null;
+  onUpdateCameraPosition?: (id: number, position: [number, number, number]) => void;
+  onUpdateCameraRotation?: (id: number, rotation: [number, number, number]) => void;
   
   drawingMode: boolean;
   setDrawingMode: (mode: boolean) => void;
@@ -36,9 +36,15 @@ interface ControlsProps {
   onClearBoundary: () => void;
   onClearAllBoundaries?: () => void;
   onClearAllPanels?: () => void;
-  onGenerateNewPanelsInBoundary?: () => void;
+  onGeneratePanels?: () => void;
   onSaveLayout?: () => void;
-  onSaveAsDefaultLayout?: () => void; // 新增保存为默认布局的回调
+  onSaveAsDefaultLayout?: () => void;
+  
+  updatePanelPosition?: (id: number, position: [number, number, number]) => void;
+  updatePanelRotation?: (id: number, rotation: [number, number, number]) => void;
+  updateInverterPosition?: (id: number, position: [number, number, number]) => void;
+  updateTransformerPosition?: (id: number, position: [number, number, number]) => void;
+  updateCameraPosition?: (id: number, position: [number, number, number]) => void;
 }
 
 export default function Controls({
@@ -72,9 +78,15 @@ export default function Controls({
   onClearBoundary,
   onClearAllBoundaries,
   onClearAllPanels,
-  onGenerateNewPanelsInBoundary,
+  onGeneratePanels,
   onSaveLayout,
-  onSaveAsDefaultLayout  // 新增
+  onSaveAsDefaultLayout,
+  
+  updatePanelPosition,
+  updatePanelRotation,
+  updateInverterPosition,
+  updateTransformerPosition,
+  updateCameraPosition
 }: ControlsProps) {
   const [adjustValue, setAdjustValue] = useState(0.5);
   
@@ -88,6 +100,8 @@ export default function Controls({
         return `Transformer: #${selectedTransformerId! + 1}`;
       case 'camera':
         return `Camera: #${selectedCameraId! + 1}`;
+      case 'itHouse':
+        return 'IT House';
       default:
         return null;
     }
@@ -116,40 +130,43 @@ export default function Controls({
     
     switch (selectedComponentType) {
       case 'panel':
-        if (selectedPanelId !== null) {
+        if (selectedPanelId !== null && updatePanelPosition && updatePanelRotation) {
           if (isRotation) {
-            onUpdatePanelRotation(selectedPanelId, rotation);
+            updatePanelRotation(selectedPanelId, rotation);
           } else {
-            onUpdatePanelPosition(selectedPanelId, position);
+            updatePanelPosition(selectedPanelId, position);
           }
         }
         break;
       case 'inverter':
-        if (selectedInverterId !== null) {
+        if (selectedInverterId !== null && updateInverterPosition) {
           if (isRotation) {
-            onUpdateInverterRotation(selectedInverterId, rotation);
+            // Handle rotation if needed
           } else {
-            onUpdateInverterPosition(selectedInverterId, position);
+            updateInverterPosition(selectedInverterId, position);
           }
         }
         break;
       case 'transformer':
-        if (selectedTransformerId !== null) {
+        if (selectedTransformerId !== null && updateTransformerPosition) {
           if (isRotation) {
-            onUpdateTransformerRotation(selectedTransformerId, rotation);
+            // Handle rotation if needed
           } else {
-            onUpdateTransformerPosition(selectedTransformerId, position);
+            updateTransformerPosition(selectedTransformerId, position);
           }
         }
         break;
       case 'camera':
-        if (selectedCameraId !== null) {
+        if (selectedCameraId !== null && updateCameraPosition) {
           if (isRotation) {
-            onUpdateCameraRotation(selectedCameraId, rotation);
+            // Handle rotation if needed
           } else {
-            onUpdateCameraPosition(selectedCameraId, position);
+            updateCameraPosition(selectedCameraId, position);
           }
         }
+        break;
+      case 'itHouse':
+        // IT House position control handled elsewhere
         break;
     }
   };
@@ -219,10 +236,10 @@ export default function Controls({
             </div>
             
             <div className="grid grid-cols-1 gap-1 mt-2">
-              {onGenerateNewPanelsInBoundary && (
+              {onGeneratePanels && (
                 <Button 
                   className="w-full" 
-                  onClick={onGenerateNewPanelsInBoundary}
+                  onClick={onGeneratePanels}
                   variant="default"
                 >
                   Generate Panels in All Boundaries
@@ -245,7 +262,9 @@ export default function Controls({
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
         <div className="text-sm font-medium">Panel Management</div>
         <div className="grid grid-cols-2 gap-1">
-          <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
+          {onResetPanels && (
+            <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
+          )}
           {onClearAllPanels && (
             <Button 
               size="sm" 

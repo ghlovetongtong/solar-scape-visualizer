@@ -8,19 +8,21 @@ import { useDraggable } from '@/hooks/useDraggable';
 interface CameraProps {
   position: THREE.Vector3;
   rotation?: THREE.Euler;
-  cameraIndex: number;
+  cameraIndex?: number;
   isSelected?: boolean;
   onSelect?: () => void;
   onPositionChange?: (position: THREE.Vector3) => void;
+  onRotationChange?: (rotation: THREE.Euler) => void;
 }
 
 export default function Camera({ 
   position, 
   rotation = new THREE.Euler(), 
-  cameraIndex, 
+  cameraIndex = 0, 
   isSelected = false, 
   onSelect,
-  onPositionChange
+  onPositionChange,
+  onRotationChange
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   

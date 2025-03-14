@@ -7,19 +7,21 @@ import { useDraggable } from '@/hooks/useDraggable';
 interface TransformerStationProps {
   position: THREE.Vector3;
   rotation?: THREE.Euler;
-  transformerIndex: number;
+  transformerIndex?: number;
   isSelected?: boolean;
   onSelect?: () => void;
   onPositionChange?: (position: THREE.Vector3) => void;
+  onRotationChange?: (rotation: THREE.Euler) => void;
 }
 
 export default function TransformerStation({ 
   position, 
   rotation = new THREE.Euler(), 
-  transformerIndex, 
+  transformerIndex = 0, 
   isSelected = false, 
   onSelect,
-  onPositionChange
+  onPositionChange,
+  onRotationChange
 }: TransformerStationProps) {
   
   const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {

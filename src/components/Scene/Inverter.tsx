@@ -7,19 +7,21 @@ import { useDraggable } from '@/hooks/useDraggable';
 interface InverterProps {
   position: THREE.Vector3;
   rotation?: THREE.Euler;
-  inverterIndex: number;
+  inverterIndex?: number;
   isSelected?: boolean;
   onSelect?: () => void;
   onPositionChange?: (position: THREE.Vector3) => void;
+  onRotationChange?: (rotation: THREE.Euler) => void;
 }
 
 export default function Inverter({ 
   position, 
   rotation = new THREE.Euler(), 
-  inverterIndex, 
+  inverterIndex = 0, 
   isSelected = false, 
   onSelect,
-  onPositionChange
+  onPositionChange,
+  onRotationChange
 }: InverterProps) {
   
   const { groupRef, handlePointerDown, isDragging } = useDraggable(position, {
