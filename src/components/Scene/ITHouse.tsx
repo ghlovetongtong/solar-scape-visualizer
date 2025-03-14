@@ -36,7 +36,6 @@ export default function ITHouse({
   return (
     <group 
       ref={groupRef}
-      position={position}
       onClick={handleClick}
       onPointerDown={handlePointerDown}
       userData={{ type: 'selectable', componentType: 'itHouse', draggable: true }}

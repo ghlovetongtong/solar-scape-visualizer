@@ -1,50 +1,34 @@
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
-import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+import React from 'react';
+import * as THREE from 'three';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
-interface ControlsProps {
+export interface ControlsProps {
   showStats: boolean;
   setShowStats: (show: boolean) => void;
   timeOfDay: number;
   setTimeOfDay: (time: number) => void;
-  onResetPanels?: () => void;
-  
-  selectedPanelId?: number | null;
-  onUpdatePanelPosition?: (id: number, position: [number, number, number]) => void;
-  onUpdatePanelRotation?: (id: number, rotation: [number, number, number]) => void;
-  
-  selectedComponentType: 'panel' | 'inverter' | 'transformer' | 'camera' | 'itHouse' | null;
-  
-  selectedInverterId?: number | null;
-  onUpdateInverterPosition?: (id: number, position: [number, number, number]) => void;
-  onUpdateInverterRotation?: (id: number, rotation: [number, number, number]) => void;
-  
-  selectedTransformerId?: number | null;
-  onUpdateTransformerPosition?: (id: number, position: [number, number, number]) => void;
-  onUpdateTransformerRotation?: (id: number, rotation: [number, number, number]) => void;
-  
-  selectedCameraId?: number | null;
-  onUpdateCameraPosition?: (id: number, position: [number, number, number]) => void;
-  onUpdateCameraRotation?: (id: number, rotation: [number, number, number]) => void;
-  
   drawingMode: boolean;
-  setDrawingMode: (mode: boolean) => void;
+  setDrawingMode: (drawing: boolean) => void;
   onSaveBoundary: () => void;
   onClearBoundary: () => void;
-  onClearAllBoundaries?: () => void;
-  onClearAllPanels?: () => void;
-  onGeneratePanels?: () => void;
-  onSaveLayout?: () => void;
-  onSaveAsDefaultLayout?: () => void;
-  
+  onClearAllBoundaries: () => void;
+  onGeneratePanels: () => void;
+  onClearAllPanels: () => void;
+  onSaveLayout: () => void;
+  onSaveAsDefaultLayout: () => void;
+  selectedComponentType: 'panel' | 'inverter' | 'transformer' | 'camera' | 'itHouse' | null;
   updatePanelPosition?: (id: number, position: [number, number, number]) => void;
   updatePanelRotation?: (id: number, rotation: [number, number, number]) => void;
   updateInverterPosition?: (id: number, position: [number, number, number]) => void;
   updateTransformerPosition?: (id: number, position: [number, number, number]) => void;
   updateCameraPosition?: (id: number, position: [number, number, number]) => void;
+  updateInverterRotation?: (id: number, rotation: [number, number, number]) => void;
+  updateTransformerRotation?: (id: number, rotation: [number, number, number]) => void;
+  updateCameraRotation?: (id: number, rotation: [number, number, number]) => void;
+  onResetPanels?: () => void;
 }
 
 export default function Controls({
@@ -52,262 +36,251 @@ export default function Controls({
   setShowStats,
   timeOfDay,
   setTimeOfDay,
-  onResetPanels,
-  
-  selectedPanelId,
-  onUpdatePanelPosition,
-  onUpdatePanelRotation,
-  
-  selectedComponentType,
-  
-  selectedInverterId,
-  onUpdateInverterPosition,
-  onUpdateInverterRotation,
-  
-  selectedTransformerId,
-  onUpdateTransformerPosition,
-  onUpdateTransformerRotation,
-  
-  selectedCameraId,
-  onUpdateCameraPosition,
-  onUpdateCameraRotation,
-  
   drawingMode,
   setDrawingMode,
   onSaveBoundary,
   onClearBoundary,
   onClearAllBoundaries,
-  onClearAllPanels,
   onGeneratePanels,
+  onClearAllPanels,
   onSaveLayout,
   onSaveAsDefaultLayout,
-  
+  selectedComponentType,
   updatePanelPosition,
   updatePanelRotation,
   updateInverterPosition,
   updateTransformerPosition,
-  updateCameraPosition
+  updateCameraPosition,
+  updateInverterRotation,
+  updateTransformerRotation,
+  updateCameraRotation,
+  onResetPanels
 }: ControlsProps) {
-  const [adjustValue, setAdjustValue] = useState(0.5);
-  
-  const getSelectedItemLabel = () => {
-    switch (selectedComponentType) {
-      case 'panel':
-        return `Panel: #${selectedPanelId}`;
-      case 'inverter':
-        return `Inverter: #${selectedInverterId! + 1}`;
-      case 'transformer':
-        return `Transformer: #${selectedTransformerId! + 1}`;
-      case 'camera':
-        return `Camera: #${selectedCameraId! + 1}`;
-      case 'itHouse':
-        return 'IT House';
-      default:
-        return null;
-    }
-  };
-  
-  const handleAdjustment = (axis: 'x' | 'y' | 'z', isRotation: boolean = false) => {
-    if (!selectedComponentType) {
-      toast.error("No component selected");
-      return;
-    }
-    
-    const scaledValue = (adjustValue - 0.5) * (isRotation ? 0.2 : 2);
-    
-    const position: [number, number, number] = [0, 0, 0];
-    const rotation: [number, number, number] = [0, 0, 0];
-    
-    if (isRotation) {
-      if (axis === 'x') rotation[0] = scaledValue;
-      if (axis === 'y') rotation[1] = scaledValue;
-      if (axis === 'z') rotation[2] = scaledValue;
-    } else {
-      if (axis === 'x') position[0] = scaledValue;
-      if (axis === 'y') position[1] = scaledValue;
-      if (axis === 'z') position[2] = scaledValue;
-    }
-    
-    switch (selectedComponentType) {
-      case 'panel':
-        if (selectedPanelId !== null && updatePanelPosition && updatePanelRotation) {
-          if (isRotation) {
-            updatePanelRotation(selectedPanelId, rotation);
-          } else {
-            updatePanelPosition(selectedPanelId, position);
-          }
-        }
-        break;
-      case 'inverter':
-        if (selectedInverterId !== null && updateInverterPosition) {
-          if (isRotation) {
-            // Handle rotation if needed
-          } else {
-            updateInverterPosition(selectedInverterId, position);
-          }
-        }
-        break;
-      case 'transformer':
-        if (selectedTransformerId !== null && updateTransformerPosition) {
-          if (isRotation) {
-            // Handle rotation if needed
-          } else {
-            updateTransformerPosition(selectedTransformerId, position);
-          }
-        }
-        break;
-      case 'camera':
-        if (selectedCameraId !== null && updateCameraPosition) {
-          if (isRotation) {
-            // Handle rotation if needed
-          } else {
-            updateCameraPosition(selectedCameraId, position);
-          }
-        }
-        break;
-      case 'itHouse':
-        // IT House position control handled elsewhere
-        break;
-    }
-  };
-  
-  const getTimeLabel = (timeValue: number) => {
-    const hoursFloat = 5 + timeValue * 14;
-    const hours = Math.floor(hoursFloat);
-    const minutes = Math.floor((hoursFloat - hours) * 60);
-    const period = hours >= 12 ? 'PM' : 'AM';
-    const hour12 = hours % 12 === 0 ? 12 : hours % 12;
-    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
-  };
-  
   return (
-    <div className="absolute left-4 bottom-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-xs space-y-4 border border-gray-200 dark:border-gray-700">
-      <div className="text-lg font-bold">Solar Panel Controls</div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Time of Day</label>
-          <span className="text-sm text-gray-500">{getTimeLabel(timeOfDay)}</span>
-        </div>
+    <div className="absolute bottom-4 left-4 bg-white p-4 rounded shadow-md z-50 w-64">
+      <h2 className="text-lg font-semibold mb-2">Controls</h2>
+
+      <div className="flex items-center justify-between mb-2">
+        <Label htmlFor="stats">Show Stats</Label>
+        <Switch id="stats" checked={showStats} onCheckedChange={setShowStats} />
+      </div>
+
+      <div className="mb-4">
+        <Label htmlFor="timeOfDay" className="block text-sm font-medium text-gray-700">
+          Time of Day
+        </Label>
         <Slider
-          value={[timeOfDay]}
-          min={0}
-          max={1}
-          step={0.01}
-          onValueChange={(values) => setTimeOfDay(values[0])}
+          id="timeOfDay"
+          defaultValue={[timeOfDay * 100]}
+          max={100}
+          step={1}
+          onValueChange={(value) => setTimeOfDay(value[0] / 100)}
+          className="w-full"
         />
       </div>
-      
-      {selectedComponentType && (
-        <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-          <div className="text-sm font-medium">{getSelectedItemLabel()}</div>
-          <Slider
-            value={[adjustValue]}
-            min={0}
-            max={1}
-            step={0.01}
-            onValueChange={(values) => setAdjustValue(values[0])}
-          />
-          <div className="grid grid-cols-3 gap-1">
-            <Button size="sm" onClick={() => handleAdjustment('x')}>Move X</Button>
-            <Button size="sm" onClick={() => handleAdjustment('y')}>Move Y</Button>
-            <Button size="sm" onClick={() => handleAdjustment('z')}>Move Z</Button>
-            <Button size="sm" onClick={() => handleAdjustment('x', true)}>Rotate X</Button>
-            <Button size="sm" onClick={() => handleAdjustment('y', true)}>Rotate Y</Button>
-            <Button size="sm" onClick={() => handleAdjustment('z', true)}>Rotate Z</Button>
-          </div>
+
+      <div className="flex items-center justify-between mb-2">
+        <Label htmlFor="drawingMode">Drawing Mode</Label>
+        <Switch id="drawingMode" checked={drawingMode} onCheckedChange={setDrawingMode} />
+      </div>
+
+      {drawingMode && (
+        <div className="mb-4">
+          <Button variant="outline" onClick={onSaveBoundary} className="w-full mb-2">
+            Save Boundary
+          </Button>
+          <Button variant="outline" onClick={onClearBoundary} className="w-full mb-2">
+            Clear Boundary
+          </Button>
+          <Button variant="destructive" onClick={onClearAllBoundaries} className="w-full">
+            Clear All Boundaries
+          </Button>
         </div>
       )}
-      
-      <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Boundary Drawing Mode</label>
-          <Switch
-            checked={drawingMode}
-            onCheckedChange={setDrawingMode}
-          />
-        </div>
-        
-        {drawingMode && (
-          <>
-            <div className="grid grid-cols-2 gap-1">
-              <Button size="sm" onClick={onSaveBoundary}>Save Boundary</Button>
-              <Button size="sm" variant="outline" onClick={onClearBoundary}>Clear Drawing</Button>
-            </div>
-            
-            <div className="grid grid-cols-1 gap-1 mt-2">
-              {onGeneratePanels && (
-                <Button 
-                  className="w-full" 
-                  onClick={onGeneratePanels}
-                  variant="default"
-                >
-                  Generate Panels in All Boundaries
-                </Button>
-              )}
-              {onClearAllBoundaries && (
-                <Button 
-                  className="w-full" 
-                  variant="outline" 
-                  onClick={onClearAllBoundaries}
-                >
-                  Clear All Boundaries
-                </Button>
-              )}
-            </div>
-          </>
-        )}
+
+      <div className="mb-4">
+        <Button variant="secondary" onClick={onGeneratePanels} className="w-full mb-2">
+          Generate Panels in Boundaries
+        </Button>
+        <Button variant="secondary" onClick={onClearAllPanels} className="w-full mb-2">
+          Clear All Panels
+        </Button>
+        <Button variant="secondary" onClick={onResetPanels} className="w-full mb-2">
+          Reset Panel Positions
+        </Button>
+        <Button variant="outline" onClick={onSaveLayout} className="w-full mb-2">
+          Save Layout
+        </Button>
+        <Button variant="outline" onClick={onSaveAsDefaultLayout} className="w-full">
+          Save as Default Layout
+        </Button>
       </div>
-      
-      <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <div className="text-sm font-medium">Panel Management</div>
-        <div className="grid grid-cols-2 gap-1">
-          {onResetPanels && (
-            <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
+
+      {selectedComponentType && (
+        <div className="mb-4">
+          {selectedComponentType === 'panel' && (
+            <>
+              <h3 className="text-sm font-semibold mb-1">Adjust Panel</h3>
+              <AdjustableControl
+                label="Position X"
+                onIncrement={() => updatePanelPosition?.(0, [0.1, 0, 0])}
+                onDecrement={() => updatePanelPosition?.(0, [-0.1, 0, 0])}
+              />
+              <AdjustableControl
+                label="Position Y"
+                onIncrement={() => updatePanelPosition?.(0, [0, 0.1, 0])}
+                onDecrement={() => updatePanelPosition?.(0, [0, -0.1, 0])}
+              />
+              <AdjustableControl
+                label="Position Z"
+                onIncrement={() => updatePanelPosition?.(0, [0, 0, 0.1])}
+                onDecrement={() => updatePanelPosition?.(0, [0, 0, -0.1])}
+              />
+              <AdjustableControl
+                label="Rotation X"
+                onIncrement={() => updatePanelRotation?.(0, [0.01, 0, 0])}
+                onDecrement={() => updatePanelRotation?.(0, [-0.01, 0, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Y"
+                onIncrement={() => updatePanelRotation?.(0, [0, 0.01, 0])}
+                onDecrement={() => updatePanelRotation?.(0, [0, -0.01, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Z"
+                onIncrement={() => updatePanelRotation?.(0, [0, 0, 0.01])}
+                onDecrement={() => updatePanelRotation?.(0, [0, 0, -0.01])}
+              />
+            </>
           )}
-          {onClearAllPanels && (
-            <Button 
-              size="sm" 
-              variant="destructive" 
-              onClick={onClearAllPanels}
-            >
-              Clear All Panels
-            </Button>
+          {selectedComponentType === 'inverter' && (
+            <>
+              <h3 className="text-sm font-semibold mb-1">Adjust Inverter</h3>
+              <AdjustableControl
+                label="Position X"
+                onIncrement={() => updateInverterPosition?.(0, [0.1, 0, 0])}
+                onDecrement={() => updateInverterPosition?.(0, [-0.1, 0, 0])}
+              />
+              <AdjustableControl
+                label="Position Y"
+                onIncrement={() => updateInverterPosition?.(0, [0, 0.1, 0])}
+                onDecrement={() => updateInverterPosition?.(0, [0, -0.1, 0])}
+              />
+              <AdjustableControl
+                label="Position Z"
+                onIncrement={() => updateInverterPosition?.(0, [0, 0, 0.1])}
+                onDecrement={() => updateInverterPosition?.(0, [0, 0, -0.1])}
+              />
+              <AdjustableControl
+                label="Rotation X"
+                onIncrement={() => updateInverterRotation?.(0, [0.01, 0, 0])}
+                onDecrement={() => updateInverterRotation?.(0, [-0.01, 0, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Y"
+                onIncrement={() => updateInverterRotation?.(0, [0, 0.01, 0])}
+                onDecrement={() => updateInverterRotation?.(0, [0, -0.01, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Z"
+                onIncrement={() => updateInverterRotation?.(0, [0, 0, 0.01])}
+                onDecrement={() => updateInverterRotation?.(0, [0, 0, -0.01])}
+              />
+            </>
+          )}
+          {selectedComponentType === 'transformer' && (
+            <>
+              <h3 className="text-sm font-semibold mb-1">Adjust Transformer</h3>
+              <AdjustableControl
+                label="Position X"
+                onIncrement={() => updateTransformerPosition?.(0, [0.1, 0, 0])}
+                onDecrement={() => updateTransformerPosition?.(0, [-0.1, 0, 0])}
+              />
+              <AdjustableControl
+                label="Position Y"
+                onIncrement={() => updateTransformerPosition?.(0, [0, 0.1, 0])}
+                onDecrement={() => updateTransformerPosition?.(0, [0, -0.1, 0])}
+              />
+              <AdjustableControl
+                label="Position Z"
+                onIncrement={() => updateTransformerPosition?.(0, [0, 0, 0.1])}
+                onDecrement={() => updateTransformerPosition?.(0, [0, 0, -0.1])}
+              />
+              <AdjustableControl
+                label="Rotation X"
+                onIncrement={() => updateTransformerRotation?.(0, [0.01, 0, 0])}
+                onDecrement={() => updateTransformerRotation?.(0, [-0.01, 0, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Y"
+                onIncrement={() => updateTransformerRotation?.(0, [0, 0.01, 0])}
+                onDecrement={() => updateTransformerRotation?.(0, [0, -0.01, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Z"
+                onIncrement={() => updateTransformerRotation?.(0, [0, 0, 0.01])}
+                onDecrement={() => updateTransformerRotation?.(0, [0, 0, -0.01])}
+              />
+            </>
+          )}
+          {selectedComponentType === 'camera' && (
+            <>
+              <h3 className="text-sm font-semibold mb-1">Adjust Camera</h3>
+              <AdjustableControl
+                label="Position X"
+                onIncrement={() => updateCameraPosition?.(0, [0.1, 0, 0])}
+                onDecrement={() => updateCameraPosition?.(0, [-0.1, 0, 0])}
+              />
+              <AdjustableControl
+                label="Position Y"
+                onIncrement={() => updateCameraPosition?.(0, [0, 0.1, 0])}
+                onDecrement={() => updateCameraPosition?.(0, [0, -0.1, 0])}
+              />
+              <AdjustableControl
+                label="Position Z"
+                onIncrement={() => updateCameraPosition?.(0, [0, 0, 0.1])}
+                onDecrement={() => updateCameraPosition?.(0, [0, 0, -0.1])}
+              />
+              <AdjustableControl
+                label="Rotation X"
+                onIncrement={() => updateCameraRotation?.(0, [0.01, 0, 0])}
+                onDecrement={() => updateCameraRotation?.(0, [-0.01, 0, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Y"
+                onIncrement={() => updateCameraRotation?.(0, [0, 0.01, 0])}
+                onDecrement={() => updateCameraRotation?.(0, [0, -0.01, 0])}
+              />
+              <AdjustableControl
+                label="Rotation Z"
+                onIncrement={() => updateCameraRotation?.(0, [0, 0, 0.01])}
+                onDecrement={() => updateCameraRotation?.(0, [0, 0, -0.01])}
+              />
+            </>
           )}
         </div>
-        
-        <div className="grid grid-cols-1 gap-1 mt-2">
-          {onSaveLayout && (
-            <Button 
-              className="w-full" 
-              variant="default"
-              onClick={onSaveLayout}
-            >
-              Save Current Layout
-            </Button>
-          )}
-          
-          {onSaveAsDefaultLayout && (
-            <Button 
-              className="w-full mt-1" 
-              variant="secondary"
-              onClick={onSaveAsDefaultLayout}
-            >
-              Save As Default Layout
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={showStats}
-            onCheckedChange={setShowStats}
-            id="stats-mode"
-          />
-          <label htmlFor="stats-mode" className="text-sm cursor-pointer">Stats</label>
-        </div>
+      )}
+    </div>
+  );
+}
+
+interface AdjustableControlProps {
+  label: string;
+  onIncrement: () => void;
+  onDecrement: () => void;
+}
+
+function AdjustableControl({ label, onIncrement, onDecrement }: AdjustableControlProps) {
+  return (
+    <div className="flex items-center justify-between mb-1">
+      <Label className="text-sm font-medium">{label}</Label>
+      <div className="flex items-center space-x-2">
+        <Button variant="outline" size="icon" onClick={onDecrement}>
+          -
+        </Button>
+        <Button variant="outline" size="icon" onClick={onIncrement}>
+          +
+        </Button>
       </div>
     </div>
   );

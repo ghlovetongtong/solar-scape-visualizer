@@ -33,7 +33,7 @@ export default function TransformerStation({
     }
   });
   
-  const handleClick = (e: any) => {
+  const handleClick = (e: THREE.Event) => {
     e.stopPropagation();
     if (onSelect) {
       onSelect();
@@ -43,7 +43,6 @@ export default function TransformerStation({
   return (
     <group 
       ref={groupRef}
-      position={position} 
       rotation={rotation} 
       onClick={handleClick}
       onPointerDown={handlePointerDown}

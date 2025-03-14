@@ -16,7 +16,7 @@ export default function Terrain({
   onBoundaryComplete,
   savedBoundaries = []
 }: TerrainProps) {
-  // Create a safe callback wrapper that won't cause "lov" errors
+  // Create a safe callback wrapper that won't cause errors
   const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
     if (onBoundaryComplete && points.length > 2) {
       // Ensure we're dealing with a valid boundary before calling the callback

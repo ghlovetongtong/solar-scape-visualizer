@@ -43,7 +43,6 @@ export default function Inverter({
   return (
     <group 
       ref={groupRef}
-      position={position} 
       rotation={rotation} 
       onClick={handleClick}
       onPointerDown={handlePointerDown}

@@ -68,7 +68,6 @@ export default function Road({
           geometry={tubeGeometry} 
           material={roadMaterial} 
           receiveShadow 
-          position={[0, 0, 0]}
         />
       );
     }
@@ -105,7 +104,6 @@ export default function Road({
           geometry={tubeGeometry} 
           material={roadMaterial} 
           receiveShadow 
-          position={[0, 0, 0]}
         />
       );
     }

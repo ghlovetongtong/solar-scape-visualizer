@@ -27,8 +27,15 @@ export function useDraggable(
   const groupRef = useRef<THREE.Group>(null);
   const dragStartPoint = useRef<THREE.Vector3 | null>(null);
   const originalPosition = useRef<THREE.Vector3 | null>(null);
-  const { camera, raycaster, scene, gl } = useThree();
+  const { camera, raycaster, gl } = useThree();
   const plane = useRef<THREE.Plane>(new THREE.Plane(new THREE.Vector3(0, 1, 0), 0));
+
+  // Set initial position
+  useEffect(() => {
+    if (groupRef.current && initialPosition) {
+      groupRef.current.position.copy(initialPosition);
+    }
+  }, [initialPosition]);
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!enabled || !groupRef.current) return;
@@ -96,11 +103,17 @@ export function useDraggable(
     if (isDragging) {
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
+      
+      // Add these to make sure dragging stops if we leave the window
+      window.addEventListener('pointerleave', handlePointerUp);
+      window.addEventListener('pointercancel', handlePointerUp);
     }
     
     return () => {
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointerleave', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
     };
   }, [isDragging]);
 
