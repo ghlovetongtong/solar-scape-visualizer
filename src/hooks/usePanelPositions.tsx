@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 // Define group size and spacing constants
 const PANELS_PER_GROUP = 16; // 4x4 grid per group
-const PANEL_SPACING = 2.8; // Reduced spacing between panels within a group
-const GROUP_SPACING = 12; // Reduced spacing between groups
+const PANEL_SPACING = 0; // Removed spacing between panels within a group
+const GROUP_SPACING = 0; // Removed spacing between groups
 
 // Utility function to check if a point is inside a polygon
 function isPointInPolygon(point: [number, number], polygon: BoundaryPoint[]): boolean {
@@ -109,12 +109,14 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       const boundaryWidth = maxX - minX;
       const boundaryDepth = maxZ - minZ;
       
-      // Determine spacing based on boundary size
-      const spacing = Math.min(PANEL_SPACING * 1.5, boundaryWidth / 10, boundaryDepth / 10);
+      // Panel size is approximately 3 units wide and 2 units deep
+      // Use these dimensions directly for spacing to create no gaps
+      const spacingX = 3;
+      const spacingZ = 2;
       
       // Calculate grid size
-      const gridSizeX = Math.floor(boundaryWidth / spacing);
-      const gridSizeZ = Math.floor(boundaryDepth / spacing);
+      const gridSizeX = Math.floor(boundaryWidth / spacingX);
+      const gridSizeZ = Math.floor(boundaryDepth / spacingZ);
       
       const newPanels: InstanceData[] = [];
       const nextPanelId = panelPositions.length > 0 
@@ -126,13 +128,13 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       // Create panels within the grid, but only if they're inside the boundary
       for (let i = 0; i < gridSizeX; i++) {
         for (let j = 0; j < gridSizeZ; j++) {
-          const x = minX + (i + 0.5) * spacing;
-          const z = minZ + (j + 0.5) * spacing;
+          const x = minX + (i * spacingX) + (spacingX / 2);
+          const z = minZ + (j * spacingZ) + (spacingZ / 2);
           
           // Check if this position is inside the boundary
           if (isPointInPolygon([x, z], boundary)) {
-            // Check if there's already a panel at this position (within a small tolerance)
-            const tolerance = spacing / 2;
+            // Check if there's already a panel at this position (with minimal tolerance)
+            const tolerance = 0.1; // Very small tolerance since we want tight packing
             const existingPanel = panelPositions.find(panel => {
               const dx = panel.position[0] - x;
               const dz = panel.position[2] - z;
@@ -145,7 +147,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
               const groundHeight = getHeightAtPosition(x, z);
               
               // Create the panel with a slight randomization to rotation
-              const rotationY = (Math.random() - 0.5) * 0.2;
+              const rotationY = (Math.random() - 0.5) * 0.1; // Reduced rotation variation
               
               newPanels.push({
                 id: nextPanelId + panelCount,

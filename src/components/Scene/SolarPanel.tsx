@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -15,6 +14,7 @@ interface SolarPanelsProps {
 export default function SolarPanels({ panelPositions, selectedPanelId, onSelectPanel }: SolarPanelsProps) {
   // Create panel geometry and materials
   const panelGeometry = useMemo(() => {
+    // Keep exact same dimensions for visual appearance
     const baseGeometry = new THREE.BoxGeometry(3, 0.1, 2);
     return baseGeometry;
   }, []);
