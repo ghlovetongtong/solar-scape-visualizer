@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useDraggable } from '@/hooks/useDraggable';
@@ -25,6 +25,10 @@ export default function TransformerStation({
   onRotationChange
 }: TransformerStationProps) {
   
+  const handleDragStart = useCallback(() => {
+    console.log("Transformer drag start:", transformerIndex);
+  }, [transformerIndex]);
+  
   const { 
     groupRef, 
     handlePointerDown, 
@@ -34,6 +38,7 @@ export default function TransformerStation({
     isDragging 
   } = useDraggable(position, {
     enabled: isSelected,
+    onDragStart: handleDragStart,
     onDragEnd: (newPosition) => {
       console.log("Transformer drag end:", newPosition);
       if (onPositionChange) {
@@ -44,6 +49,7 @@ export default function TransformerStation({
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent orbit controls from taking over
     console.log("Transformer clicked:", transformerIndex);
     if (onSelect) {
       onSelect();

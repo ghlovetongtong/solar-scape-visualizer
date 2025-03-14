@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useCallback } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useDraggable } from '@/hooks/useDraggable';
@@ -25,6 +25,10 @@ export default function Inverter({
   onRotationChange
 }: InverterProps) {
   
+  const handleDragStart = useCallback(() => {
+    console.log("Inverter drag start:", inverterIndex);
+  }, [inverterIndex]);
+  
   const { 
     groupRef, 
     handlePointerDown, 
@@ -34,6 +38,7 @@ export default function Inverter({
     isDragging 
   } = useDraggable(position, {
     enabled: isSelected,
+    onDragStart: handleDragStart,
     onDragEnd: (newPosition) => {
       console.log("Inverter drag end:", newPosition);
       if (onPositionChange) {
@@ -44,6 +49,7 @@ export default function Inverter({
   
   const handleClick = (e: ThreeEvent<MouseEvent>) => {
     e.stopPropagation();
+    e.preventDefault(); // Prevent orbit controls from taking over
     console.log("Inverter clicked:", inverterIndex);
     if (onSelect) {
       onSelect();

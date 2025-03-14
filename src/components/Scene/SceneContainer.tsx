@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -178,6 +177,8 @@ export default function SceneContainer() {
     saveCurrentLayout,
     saveAsDefaultLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
+
+  const [isDraggingComponent, setIsDraggingComponent] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -630,6 +631,7 @@ export default function SceneContainer() {
   }, [selectedPanelId, selectedComponentType]);
 
   const handleInverterPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setIsDraggingComponent(false);
     setInverterPositionsState(prev => {
       const newPositions = [...prev];
       newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
@@ -639,6 +641,7 @@ export default function SceneContainer() {
   };
   
   const handleTransformerPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setIsDraggingComponent(false);
     setTransformerPositionsState(prev => {
       const newPositions = [...prev];
       newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
@@ -648,6 +651,7 @@ export default function SceneContainer() {
   };
   
   const handleCameraPositionChange = (id: number, newPosition: THREE.Vector3) => {
+    setIsDraggingComponent(false);
     setCameraPositionsState(prev => {
       const newPositions = [...prev];
       newPositions[id] = [newPosition.x, newPosition.y, newPosition.z];
@@ -657,6 +661,7 @@ export default function SceneContainer() {
   };
   
   const handleITHousePositionChange = (newPosition: THREE.Vector3) => {
+    setIsDraggingComponent(false);
     setITHousePositionState([newPosition.x, newPosition.y, newPosition.z]);
     toast.success('Moved IT House to new position');
   };
@@ -745,6 +750,24 @@ export default function SceneContainer() {
     );
   };
 
+  const handleComponentDragStart = useCallback(() => {
+    console.log("Component drag started");
+    setIsDraggingComponent(true);
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.enabled = false;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (orbitControlsRef.current) {
+      if (drawingMode || isDraggingComponent) {
+        orbitControlsRef.current.enabled = false;
+      } else {
+        orbitControlsRef.current.enabled = true;
+      }
+    }
+  }, [drawingMode, isDraggingComponent]);
+
   return (
     <div className="h-full w-full relative">
       <Canvas
@@ -795,113 +818,4 @@ export default function SceneContainer() {
           }
         }}
       >
-        <CustomEnvironment timeOfDay={timeOfDay} />
-        
-        <SkyBox timeOfDay={timeOfDay} />
-        
-        <Suspense fallback={null}>
-          <Terrain 
-            drawingEnabled={drawingMode}
-            onBoundaryComplete={handleBoundaryComplete}
-            savedBoundaries={[...savedBoundaries, ...(currentBoundary.length > 2 ? [currentBoundary] : [])]}
-          />
-          
-          <SolarPanels 
-            panelPositions={panelPositions} 
-            selectedPanelId={selectedPanelId}
-            onSelectPanel={selectPanel}
-          />
-          
-          {inverterPositionsState.map((position, index) => (
-            <Inverter 
-              key={`inverter-${index}`}
-              position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(inverterRotations[index] || [0,0,0]))}
-              inverterIndex={index}
-              isSelected={selectedInverterId === index && selectedComponentType === 'inverter'}
-              onSelect={() => handleSelectInverter(index)}
-              onPositionChange={(newPosition) => handleInverterPositionChange(index, newPosition)}
-              onRotationChange={(newRotation) => {}}
-            />
-          ))}
-          
-          {transformerPositionsState.map((position, index) => (
-            <TransformerStation
-              key={`transformer-${index}`}
-              position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(transformerRotations[index] || [0,0,0]))}
-              transformerIndex={index}
-              isSelected={selectedTransformerId === index && selectedComponentType === 'transformer'}
-              onSelect={() => handleSelectTransformer(index)}
-              onPositionChange={(newPosition) => handleTransformerPositionChange(index, newPosition)}
-              onRotationChange={(newRotation) => {}}
-            />
-          ))}
-          
-          {cameraPositionsState.map((position, index) => (
-            <Camera
-              key={`camera-${index}`}
-              position={new THREE.Vector3(...position)}
-              rotation={new THREE.Euler(...(cameraRotations[index] || [0,0,0]))}
-              cameraIndex={index}
-              isSelected={selectedCameraId === index && selectedComponentType === 'camera'}
-              onSelect={() => handleSelectCamera(index)}
-              onPositionChange={(newPosition) => handleCameraPositionChange(index, newPosition)}
-              onRotationChange={(newRotation) => {}}
-            />
-          ))}
-          
-          <ITHouse
-            position={new THREE.Vector3(...itHousePositionState)}
-            isSelected={isITHouseSelected && selectedComponentType === 'itHouse'}
-            onSelect={handleSelectITHouse}
-            onPositionChange={handleITHousePositionChange}
-          />
-          
-          <Road 
-            center={panelCenter}
-            visible={false}
-          />
-          
-          <OrbitControls
-            ref={orbitControlsRef}
-            minDistance={10}
-            maxDistance={500}
-            maxPolarAngle={Math.PI / 2 - 0.05}
-            target={new THREE.Vector3(...panelCenter)}
-          />
-          
-          {showStats && <Stats />}
-        </Suspense>
-      </Canvas>
-
-      <Controls
-        showStats={showStats}
-        setShowStats={setShowStats}
-        timeOfDay={timeOfDay}
-        setTimeOfDay={setTimeOfDay}
-        drawingMode={drawingMode}
-        setDrawingMode={setDrawingMode}
-        onSaveBoundary={handleSaveBoundary}
-        onClearBoundary={handleClearBoundary}
-        onClearAllBoundaries={handleClearAllBoundaries}
-        onGeneratePanels={handleGenerateNewPanelsInBoundary}
-        onClearAllPanels={handleClearAllPanels}
-        onSaveLayout={handleSaveLayout}
-        onSaveAsDefaultLayout={handleSaveAsDefaultLayout}
-        selectedComponentType={selectedComponentType}
-        updatePanelPosition={updatePanelPosition}
-        updatePanelRotation={updatePanelRotation}
-        updateInverterPosition={updateInverterPosition}
-        updateTransformerPosition={updateTransformerPosition}
-        updateCameraPosition={updateCameraPosition}
-        updateInverterRotation={updateInverterRotation}
-        updateTransformerRotation={updateTransformerRotation}
-        updateCameraRotation={updateCameraRotation}
-        onResetPanels={resetPanelPositions}
-      />
-
-      {!sceneReady && <Loader />}
-    </div>
-  );
-}
+        <
