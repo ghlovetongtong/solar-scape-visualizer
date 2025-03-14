@@ -78,7 +78,11 @@ export function useDraggable(
     }
     
     // Capture pointer to ensure we get all events
-    e.target.setPointerCapture(e.pointerId);
+    // TypeScript fix: Cast to HTMLElement to access setPointerCapture method
+    const element = e.target as unknown as HTMLElement;
+    if (element && typeof element.setPointerCapture === 'function') {
+      element.setPointerCapture(e.pointerId);
+    }
   };
 
   const handlePointerMove = (e: ThreeEvent<PointerEvent>) => {
@@ -118,8 +122,10 @@ export function useDraggable(
     if (!isDragging || pointerId.current !== e.pointerId) return;
     
     // Release pointer capture
-    if (e.target.hasPointerCapture(e.pointerId)) {
-      e.target.releasePointerCapture(e.pointerId);
+    // TypeScript fix: Cast to HTMLElement to access pointer capture methods
+    const element = e.target as unknown as HTMLElement;
+    if (element && typeof element.hasPointerCapture === 'function' && element.hasPointerCapture(e.pointerId)) {
+      element.releasePointerCapture(e.pointerId);
     }
     
     setIsDragging(false);
@@ -138,8 +144,10 @@ export function useDraggable(
     if (pointerId.current !== e.pointerId) return;
     
     // Release pointer capture
-    if (e.target.hasPointerCapture(e.pointerId)) {
-      e.target.releasePointerCapture(e.pointerId);
+    // TypeScript fix: Cast to HTMLElement to access pointer capture methods
+    const element = e.target as unknown as HTMLElement;
+    if (element && typeof element.hasPointerCapture === 'function' && element.hasPointerCapture(e.pointerId)) {
+      element.releasePointerCapture(e.pointerId);
     }
     
     setIsDragging(false);
