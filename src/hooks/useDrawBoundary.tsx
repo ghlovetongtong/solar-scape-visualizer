@@ -63,8 +63,15 @@ export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
     setIsDrawing(false);
     
     // Only save if we have enough points to form a boundary
-    if (points.length > 2 && onComplete) {
-      onComplete(points);
+    if (points.length > 2) {
+      // Make a copy of the points array to avoid any reference issues
+      const completedPoints = [...points];
+      if (onComplete) {
+        // Use setTimeout to make sure this happens after the current render cycle
+        setTimeout(() => {
+          onComplete(completedPoints);
+        }, 0);
+      }
     }
   }, [isDrawing, enabled, points, onComplete]);
 

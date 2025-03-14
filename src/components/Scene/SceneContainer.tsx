@@ -144,6 +144,7 @@ export default function SceneContainer() {
   const [drawingMode, setDrawingMode] = useState(false);
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
+  const orbitControlsRef = useRef<any>(null);
   
   const {
     panelPositions,
@@ -163,6 +164,12 @@ export default function SceneContainer() {
     
     return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    if (orbitControlsRef.current) {
+      orbitControlsRef.current.enabled = !drawingMode;
+    }
+  }, [drawingMode]);
 
   const inverterPositions = isInitialized && panelPositions.length > 0 ? [
     [-20, 0, -20],   // Top-left quadrant
@@ -233,6 +240,7 @@ export default function SceneContainer() {
   };
 
   const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
+    console.log("Boundary completed with", points.length, "points");
     setCurrentBoundary(points);
     toast.success(`Boundary captured with ${points.length} points`);
   }, []);
@@ -242,8 +250,13 @@ export default function SceneContainer() {
       setSavedBoundaries(prev => [...prev, currentBoundary]);
       toast.success('Boundary saved successfully');
       
-      const savedData = JSON.stringify([...savedBoundaries, currentBoundary]);
-      localStorage.setItem('solar-station-boundaries', savedData);
+      try {
+        const savedData = JSON.stringify([...savedBoundaries, currentBoundary]);
+        localStorage.setItem('solar-station-boundaries', savedData);
+      } catch (error) {
+        console.error("Error saving boundary to localStorage:", error);
+        toast.error('Failed to save boundary data');
+      }
       
       setCurrentBoundary([]);
     } else {
@@ -328,6 +341,7 @@ export default function SceneContainer() {
           <ITHouse position={new THREE.Vector3(...itHousePosition)} />
           
           <OrbitControls 
+            ref={orbitControlsRef}
             enableDamping 
             dampingFactor={0.05} 
             maxDistance={800}
