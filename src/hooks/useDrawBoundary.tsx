@@ -64,16 +64,39 @@ export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
     
     // Only save if we have enough points to form a boundary
     if (points.length > 2) {
-      // Make a copy of the points array to avoid any reference issues
-      const completedPoints = [...points];
-      if (onComplete) {
-        // Use setTimeout to make sure this happens after the current render cycle
-        setTimeout(() => {
-          onComplete(completedPoints);
-        }, 0);
-      }
+      // Make a simplified copy of the points to ensure we have a clean boundary
+      const simplifiedPoints = simplifyBoundary([...points]);
+      
+      // Use setTimeout to ensure the completion event occurs after the current render cycle
+      // This should help avoid the "Cannot read properties of undefined (reading 'lov')" error
+      setTimeout(() => {
+        if (onComplete && simplifiedPoints.length > 2) {
+          onComplete(simplifiedPoints);
+        }
+      }, 0);
     }
   }, [isDrawing, enabled, points, onComplete]);
+
+  // Helper function to simplify boundary by removing redundant points
+  const simplifyBoundary = (points: BoundaryPoint[]): BoundaryPoint[] => {
+    if (points.length < 4) return points;
+    
+    // Remove points that are too close to each other
+    const minDistance = 0.5; // Minimum distance between points
+    const result: BoundaryPoint[] = [points[0]];
+    
+    for (let i = 1; i < points.length; i++) {
+      const [x, z] = points[i];
+      const [prevX, prevZ] = result[result.length - 1];
+      
+      const distance = Math.sqrt(Math.pow(x - prevX, 2) + Math.pow(z - prevZ, 2));
+      if (distance > minDistance) {
+        result.push(points[i]);
+      }
+    }
+    
+    return result;
+  };
 
   // Add and remove event listeners
   useEffect(() => {
