@@ -32,26 +32,7 @@ export default function Ground({
     }
   }, [texture]);
   
-  // Apply some gentle elevation to make the terrain more interesting
-  useMemo(() => {
-    if (groundGeometry) {
-      const positions = groundGeometry.attributes.position.array;
-      for (let i = 0; i < positions.length; i += 3) {
-        // Skip the center area where the solar panels are
-        const x = positions[i];
-        const z = positions[i + 2];
-        const distanceFromCenter = Math.sqrt(x * x + z * z);
-        
-        if (distanceFromCenter > 100) {
-          // Add some very subtle undulations to mimic the sandy terrain
-          positions[i + 1] = 
-            Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
-            Math.sin(x * 0.03 + 0.5) * Math.sin(z * 0.02 + 0.5) * 1;
-        }
-      }
-      groundGeometry.computeVertexNormals();
-    }
-  }, [groundGeometry]);
+  // Remove all terrain undulations - the ground is now completely flat
 
   // Create boundary line geometries for each saved boundary
   const boundaryLines = useMemo(() => {
@@ -106,12 +87,7 @@ export default function Ground({
   );
 }
 
-// Utility function to get height at a position
+// Update the utility function to always return 0 (flat ground)
 export function getHeightAtPosition(x: number, z: number) {
-  const distanceFromCenter = Math.sqrt(x * x + z * z);
-  if (distanceFromCenter > 100) {
-    return Math.sin(x * 0.01) * Math.cos(z * 0.01) * 2 + 
-           Math.sin(x * 0.03 + 0.5) * Math.sin(z * 0.02 + 0.5) * 1;
-  }
-  return 0; // Flat in the solar panel area
+  return 0; // Always return 0 for a completely flat terrain
 }

@@ -41,7 +41,8 @@ export default function Vegetation({
         continue;
       }
       
-      const y = getHeightAtPosition(x, z);
+      // Use flat ground (y = 0)
+      const y = 0;
       positions.push([x, y, z]);
     }
     return positions;
