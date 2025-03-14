@@ -1,4 +1,3 @@
-
 import { useState, useCallback, useEffect } from 'react';
 import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
@@ -199,7 +198,7 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
   const addNewPanelsInBoundary = useCallback((boundary: BoundaryPoint[]) => {
     if (boundary.length < 3) {
       console.warn("Cannot add panels - boundary has less than 3 points");
-      return;
+      return 0;
     }
 
     try {
@@ -283,6 +282,12 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     }
   }, [panelPositions]);
 
+  // Function to clear all panels
+  const clearAllPanels = useCallback(() => {
+    setPanelPositions([]);
+    setSelectedPanelId(null);
+  }, []);
+
   // Function to update a single panel's position
   const updatePanelPosition = useCallback((id: number, position: [number, number, number]) => {
     setPanelPositions(prev => 
@@ -323,6 +328,7 @@ export function usePanelPositions({ initialCount = 100, boundaries = [] }: UsePa
     selectPanel,
     resetPanelPositions,
     isInitialized,
-    addNewPanelsInBoundary  // Added this new function to the returned object
+    addNewPanelsInBoundary,
+    clearAllPanels
   };
 }

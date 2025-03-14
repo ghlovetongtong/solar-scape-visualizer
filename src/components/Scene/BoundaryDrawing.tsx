@@ -38,11 +38,10 @@ export default function BoundaryDrawing({
 
   if (linePoints.length < 2) return null;
 
-  // Using plain Three.js objects instead of drei's Line component
-  // This should avoid the "Cannot read properties of undefined (reading 'lov')" error
+  // Use Line instead of LineSegments to ensure continuous drawing
   return (
     <group>
-      <lineSegments>
+      <line>
         <bufferGeometry>
           <bufferAttribute
             attach="attributes-position"
@@ -52,7 +51,7 @@ export default function BoundaryDrawing({
           />
         </bufferGeometry>
         <lineBasicMaterial color={color} linewidth={lineWidth} />
-      </lineSegments>
+      </line>
     </group>
   );
 }

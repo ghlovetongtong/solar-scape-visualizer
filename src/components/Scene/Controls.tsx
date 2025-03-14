@@ -19,6 +19,8 @@ interface ControlsProps {
   setDrawingMode: (mode: boolean) => void;
   onSaveBoundary: () => void;
   onClearBoundary: () => void;
+  onClearAllBoundaries?: () => void;
+  onClearAllPanels?: () => void;
   onGenerateNewPanelsInBoundary?: () => void;
 }
 
@@ -35,6 +37,8 @@ export default function Controls({
   setDrawingMode,
   onSaveBoundary,
   onClearBoundary,
+  onClearAllBoundaries,
+  onClearAllPanels,
   onGenerateNewPanelsInBoundary
 }: ControlsProps) {
   const [adjustValue, setAdjustValue] = useState(0.5);
@@ -134,20 +138,49 @@ export default function Controls({
         )}
         
         {/* New Panel Generation Button */}
-        {!drawingMode && onGenerateNewPanelsInBoundary && (
-          <Button 
-            className="w-full" 
-            onClick={onGenerateNewPanelsInBoundary}
-            variant="default"
-          >
-            Generate New Panels in Boundary
-          </Button>
+        {!drawingMode && (
+          <div className="grid grid-cols-1 gap-1">
+            {onGenerateNewPanelsInBoundary && (
+              <Button 
+                className="w-full" 
+                onClick={onGenerateNewPanelsInBoundary}
+                variant="default"
+              >
+                Generate New Panels in Boundary
+              </Button>
+            )}
+            {onClearAllBoundaries && (
+              <Button 
+                className="w-full" 
+                variant="outline" 
+                onClick={onClearAllBoundaries}
+              >
+                Clear All Boundaries
+              </Button>
+            )}
+          </div>
         )}
+      </div>
+      
+      {/* Panel Management Controls */}
+      <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
+        <div className="text-sm font-medium">Panel Management</div>
+        <div className="grid grid-cols-2 gap-1">
+          <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
+          {onClearAllPanels && (
+            <Button 
+              size="sm" 
+              variant="destructive" 
+              onClick={onClearAllPanels}
+            >
+              Clear All Panels
+            </Button>
+          )}
+        </div>
       </div>
       
       {/* Misc Controls */}
       <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
         <div className="flex items-center space-x-2">
           <Switch
             checked={showStats}

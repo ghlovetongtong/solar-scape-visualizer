@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -154,7 +155,8 @@ export default function SceneContainer() {
     selectPanel,
     resetPanelPositions,
     isInitialized,
-    addNewPanelsInBoundary
+    addNewPanelsInBoundary,
+    clearAllPanels
   } = usePanelPositions({ initialCount: 2000, boundaries: savedBoundaries });
   
   useEffect(() => {
@@ -269,6 +271,25 @@ export default function SceneContainer() {
     setCurrentBoundary([]);
     toast.info('Current boundary cleared');
   }, []);
+
+  const handleClearAllBoundaries = useCallback(() => {
+    setSavedBoundaries([]);
+    setCurrentBoundary([]);
+    toast.info('All boundaries cleared');
+    
+    try {
+      localStorage.removeItem('solar-station-boundaries');
+    } catch (error) {
+      console.error("Error removing boundaries from localStorage:", error);
+    }
+  }, []);
+
+  const handleClearAllPanels = useCallback(() => {
+    if (clearAllPanels) {
+      clearAllPanels();
+      toast.success('All solar panels cleared');
+    }
+  }, [clearAllPanels]);
 
   const handleGenerateNewPanelsInBoundary = useCallback(() => {
     const allBoundaries = [...savedBoundaries];
@@ -391,6 +412,8 @@ export default function SceneContainer() {
         setDrawingMode={setDrawingMode}
         onSaveBoundary={handleSaveBoundary}
         onClearBoundary={handleClearBoundary}
+        onClearAllBoundaries={handleClearAllBoundaries}
+        onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
       />
       

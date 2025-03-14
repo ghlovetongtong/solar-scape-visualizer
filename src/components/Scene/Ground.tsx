@@ -53,8 +53,8 @@ export default function Ground({
     }
   }, [groundGeometry]);
 
-  // Create boundary line geometries
-  const boundaryLineSegments = useMemo(() => {
+  // Create boundary line geometries - using Line instead of LineSegments for continuous drawing
+  const boundaryLines = useMemo(() => {
     return savedBoundaries.map((boundary, boundaryIndex) => {
       if (boundary.length < 3) return null;
       
@@ -68,7 +68,7 @@ export default function Ground({
       const positions = new Float32Array(points.flatMap(p => [p.x, p.y, p.z]));
       
       return (
-        <lineSegments key={`boundary-${boundaryIndex}`}>
+        <line key={`boundary-${boundaryIndex}`}>
           <bufferGeometry>
             <bufferAttribute
               attach="attributes-position"
@@ -78,7 +78,7 @@ export default function Ground({
             />
           </bufferGeometry>
           <lineBasicMaterial color="#00ff00" linewidth={2} />
-        </lineSegments>
+        </line>
       );
     }).filter(Boolean);
   }, [savedBoundaries]);
@@ -100,7 +100,7 @@ export default function Ground({
       </mesh>
 
       {/* Render saved boundaries */}
-      <group>{boundaryLineSegments}</group>
+      <group>{boundaryLines}</group>
     </>
   );
 }
