@@ -31,7 +31,7 @@ export default function Inverter({
     : <meshPhysicalMaterial color="#4a4e69" roughness={0.3} metalness={0.7} />;
 
   const handleClick = (event: any) => {
-    // 阻止事件冒泡，确保不会触发场景的点击事件
+    // Stop event propagation to prevent scene click event
     event.stopPropagation();
     if (onClick) {
       onClick(event);
@@ -51,6 +51,7 @@ export default function Inverter({
         receiveShadow
         position={[0, 1, 0]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <boxGeometry args={[3.0, 2.2, 1.8]} />
         {baseMaterial}
@@ -61,6 +62,7 @@ export default function Inverter({
         castShadow 
         position={[0, 1, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <boxGeometry args={[2.7, 2.0, 0.15]} />
         {finsMaterial}
@@ -71,6 +73,7 @@ export default function Inverter({
         castShadow 
         position={[0, 0, 0]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <boxGeometry args={[2.4, 0.6, 1.2]} />
         {connectionMaterial}
@@ -80,6 +83,7 @@ export default function Inverter({
       <mesh
         position={[1.1, 1.6, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <sphereGeometry args={[0.2, 16, 16]} />
         <meshStandardMaterial 
@@ -93,6 +97,7 @@ export default function Inverter({
       <mesh
         position={[-1.0, 1.6, 0.95]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <boxGeometry args={[1.0, 1.0, 0.08]} />
         <meshStandardMaterial 
@@ -105,6 +110,7 @@ export default function Inverter({
       <mesh
         position={[0, 0.3, 0.9]}
         userData={{ type: 'inverter', inverterIndex }}
+        onClick={handleClick} // Add onClick to each mesh
       >
         <cylinderGeometry args={[0.15, 0.15, 1.8, 8]} />
         <meshStandardMaterial color="#111111" />

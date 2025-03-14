@@ -130,27 +130,30 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelPositions, batchSize]);
   
   const handleClick = (event: any) => {
-    event.stopPropagation(); // 阻止事件冒泡
+    // Ensure this function really stops propagation
+    event.stopPropagation();
     
-    if (event.intersections.length > 0) {
+    if (event.intersections && event.intersections.length > 0) {
       const intersection = event.intersections[0];
       
       if (intersection.instanceId !== undefined && intersection.object.userData.batchIndex !== undefined) {
         const batchIndex = Math.floor(intersection.object.userData.batchIndex);
         const panelId = batchIndex * batchSize + intersection.instanceId;
         
-        // 确保索引在有效范围内
+        // Ensure the index is valid
         if (panelId < panelPositions.length) {
           const actualPanelId = panelPositions[panelId].id;
           console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
           onSelectPanel(actualPanelId);
+          event.nativeEvent.stopPropagation();
         }
       } else if (intersection.object.userData.panelId !== undefined) {
         const panelId = intersection.object.userData.panelId;
         console.log(`Selected panel clicked: panelId=${panelId}`);
         onSelectPanel(panelId);
+        event.nativeEvent.stopPropagation();
       } else {
-        // 如果点击的不是面板，保持选中状态不变
+        // If clicked on panel group but not a specific panel
         console.log('Clicked on panel group but not a specific panel');
       }
     }
@@ -221,6 +224,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
           />
           
           <instancedMesh
@@ -231,6 +235,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
           />
           
           <instancedMesh
@@ -241,6 +246,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
+            onClick={handleClick} // Add explicit onClick handler
           />
         </group>
       ))}
@@ -254,6 +260,10 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             castShadow
             receiveShadow
             userData={{ type: 'panel', panelId: selectedPanel.id }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectPanel(selectedPanel.id);
+            }}
           >
             <boxGeometry args={[3, 0.1, 2]} />
             <meshStandardMaterial 
@@ -272,6 +282,10 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             userData={{ type: 'panel', panelId: selectedPanel.id }}
             castShadow
             receiveShadow
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectPanel(selectedPanel.id);
+            }}
           >
             <primitive object={bracketGeometry} />
             <meshStandardMaterial 
