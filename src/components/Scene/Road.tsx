@@ -83,6 +83,7 @@ export default function Road({
       <>
         {roadSegments.map((segment, index) => (
           <group key={index} position={segment.centerPos} rotation={[0, -segment.angle, 0]}>
+            {/* Main road surface - added depthWrite: false to prevent Z-fighting */}
             <mesh 
               geometry={new THREE.PlaneGeometry(width, segment.roadLength)} 
               material={new THREE.MeshStandardMaterial({
@@ -90,12 +91,17 @@ export default function Road({
                 roughness: 0.7,
                 metalness: 0.2,
                 side: THREE.DoubleSide,
+                depthWrite: false,  // Prevent z-fighting
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -1
               })}
               receiveShadow 
               rotation={[-Math.PI / 2, 0, 0]}
+              renderOrder={1}  // Ensure the road renders above the ground
             />
             
-            {/* Center line (dashed) */}
+            {/* Center line (dashed) - slightly higher to prevent z-fighting */}
             <mesh
               geometry={new THREE.PlaneGeometry(0.3, segment.roadLength - 1)}
               material={new THREE.MeshStandardMaterial({
@@ -103,13 +109,18 @@ export default function Road({
                 roughness: 0.3,
                 metalness: 0.1,
                 side: THREE.DoubleSide,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2,
+                polygonOffsetUnits: -2
               })}
               receiveShadow
-              position={[0, 0.01, 0]} // Slightly above the road
+              position={[0, 0.02, 0]} // Increased height to 0.02 (from 0.01)
               rotation={[-Math.PI / 2, 0, 0]}
+              renderOrder={2}  // Ensure the center line renders above the road
             />
             
-            {/* Edge lines */}
+            {/* Edge lines - also slightly higher */}
             <mesh
               geometry={new THREE.PlaneGeometry(0.3, segment.roadLength)}
               material={new THREE.MeshStandardMaterial({
@@ -117,10 +128,15 @@ export default function Road({
                 roughness: 0.3,
                 metalness: 0.1,
                 side: THREE.DoubleSide,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2,
+                polygonOffsetUnits: -2
               })}
               receiveShadow
-              position={[-(width / 2 - 0.3), 0.01, 0]} // Left edge line
+              position={[-(width / 2 - 0.3), 0.02, 0]} // Increased height to 0.02 (from 0.01)
               rotation={[-Math.PI / 2, 0, 0]}
+              renderOrder={2}  // Ensure edge lines render above the road
             />
             <mesh
               geometry={new THREE.PlaneGeometry(0.3, segment.roadLength)}
@@ -129,10 +145,15 @@ export default function Road({
                 roughness: 0.3,
                 metalness: 0.1,
                 side: THREE.DoubleSide,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2,
+                polygonOffsetUnits: -2
               })}
               receiveShadow
-              position={[(width / 2 - 0.3), 0.01, 0]} // Right edge line
+              position={[(width / 2 - 0.3), 0.02, 0]} // Increased height to 0.02 (from 0.01)
               rotation={[-Math.PI / 2, 0, 0]}
+              renderOrder={2}  // Ensure edge lines render above the road
             />
           </group>
         ))}
