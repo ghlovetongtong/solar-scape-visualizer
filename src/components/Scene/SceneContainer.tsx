@@ -157,6 +157,7 @@ export default function SceneContainer() {
   const [cameraPositions, setCameraPositions] = useState<[number, number, number][]>([]);
   const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
   const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
+  const [inverterDialogOpen, setInverterDialogOpen] = useState(false);
   
   const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
   
