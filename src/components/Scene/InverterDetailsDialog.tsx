@@ -1,5 +1,6 @@
+
 import React, { useState } from 'react';
-import { Modal, Typography, Divider, Row, Col, Tabs, Card, Tag, Space, Progress } from 'antd';
+import { Modal, Typography, Divider, Row, Col, Card, Tag, Space, Progress } from 'antd';
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   Zap, 
@@ -19,7 +20,6 @@ import inveterImg from '@/assets/inveter.png';
 
 
 const { Title, Text } = Typography;
-const { TabPane } = Tabs;
 
 const powerOutputData = [
   { time: '00:00', power: 0 },
@@ -187,217 +187,245 @@ export default function InverterDetailsDialog({
             <div className="mb-6 mt-2">
               <div className="flex items-center mb-1">
                 <Zap className="mr-2 text-teal-500" size={16} />
-                <Text className="text-gray-500">Daily Energy</Text>
+                <Text className="text-gray-500 text-sm">Daily Energy</Text>
               </div>
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold">{inverterData.dailyEnergy}</span>
-                <span className="ml-1 text-gray-500">kWh</span>
+                <span className="text-2xl font-bold">{inverterData.dailyEnergy}</span>
+                <span className="ml-1 text-gray-500 text-sm">kWh</span>
               </div>
             </div>
             
             <div className="mb-2">
               <div className="flex items-center mb-1">
                 <Zap className="mr-2 text-teal-500" size={16} />
-                <Text className="text-gray-500">Total Energy</Text>
+                <Text className="text-gray-500 text-sm">Total Energy</Text>
               </div>
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold">{inverterData.totalEnergy.toLocaleString()}</span>
-                <span className="ml-1 text-gray-500">MWh</span>
+                <span className="text-2xl font-bold">{inverterData.totalEnergy.toLocaleString()}</span>
+                <span className="ml-1 text-gray-500 text-sm">MWh</span>
               </div>
             </div>
           </div>
         </div>
         
-        <Tabs 
-          defaultActiveKey="1" 
-          activeKey={activeTab}
-          onChange={setActiveTab} 
-          className="mt-2"
-          type="card"
-          centered
-        >
-          <TabPane tab="Overview" key="1">
-            <div className="p-4">
+        {/* Custom Tab Implementation */}
+        <div className="border-b">
+          <div className="flex">
+            <button 
+              onClick={() => setActiveTab('1')}
+              className={`px-4 py-2 text-sm font-medium ${activeTab === '1' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Overview
+            </button>
+            <button 
+              onClick={() => setActiveTab('2')}
+              className={`px-4 py-2 text-sm font-medium ${activeTab === '2' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              Power & Energy
+            </button>
+            <button 
+              onClick={() => setActiveTab('3')}
+              className={`px-4 py-2 text-sm font-medium ${activeTab === '3' 
+                ? 'border-b-2 border-blue-500 text-blue-600' 
+                : 'text-gray-500 hover:text-gray-700'}`}
+            >
+              String Data
+            </button>
+          </div>
+        </div>
+        
+        {/* Tab Content */}
+        <div className="p-4">
+          {activeTab === '1' && (
+            <div>
               <div className="flex flex-wrap -mx-2 mb-6">
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Activity size={18} className="mr-2 text-blue-600" />
-                      <Text>逆变器效率 (%)</Text>
+                      <Activity size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">逆变器效率 (%)</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.efficiency}%</div>
+                    <div className="text-lg font-bold">{inverterData.efficiency}%</div>
                   </div>
                 </div>
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Activity size={18} className="mr-2 text-blue-600" />
-                      <Text>功率因数</Text>
+                      <Activity size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">功率因数</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.powerFactor}</div>
+                    <div className="text-lg font-bold">{inverterData.powerFactor}</div>
                   </div>
                 </div>
                 <div className="w-full md:w-1/3 px-2">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Thermometer size={18} className="mr-2 text-blue-600" />
-                      <Text>内部温度 (°C)</Text>
+                      <Thermometer size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">内部温度 (°C)</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.temperature}</div>
+                    <div className="text-lg font-bold">{inverterData.temperature}</div>
                   </div>
                 </div>
               </div>
               
-              <div className="mb-6">
-                <Title level={5} className="mb-3 font-medium pb-2 border-b">电气参数</Title>
+              <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+                <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">电气参数</Title>
                 <Row gutter={[16, 16]}>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">直流输入功率 (kW)</Text>
-                    <Text strong>{inverterData.dcInputPower}</Text>
+                    <Text className="text-gray-500 block text-xs">直流输入功率 (kW)</Text>
+                    <Text strong className="text-sm">{inverterData.dcInputPower}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">交流有功功率 (kW)</Text>
-                    <Text strong>{inverterData.acActivePower}</Text>
+                    <Text className="text-gray-500 block text-xs">交流有功功率 (kW)</Text>
+                    <Text strong className="text-sm">{inverterData.acActivePower}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">交流无功功率 (Var)</Text>
-                    <Text strong>{inverterData.acReactivePower}</Text>
+                    <Text className="text-gray-500 block text-xs">交流无功功率 (Var)</Text>
+                    <Text strong className="text-sm">{inverterData.acReactivePower}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">电网频率 (Hz)</Text>
-                    <Text strong>{inverterData.gridFrequency}</Text>
+                    <Text className="text-gray-500 block text-xs">电网频率 (Hz)</Text>
+                    <Text strong className="text-sm">{inverterData.gridFrequency}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">绝缘阻抗值 (kΩ)</Text>
-                    <Text strong>{inverterData.insulationResistance}</Text>
+                    <Text className="text-gray-500 block text-xs">绝缘阻抗值 (kΩ)</Text>
+                    <Text strong className="text-sm">{inverterData.insulationResistance}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">PID状态</Text>
-                    <Text strong>{inverterData.pidStatus}</Text>
+                    <Text className="text-gray-500 block text-xs">PID状态</Text>
+                    <Text strong className="text-sm">{inverterData.pidStatus}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">累计运行时间 (h)</Text>
-                    <Text strong>{inverterData.totalRunningTime}</Text>
+                    <Text className="text-gray-500 block text-xs">累计运行时间 (h)</Text>
+                    <Text strong className="text-sm">{inverterData.totalRunningTime}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">日运行时间 (h)</Text>
-                    <Text strong>{inverterData.dailyRunningTime}</Text>
+                    <Text className="text-gray-500 block text-xs">日运行时间 (h)</Text>
+                    <Text strong className="text-sm">{inverterData.dailyRunningTime}</Text>
                   </Col>
                 </Row>
               </div>
               
-              <div className="mb-6">
-                <Title level={5} className="mb-3 font-medium pb-2 border-b">运营统计</Title>
+              <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
+                <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">运营统计</Title>
                 <Row gutter={[16, 16]}>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">连接面板</Text>
-                    <Text strong>{inverterData.connectedPanels}枚</Text>
+                    <Text className="text-gray-500 block text-xs">连接面板</Text>
+                    <Text strong className="text-sm">{inverterData.connectedPanels}枚</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">组串数量</Text>
-                    <Text strong>{inverterData.stringCount}</Text>
+                    <Text className="text-gray-500 block text-xs">组串数量</Text>
+                    <Text strong className="text-sm">{inverterData.stringCount}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">固件</Text>
-                    <Text strong>{inverterData.firmwareVersion}</Text>
+                    <Text className="text-gray-500 block text-xs">固件</Text>
+                    <Text strong className="text-sm">{inverterData.firmwareVersion}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">每日运行时间</Text>
-                    <Text strong>{inverterData.dailyOperationTime}分钟</Text>
+                    <Text className="text-gray-500 block text-xs">每日运行时间</Text>
+                    <Text strong className="text-sm">{inverterData.dailyOperationTime}分钟</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">上次维护时间</Text>
-                    <Text strong>{inverterData.lastMaintenanceDate}</Text>
+                    <Text className="text-gray-500 block text-xs">上次维护时间</Text>
+                    <Text strong className="text-sm">{inverterData.lastMaintenanceDate}</Text>
                   </Col>
                   <Col span={8}>
-                    <Text className="text-gray-500 block">操作时间</Text>
-                    <Text strong>{inverterData.operationTime}</Text>
+                    <Text className="text-gray-500 block text-xs">操作时间</Text>
+                    <Text strong className="text-sm">{inverterData.operationTime}</Text>
                   </Col>
                 </Row>
               </div>
               
               <div className="flex flex-wrap -mx-2">
                 <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
-                  <Title level={5} className="mb-3 font-medium pb-2 border-b">设备规格</Title>
-                  <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">制造商</Text>
-                      <Text strong>{inverterData.manufacturer}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">SN号</Text>
-                      <Text strong>{inverterData.serialNumber}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">额定功率</Text>
-                      <Text strong>{inverterData.ratedPower}千瓦</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">安装日期</Text>
-                      <Text strong>{inverterData.installationDate}</Text>
-                    </Col>
-                  </Row>
+                  <div className="bg-white p-4 rounded-lg shadow-md h-full">
+                    <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">设备规格</Title>
+                    <Row gutter={[16, 16]}>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">制造商</Text>
+                        <Text strong className="text-sm">{inverterData.manufacturer}</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">SN号</Text>
+                        <Text strong className="text-sm">{inverterData.serialNumber}</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">额定功率</Text>
+                        <Text strong className="text-sm">{inverterData.ratedPower}千瓦</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">安装日期</Text>
+                        <Text strong className="text-sm">{inverterData.installationDate}</Text>
+                      </Col>
+                    </Row>
+                  </div>
                 </div>
                 
                 <div className="w-full md:w-1/2 px-2">
-                  <Title level={5} className="mb-3 font-medium pb-2 border-b">Grid Parameters</Title>
-                  <Row gutter={[16, 16]}>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">电网连接商</Text>
-                      <Text strong>{inverterData.gridConnector}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">网格类型</Text>
-                      <Text strong>{inverterData.gridType}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">标称电压</Text>
-                      <Text strong>{inverterData.nominalVoltage}V交流电</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text className="text-gray-500 block">电网合规性</Text>
-                      <Text strong>{inverterData.gridCompliance}</Text>
-                    </Col>
-                  </Row>
+                  <div className="bg-white p-4 rounded-lg shadow-md h-full">
+                    <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">Grid Parameters</Title>
+                    <Row gutter={[16, 16]}>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">电网连接商</Text>
+                        <Text strong className="text-sm">{inverterData.gridConnector}</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">网格类型</Text>
+                        <Text strong className="text-sm">{inverterData.gridType}</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">标称电压</Text>
+                        <Text strong className="text-sm">{inverterData.nominalVoltage}V交流电</Text>
+                      </Col>
+                      <Col span={12}>
+                        <Text className="text-gray-500 block text-xs">电网合规性</Text>
+                        <Text strong className="text-sm">{inverterData.gridCompliance}</Text>
+                      </Col>
+                    </Row>
+                  </div>
                 </div>
               </div>
             </div>
-          </TabPane>
+          )}
           
-          <TabPane tab="Power & Energy" key="2">
-            <div className="p-4">
+          {activeTab === '2' && (
+            <div>
               <div className="flex flex-wrap -mx-2 mb-6">
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Activity size={18} className="mr-2 text-blue-600" />
-                      <Text>Daily Peak Power</Text>
+                      <Activity size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">Daily Peak Power</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.dailyPeakPower}kW</div>
+                    <div className="text-lg font-bold">{inverterData.dailyPeakPower}kW</div>
                   </div>
                 </div>
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Clock size={18} className="mr-2 text-blue-600" />
-                      <Text>Power Generation Time</Text>
+                      <Clock size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">Power Generation Time</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.powerGenerationTime}h</div>
+                    <div className="text-lg font-bold">{inverterData.powerGenerationTime}h</div>
                   </div>
                 </div>
                 <div className="w-full md:w-1/3 px-2">
-                  <div className="bg-gray-50 p-3 rounded-md">
+                  <div className="bg-white p-3 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
-                      <Activity size={18} className="mr-2 text-blue-600" />
-                      <Text>Performance Ratio</Text>
+                      <Activity size={16} className="mr-2 text-blue-600" />
+                      <Text className="text-sm">Performance Ratio</Text>
                     </div>
-                    <div className="text-xl font-bold">{inverterData.performanceRatio}</div>
+                    <div className="text-lg font-bold">{inverterData.performanceRatio}</div>
                   </div>
                 </div>
               </div>
               
-              <div className="mb-6">
-                <Title level={5} className="mb-3 font-medium">输出功率 (24h)</Title>
+              <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+                <Title level={5} className="mb-3 text-base font-medium">输出功率 (24h)</Title>
                 <div style={{ width: '100%', height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -407,13 +435,13 @@ export default function InverterDetailsDialog({
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis 
                         dataKey="time" 
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 11 }}
                         tickCount={6}
                         axisLine={{ stroke: '#E0E0E0' }}
                       />
                       <YAxis 
-                        label={{ value: 'kW', angle: -90, position: 'insideLeft' }}
-                        tick={{ fontSize: 12 }}
+                        label={{ value: 'kW', angle: -90, position: 'insideLeft', fontSize: 11 }}
+                        tick={{ fontSize: 11 }}
                         axisLine={{ stroke: '#E0E0E0' }}
                         domain={[0, 100]}
                       />
@@ -430,73 +458,73 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
             </div>
-          </TabPane>
+          )}
           
-          <TabPane tab="String Data" key="3">
-            <div className="p-4">
+          {activeTab === '3' && (
+            <div className="bg-white p-4 rounded-lg shadow-md">
               <div className="flex mb-6 justify-center space-x-6">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>
-                  <span>{inverterData.normalStrings}正常</span>
+                  <span className="text-sm">{inverterData.normalStrings}正常</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
-                  <span>{inverterData.warningStrings}异常</span>
+                  <span className="text-sm">{inverterData.warningStrings}异常</span>
                 </div>
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
-                  <span>{inverterData.offlineStrings}离线</span>
+                  <span className="text-sm">{inverterData.offlineStrings}离线</span>
                 </div>
               </div>
               
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
-                  <Text strong>逆变器</Text>
+                  <Text strong className="text-sm">逆变器</Text>
                   <div className="flex items-center">
-                    <Text className="mr-2">{currentPage}/{totalPages}</Text>
+                    <Text className="mr-2 text-xs">{currentPage}/{totalPages}</Text>
                     <button
                       onClick={handlePrevPage}
                       disabled={currentPage === 1}
-                      className="p-1 mr-1 rounded-full disabled:opacity-50"
+                      className="p-1 mr-1 rounded-full disabled:opacity-50 hover:bg-gray-100"
                     >
-                      <ChevronLeft size={18} />
+                      <ChevronLeft size={16} />
                     </button>
                     <button
                       onClick={handleNextPage}
                       disabled={currentPage === totalPages}
-                      className="p-1 rounded-full disabled:opacity-50"
+                      className="p-1 rounded-full disabled:opacity-50 hover:bg-gray-100"
                     >
-                      <ChevronRight size={18} />
+                      <ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
                 
                 <div>
                   {currentStringData.map((string, index) => (
-                    <div key={string.id} className="flex justify-between items-center p-3 border-b">
+                    <div key={string.id} className="flex justify-between items-center p-2 border-b">
                       <div className="flex items-center">
                         <div 
-                          className="w-24 h-2 mr-3 rounded-full" 
+                          className="w-20 h-1.5 mr-3 rounded-full" 
                           style={{ backgroundColor: getStatusColor(string.status) }}
                         ></div>
-                        <Text>{string.id}</Text>
+                        <Text className="text-xs">{string.id}</Text>
                       </div>
                       <div className="flex space-x-4">
-                        <Text>{string.voltage} V</Text>
-                        <Text>{string.current} A</Text>
+                        <Text className="text-xs">{string.voltage} V</Text>
+                        <Text className="text-xs">{string.current} A</Text>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </TabPane>
-        </Tabs>
+          )}
+        </div>
         
         <div className="flex justify-center p-4 border-t">
           <button 
             onClick={handleCancel}
-            className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"
           >
             关闭
           </button>
