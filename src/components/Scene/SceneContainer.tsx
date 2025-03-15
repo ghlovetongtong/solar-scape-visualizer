@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -811,3 +812,64 @@ export default function SceneContainer() {
           {transformerPositions.map((position, index) => (
             <TransformerStation 
               key={`transformer-${index}`}
+              position={new THREE.Vector3(...position)}
+              transformerIndex={index}
+              isDragging={draggingObject?.type === 'transformer' && draggingObject.index === index}
+              onDragStart={() => handleStartDrag('transformer', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragTransformer}
+            />
+          ))}
+          
+          <ITHouse 
+            position={new THREE.Vector3(...itHousePosition)} 
+            isDragging={draggingObject?.type === 'itHouse'}
+            onDragStart={() => handleStartDrag('itHouse')}
+            onDragEnd={() => handleEndDrag()}
+            onDrag={handleDragITHouse}
+          />
+          
+          <OrbitControls 
+            ref={orbitControlsRef}
+            enableDamping 
+            dampingFactor={0.05} 
+            maxDistance={800}
+            minDistance={10}
+            maxPolarAngle={Math.PI / 2 - 0.1}
+            minPolarAngle={0.1}
+            target={new THREE.Vector3(...panelCenter)}
+          />
+          
+          {showStats && <Stats />}
+        </Suspense>
+      </Canvas>
+      
+      <InverterDetailsPopup
+        isOpen={isDetailsPopupOpen}
+        onClose={closeInverterDetails}
+        inverterData={selectedInverterData}
+      />
+      
+      <Controls 
+        showStats={showStats}
+        setShowStats={setShowStats}
+        timeOfDay={timeOfDay}
+        setTimeOfDay={setTimeOfDay}
+        onResetPanels={resetPanelPositions}
+        selectedPanelId={selectedPanelId}
+        onUpdatePanelPosition={updatePanelPosition}
+        onUpdatePanelRotation={updatePanelRotation}
+        drawingMode={drawingMode}
+        setDrawingMode={setDrawingMode}
+        onSaveBoundary={handleSaveBoundary}
+        onClearBoundary={handleClearBoundary}
+        onClearAllBoundaries={handleClearAllBoundaries}
+        onClearAllPanels={handleClearAllPanels}
+        onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
+        onSaveLayout={handleSaveLayout}
+      />
+      
+      <Loader />
+    </div>
+  );
+}
