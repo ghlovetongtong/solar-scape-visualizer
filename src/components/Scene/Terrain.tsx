@@ -3,7 +3,6 @@ import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
 import BoundaryDrawing from './BoundaryDrawing';
-import Road from './Road';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 interface TerrainProps {
@@ -42,15 +41,7 @@ export default function Terrain({
       <Ground size={400} savedBoundaries={savedBoundaries} />
       <Vegetation />
       
-      {/* Render road if we have a road boundary - increased elevation and width */}
-      {roadBoundary.length > 2 && (
-        <Road 
-          boundary={roadBoundary} 
-          width={8} 
-          color="#555555" 
-          elevation={0.15} 
-        />
-      )}
+      {/* Road section has been removed as requested */}
       
       {drawingEnabled && (
         <BoundaryDrawing 
