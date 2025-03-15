@@ -5,7 +5,7 @@ import { useFrame } from '@react-three/fiber';
 import { useTexture } from '@react-three/drei';
 import { createInstancedMesh, updateInstancedMesh, type InstanceData, getShadowIntensity } from '@/lib/instancedMesh';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-
+import solarpanelImg from '@/assets/solarpanel.jpg';
 interface SolarPanelsProps {
   panelPositions: InstanceData[];
   selectedPanelId: number | null;
@@ -51,7 +51,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
     return mergedGeometry;
   }, []);
   
-  const panelTexture = useTexture('https://i.imgur.com/kDucSwd.jpeg');
+  const panelTexture = useTexture(solarpanelImg);
   
   useMemo(() => {
     if (panelTexture) {

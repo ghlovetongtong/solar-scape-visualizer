@@ -3,6 +3,8 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+import groundImg from '@/assets/ground_color.jpg';
+
 
 interface GroundProps {
   size?: number;
@@ -19,7 +21,7 @@ export default function Ground({
   const groundGeometry = useMemo(() => new THREE.PlaneGeometry(size, size, resolution, resolution), [size, resolution]);
   
   // Use the new Imgur URL directly for the texture
-  const textureUrl = 'https://i.imgur.com/A9UZ1Ol.jpeg';
+  const textureUrl = groundImg;
   
   // Use useTexture hook without the callback function which was causing errors
   const texture = useTexture(textureUrl);
