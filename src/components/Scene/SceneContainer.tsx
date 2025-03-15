@@ -740,7 +740,7 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [-90, 140, -180],  // Updated X position to -90
+          position: [-270, 140, -180],  // Updated X position to -270
           fov: 35,  // Narrower field of view for better perspective
           near: 0.1,
           far: 2000
