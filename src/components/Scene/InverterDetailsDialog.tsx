@@ -160,7 +160,7 @@ export default function InverterDetailsDialog({
 
   return (
     <Modal
-      open={open}
+      visible={open}
       onCancel={handleCancel}
       footer={null}
       title={`${inverterData.name} (设备号)`}
@@ -180,7 +180,7 @@ export default function InverterDetailsDialog({
               </Tag>
             </div>
             <div className="flex justify-center mb-4">
-              <img src="/public/lovable-uploads/cff0e8de-f76a-4bda-9c45-f67fc8b8a7f8.png" alt="逆变器图片" className="w-32 h-32 object-contain" />
+              {/* <img src="/public/lovable-uploads/cff0e8de-f76a-4bda-9c45-f67fc8b8a7f8.png" alt="逆变器图片" className="w-32 h-32 object-contain" /> */}
             </div>
             <div className="text-center">
               <p className="text-sm mb-2">型号：{inverterData.model}</p>
