@@ -4,7 +4,7 @@ import { type InstanceData } from '@/lib/instancedMesh';
 import { getHeightAtPosition } from '@/components/Scene/Ground';
 import * as THREE from 'three';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import { toast } from 'sonner';
+import { message } from 'antd';
 
 // Define group size and spacing constants
 const PANELS_PER_GROUP = 16; // 4x4 grid per group
@@ -64,7 +64,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
         setPanelPositions(parsedLayout.panels);
         setInitialPositions(parsedLayout.panels);
         console.log(`Loaded ${parsedLayout.panels.length} panels from saved layout`);
-        toast.success(`Loaded complete layout with ${parsedLayout.panels.length} panels`);
+        message.success(`Loaded complete layout with ${parsedLayout.panels.length} panels`);
       } else {
         // Try to load legacy panel-only layout
         const legacyLayout = localStorage.getItem('solar-station-panel-layout');
@@ -73,7 +73,7 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
           setPanelPositions(parsedLayout);
           setInitialPositions(parsedLayout);
           console.log(`Loaded ${parsedLayout.length} panels from legacy layout`);
-          toast.success(`Loaded ${parsedLayout.length} panels from saved layout`);
+          message.success(`Loaded ${parsedLayout.length} panels from saved layout`);
         } else {
           // Start with empty array if no saved layout
           setPanelPositions([]);
@@ -96,19 +96,19 @@ export function usePanelPositions({ initialCount = 0, boundaries = [] }: UsePane
       if (completeLayout) {
         // Save complete layout with all components
         localStorage.setItem('solar-station-complete-layout', JSON.stringify(completeLayout));
-        toast.success(`Saved complete layout with ${completeLayout.panels.length} panels and all equipment`);
+        message.success(`Saved complete layout with ${completeLayout.panels.length} panels and all equipment`);
         setInitialPositions(completeLayout.panels);
         console.log(`Saved complete layout with ${completeLayout.panels.length} panels`);
       } else {
         // Legacy save (panels only)
         localStorage.setItem('solar-station-panel-layout', JSON.stringify(panelPositions));
-        toast.success(`Saved ${panelPositions.length} panels to layout`);
+        message.success(`Saved ${panelPositions.length} panels to layout`);
         setInitialPositions(panelPositions);
         console.log(`Saved ${panelPositions.length} panels to layout`);
       }
     } catch (error) {
       console.error("Error saving layout:", error);
-      toast.error("Failed to save layout");
+      message.error("Failed to save layout");
     }
   }, [panelPositions]);
 

@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
 import * as THREE from 'three';
-import { toast } from 'sonner';
+import { message } from 'antd';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 import Terrain from './Terrain';
@@ -29,7 +29,7 @@ function Loader() {
   useEffect(() => {
     if (errors.length > 0) {
       console.error('Loading errors:', errors);
-      toast.error(`Error loading 3D assets: ${errors[0]}`);
+      message.error(`Error loading 3D assets: ${errors[0]}`);
     }
     
     if (active) {
@@ -445,7 +445,7 @@ export default function SceneContainer() {
 
   const handleUpdateInverterPosition = useCallback((index: number, deltaPosition: [number, number, number]) => {
     if (index === null || index < 0 || index >= inverterPositions.length) {
-      toast.error("Invalid inverter index");
+      message.error("Invalid inverter index");
       return;
     }
     
@@ -460,7 +460,7 @@ export default function SceneContainer() {
       if (isAbsolutePosition) {
         newPositions[index] = deltaPosition;
         console.log(`Setting inverter ${index + 1} to absolute position:`, deltaPosition);
-        toast.success(`Set inverter ${index + 1} position to [${deltaPosition.join(', ')}]`);
+        message.success(`Set inverter ${index + 1} position to [${deltaPosition.join(', ')}]`);
       } else {
         const currentPos = prevPositions[index];
         newPositions[index] = [
@@ -469,7 +469,7 @@ export default function SceneContainer() {
           currentPos[2] + deltaPosition[2]
         ];
         console.log(`Adjusted inverter ${index + 1} position by:`, deltaPosition);
-        toast.success(`Moved inverter ${index + 1}`);
+        message.success(`Moved inverter ${index + 1}`);
       }
       
       return newPositions;
@@ -530,43 +530,43 @@ export default function SceneContainer() {
 
   const handleCanvasError = (error: any) => {
     console.error("Canvas error:", error);
-    toast.error(`3D rendering error: ${error.message || 'Unknown error'}`);
+    message.error(`3D rendering error: ${error.message || 'Unknown error'}`);
   };
 
   const handleBoundaryComplete = useCallback((points: BoundaryPoint[]) => {
     console.log("Boundary completed with", points.length, "points");
     setCurrentBoundary(points);
-    toast.success(`Boundary captured with ${points.length} points`);
+    message.success(`Boundary captured with ${points.length} points`);
   }, []);
 
   const handleSaveBoundary = useCallback(() => {
     if (currentBoundary.length > 2) {
       setSavedBoundaries(prev => [...prev, currentBoundary]);
-      toast.success('Boundary saved successfully');
+      message.success('Boundary saved successfully');
       
       try {
         const allBoundaries = [...savedBoundaries, currentBoundary];
         localStorage.setItem('solar-station-boundaries', JSON.stringify(allBoundaries));
       } catch (error) {
         console.error("Error saving boundary to localStorage:", error);
-        toast.error('Failed to save boundary data');
+        message.error('Failed to save boundary data');
       }
       
       setCurrentBoundary([]);
     } else {
-      toast.error('Draw a boundary first (at least 3 points needed)');
+      message.error('Draw a boundary first (at least 3 points needed)');
     }
   }, [currentBoundary, savedBoundaries]);
 
   const handleClearBoundary = useCallback(() => {
     setCurrentBoundary([]);
-    toast.info('Current boundary cleared');
+    message.info('Current boundary cleared');
   }, []);
 
   const handleClearAllBoundaries = useCallback(() => {
     setSavedBoundaries([]);
     setCurrentBoundary([]);
-    toast.info('All boundaries cleared');
+    message.info('All boundaries cleared');
     
     try {
       localStorage.removeItem('solar-station-boundaries');
@@ -578,7 +578,7 @@ export default function SceneContainer() {
   const handleClearAllPanels = useCallback(() => {
     if (clearAllPanels) {
       clearAllPanels();
-      toast.success('All solar panels cleared');
+      message.success('All solar panels cleared');
     }
   }, [clearAllPanels]);
 
@@ -586,7 +586,7 @@ export default function SceneContainer() {
     const allBoundaries = [...savedBoundaries];
     
     if (allBoundaries.length === 0) {
-      toast.error('No saved boundaries available. Draw and save a boundary first.');
+      message.error('No saved boundaries available. Draw and save a boundary first.');
       return;
     }
     
@@ -600,9 +600,9 @@ export default function SceneContainer() {
     }
     
     if (totalPanelsAdded > 0) {
-      toast.success(`Generated ${totalPanelsAdded} new solar panels within boundaries`);
+      message.success(`Generated ${totalPanelsAdded} new solar panels within boundaries`);
     } else {
-      toast.info('No new panels could be added. The boundaries may already be filled or too small.');
+      message.info('No new panels could be added. The boundaries may already be filled or too small.');
     }
   }, [savedBoundaries, addNewPanelsInBoundary]);
 
@@ -626,7 +626,7 @@ export default function SceneContainer() {
       try {
         const parsedData = JSON.parse(savedData) as BoundaryPoint[][];
         setSavedBoundaries(parsedData);
-        toast.success(`Loaded ${parsedData.length} saved boundaries`);
+        message.success(`Loaded ${parsedData.length} saved boundaries`);
       } catch (error) {
         console.error('Error loading saved boundaries:', error);
       }

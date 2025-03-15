@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState, Suspense } from 'react';
-import { toast } from 'sonner';
+import { message } from 'antd';
 import { ErrorBoundary } from 'react-error-boundary';
 
 // Lazy load the SceneContainer component to ensure all Three.js dependencies are loaded first
@@ -8,7 +8,7 @@ const SceneContainer = React.lazy(() =>
   import('@/components/Scene/SceneContainer')
     .catch(error => {
       console.error("Failed to load SceneContainer:", error);
-      toast.error("Failed to load 3D visualization. Please refresh the page.");
+      message.error("Failed to load 3D visualization. Please refresh the page.");
       return Promise.reject(error);
     })
 );
@@ -51,7 +51,7 @@ const Index = () => {
       } catch (error) {
         console.error("Failed to load Three.js:", error);
         setLoadingError(error instanceof Error ? error : new Error("Failed to load Three.js"));
-        toast.error("Failed to initialize 3D engine");
+        message.error("Failed to initialize 3D engine");
       }
     };
 
