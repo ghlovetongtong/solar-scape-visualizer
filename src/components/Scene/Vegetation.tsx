@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
@@ -91,10 +90,10 @@ export default function Vegetation({
       
       // Create four corners of the road corridor
       return [
-        [startPoint[0] + perpendicular.x * roadWidth, startPoint[1] + perpendicular.z * roadWidth],
-        [endPoint[0] + perpendicular.x * roadWidth, endPoint[1] + perpendicular.z * roadWidth],
-        [endPoint[0] - perpendicular.x * roadWidth, endPoint[1] - perpendicular.z * roadWidth],
-        [startPoint[0] - perpendicular.x * roadWidth, startPoint[1] - perpendicular.z * roadWidth]
+        [startPoint[0] + perpendicular.x * roadWidth, startPoint[1] + perpendicular.z * roadWidth] as BoundaryPoint,
+        [endPoint[0] + perpendicular.x * roadWidth, endPoint[1] + perpendicular.z * roadWidth] as BoundaryPoint,
+        [endPoint[0] - perpendicular.x * roadWidth, endPoint[1] - perpendicular.z * roadWidth] as BoundaryPoint,
+        [startPoint[0] - perpendicular.x * roadWidth, startPoint[1] - perpendicular.z * roadWidth] as BoundaryPoint
       ];
     }
     
