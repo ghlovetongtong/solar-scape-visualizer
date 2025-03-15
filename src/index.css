@@ -116,6 +116,19 @@
   @apply text-base font-medium pb-2 border-b mb-4;
 }
 
+/* Enhanced card styles */
+.data-card {
+  @apply bg-white rounded-lg shadow-sm p-4 border border-gray-100 transition-shadow hover:shadow-md;
+}
+
+.info-card {
+  @apply bg-white rounded-lg shadow-md p-4 border border-gray-50;
+}
+
+.string-card {
+  @apply bg-white rounded-lg shadow-sm p-3 border border-gray-100 hover:shadow transition-all duration-200;
+}
+
 .controls-panel {
   position: absolute;
   top: 20px;

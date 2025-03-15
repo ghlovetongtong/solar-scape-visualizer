@@ -467,7 +467,7 @@ export default function InverterDetailsDialog({
           )}
           
           {activeTab === '3' && (
-            <div className="bg-white p-5 rounded-lg shadow-md">
+            <div>
               <div className="flex mb-6 justify-center space-x-6">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>
@@ -484,8 +484,8 @@ export default function InverterDetailsDialog({
               </div>
               
               <div className="mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <Text strong className="text-sm">逆变器</Text>
+                <div className="flex justify-between items-center mb-4">
+                  <Text strong className="text-sm">逆变器组串</Text>
                   <div className="flex items-center">
                     <Text className="mr-2 text-xs">{currentPage}/{totalPages}</Text>
                     <button
@@ -505,19 +505,35 @@ export default function InverterDetailsDialog({
                   </div>
                 </div>
                 
-                <div>
+                {/* Display string data as individual cards in a grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {currentStringData.map((string, index) => (
-                    <div key={string.id} className="flex justify-between items-center p-2 border-b">
-                      <div className="flex items-center">
-                        <div 
-                          className="w-20 h-1.5 mr-3 rounded-full" 
-                          style={{ backgroundColor: getStatusColor(string.status) }}
-                        ></div>
-                        <Text className="text-xs">{string.id}</Text>
+                    <div key={string.id} className="bg-white rounded-lg shadow-md p-3">
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center">
+                          <div 
+                            className="w-3 h-3 mr-2 rounded-full" 
+                            style={{ backgroundColor: getStatusColor(string.status) }}
+                          ></div>
+                          <Text strong className="text-sm">{string.id}</Text>
+                        </div>
+                        <Tag color={
+                          string.status === 'normal' ? 'success' : 
+                          string.status === 'warning' ? 'warning' : 'default'
+                        }>
+                          {string.status === 'normal' ? '正常' : 
+                           string.status === 'warning' ? '异常' : '离线'}
+                        </Tag>
                       </div>
-                      <div className="flex space-x-4">
-                        <Text className="text-xs">{string.voltage} V</Text>
-                        <Text className="text-xs">{string.current} A</Text>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <Text className="text-gray-500 text-xs">电压</Text>
+                          <div className="font-medium">{string.voltage} V</div>
+                        </div>
+                        <div>
+                          <Text className="text-gray-500 text-xs">电流</Text>
+                          <div className="font-medium">{string.current} A</div>
+                        </div>
                       </div>
                     </div>
                   ))}
