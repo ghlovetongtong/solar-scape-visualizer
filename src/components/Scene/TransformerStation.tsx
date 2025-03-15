@@ -11,6 +11,7 @@ interface TransformerStationProps {
   onDragStart?: (index: number) => void;
   onDragEnd?: (index: number, position: [number, number, number]) => void;
   onDrag?: (index: number, position: [number, number, number]) => void;
+  onClick?: (index: number) => void;
 }
 
 export default function TransformerStation({ 
@@ -19,11 +20,13 @@ export default function TransformerStation({
   isDragging = false,
   onDragStart,
   onDragEnd,
-  onDrag
+  onDrag,
+  onClick
 }: TransformerStationProps) {
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
+  const [hovered, setHovered] = useState(false);
   
   useEffect(() => {
     if (!isDragging) return;
@@ -74,6 +77,12 @@ export default function TransformerStation({
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
     
+    if (e.button === 0) { // Left click
+      if (onClick) {
+        onClick(transformerIndex);
+      }
+    }
+    
     if (onDragStart) {
       onDragStart(transformerIndex);
       
@@ -90,19 +99,38 @@ export default function TransformerStation({
       }
     }
   };
+  
+  // Add hover effects
+  const handlePointerOver = (e: THREE.Event) => {
+    e.stopPropagation();
+    setHovered(true);
+    document.body.style.cursor = 'pointer';
+  };
+  
+  const handlePointerOut = (e: THREE.Event) => {
+    e.stopPropagation();
+    setHovered(false);
+    document.body.style.cursor = 'auto';
+  };
 
   return (
     <group 
       position={position} 
       ref={groupRef}
       onPointerDown={handlePointerDown}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+      userData={{ type: 'transformer', transformerIndex }}
     >
       <mesh 
         receiveShadow 
         position={[0, 0.3, 0]}
       >
         <boxGeometry args={[10, 0.6, 8]} />
-        <meshStandardMaterial color={isDragging ? "#aaaaaa" : "#555555"} roughness={0.8} />
+        <meshStandardMaterial 
+          color={hovered ? "#777777" : (isDragging ? "#aaaaaa" : "#555555")} 
+          roughness={0.8} 
+        />
       </mesh>
       
       <mesh 
@@ -111,7 +139,11 @@ export default function TransformerStation({
         position={[0, 2.5, 0]}
       >
         <boxGeometry args={[6, 4, 4]} />
-        <meshStandardMaterial color={isDragging ? "#a9a8bc" : "#8a898c"} roughness={0.5} metalness={0.4} />
+        <meshStandardMaterial 
+          color={hovered ? "#b9b8cc" : (isDragging ? "#a9a8bc" : "#8a898c")} 
+          roughness={0.5} 
+          metalness={0.4} 
+        />
       </mesh>
       
       <mesh 
@@ -119,7 +151,11 @@ export default function TransformerStation({
         position={[-3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color={isDragging ? "#999999" : "#777777"} roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial 
+          color={hovered ? "#aaaaaa" : (isDragging ? "#999999" : "#777777")} 
+          roughness={0.3} 
+          metalness={0.6} 
+        />
       </mesh>
       
       <mesh 
@@ -127,13 +163,17 @@ export default function TransformerStation({
         position={[3.01, 2.5, 0]}
       >
         <boxGeometry args={[0.2, 3.5, 3.5]} />
-        <meshStandardMaterial color={isDragging ? "#999999" : "#777777"} roughness={0.3} metalness={0.6} />
+        <meshStandardMaterial 
+          color={hovered ? "#aaaaaa" : (isDragging ? "#999999" : "#777777")} 
+          roughness={0.3} 
+          metalness={0.6} 
+        />
       </mesh>
       
       <mesh position={[0, 2.5, 2.01]}>
         <planeGeometry args={[2, 1.5]} />
         <meshBasicMaterial 
-          color="#ffff00"
+          color={hovered ? "#ffff66" : "#ffff00"}
           side={THREE.DoubleSide}
         />
       </mesh>

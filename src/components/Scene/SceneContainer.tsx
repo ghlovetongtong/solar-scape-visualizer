@@ -14,6 +14,7 @@ import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
 import InverterDetailsDialog from './InverterDetailsDialog';
+import TransformerDetailsDialog from './TransformerDetailsDialog';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
@@ -153,11 +154,13 @@ export default function SceneContainer() {
   const [currentBoundary, setCurrentBoundary] = useState<BoundaryPoint[]>([]);
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
+  const [selectedTransformerIndex, setSelectedTransformerIndex] = useState<number | null>(null);
   const [inverterPositions, setInverterPositions] = useState<[number, number, number][]>([]);
   const [cameraPositions, setCameraPositions] = useState<[number, number, number][]>([]);
   const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
   const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
   const [inverterDialogOpen, setInverterDialogOpen] = useState(false);
+  const [transformerDialogOpen, setTransformerDialogOpen] = useState(false);
   
   const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
   
@@ -483,8 +486,11 @@ export default function SceneContainer() {
     
     if (type === 'inverter') {
       setSelectedInverterIndex(index !== undefined ? index : null);
+    } else if (type === 'transformer') {
+      setSelectedTransformerIndex(index !== undefined ? index : null);
     } else {
       setSelectedInverterIndex(null);
+      setSelectedTransformerIndex(null);
     }
     
     console.log(`Started dragging ${type}${index !== undefined ? ' ' + (index + 1) : ''}`);
@@ -667,6 +673,7 @@ export default function SceneContainer() {
     
     if (!event.object) {
       setSelectedInverterIndex(null);
+      setSelectedTransformerIndex(null);
       selectPanel(null);
       return;
     }
@@ -678,16 +685,29 @@ export default function SceneContainer() {
       console.log(`Inverter ${userData.inverterIndex} selected`);
       
       setSelectedInverterIndex(userData.inverterIndex);
+      setSelectedTransformerIndex(null);
       setInverterDialogOpen(true);
       
       selectPanel(null);
       event.stopPropagation();
     } 
+    else if (userData.type === 'transformer') {
+      console.log(`Transformer ${userData.transformerIndex} selected`);
+      
+      setSelectedTransformerIndex(userData.transformerIndex);
+      setSelectedInverterIndex(null);
+      setTransformerDialogOpen(true);
+      
+      selectPanel(null);
+      event.stopPropagation();
+    }
     else if (userData.type === 'panel' || userData.type === 'panel-instance') {
       setSelectedInverterIndex(null);
+      setSelectedTransformerIndex(null);
     }
     else {
       setSelectedInverterIndex(null);
+      setSelectedTransformerIndex(null);
       selectPanel(null);
     }
   }, [selectPanel]);
@@ -772,6 +792,13 @@ export default function SceneContainer() {
               onDragStart={() => handleStartDrag('transformer', index)}
               onDragEnd={() => handleEndDrag()}
               onDrag={handleDragTransformer}
+              onClick={(index) => {
+                console.log(`Transformer onClick callback, index=${index}`);
+                setSelectedTransformerIndex(selectedTransformerIndex === index ? null : index);
+                setTransformerDialogOpen(true);
+                setSelectedInverterIndex(null);
+                selectPanel(null);
+              }}
             />
           ))}
           
@@ -821,6 +848,12 @@ export default function SceneContainer() {
         open={inverterDialogOpen}
         onOpenChange={setInverterDialogOpen}
         inverterId={selectedInverterIndex}
+      />
+      
+      <TransformerDetailsDialog
+        open={transformerDialogOpen}
+        onOpenChange={setTransformerDialogOpen}
+        transformerId={selectedTransformerIndex}
       />
       
       <Loader />
