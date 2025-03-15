@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
@@ -12,6 +11,7 @@ interface CameraProps {
   onDragEnd?: (index: number, position: [number, number, number]) => void;
   onDrag?: (index: number, position: [number, number, number]) => void;
   onClick?: (index: number) => void;
+  autoRotate?: boolean;
 }
 
 export default function Camera({ 
@@ -21,12 +21,14 @@ export default function Camera({
   onDragStart,
   onDragEnd,
   onDrag,
-  onClick
+  onClick,
+  autoRotate = true
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   const dragOffsetRef = useRef<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
   const [hovered, setHovered] = useState(false);
+  const rotationSpeedRef = useRef(Math.random() * 0.02 + 0.01); // Random speed between 0.01 and 0.03
   
   // Setup scene-level event listeners for dragging
   useEffect(() => {
@@ -82,11 +84,24 @@ export default function Camera({
     };
   }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, cameraIndex, gl.domElement]);
   
-  // Rotate camera slightly over time (only if not being dragged)
+  // Rotate camera slightly over time
   useFrame((state) => {
-    if (cameraRef.current && !isDragging) {
-      // Rotate the camera back and forth when not dragging
-      cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
+    if (cameraRef.current) {
+      if (isDragging) {
+        // Stop rotation when dragging
+        return;
+      }
+      
+      if (autoRotate) {
+        // Continuous rotation with slight variation based on camera index
+        cameraRef.current.rotation.y += rotationSpeedRef.current * 0.01;
+        
+        // Optional: Add slight swaying motion for more natural look
+        cameraRef.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.2 + cameraIndex) * 0.03;
+      } else {
+        // If autoRotate is false, just keep the subtle back and forth motion
+        cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
+      }
     }
   });
   
