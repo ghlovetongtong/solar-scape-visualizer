@@ -38,34 +38,26 @@ export default function Terrain({
 
   // Create a road where:
   // - We keep the south point fixed
-  // - Angle the north point 5 degrees to the left from its current position
-  const currentAngleInRadians = 45 * Math.PI / 180; // Current 45 degrees angle
-  const newAngleAdjustment = -5 * Math.PI / 180; // 5 degrees to the left (negative angle)
-  const newAngleInRadians = currentAngleInRadians + newAngleAdjustment; // 40 degrees in radians
+  // - Angle the north point 15 degrees to the right from its current position
+  const currentAngleInRadians = 40 * Math.PI / 180; // Current 40 degrees angle (after previous 5-degree left tilt)
+  const newAngleAdjustment = 15 * Math.PI / 180; // 15 degrees to the right (positive angle)
+  const newAngleInRadians = currentAngleInRadians + newAngleAdjustment; // 55 degrees in radians
   
   const roadLength = 360; // Total length from north to south
   
-  // Calculate the south point based on the old angle (45 degrees)
-  // Starting from the fixed north point (-75, 180)
-  const oldNorthX = -75;
-  const northZ = 180;
-  
-  const oldXOffset = Math.sin(currentAngleInRadians) * roadLength;
-  const zOffset = Math.cos(currentAngleInRadians) * roadLength;
-  
-  // South point (fixed)
-  const southX = oldNorthX + oldXOffset;
-  const southZ = northZ - zOffset;
+  // Keep the same south point fixed from previous calculations
+  const southX = -75 + Math.sin(45 * Math.PI / 180) * roadLength; // Using original 45 degrees to find the fixed south point
+  const southZ = 180 - Math.cos(45 * Math.PI / 180) * roadLength;
   
   // Now calculate the new north point by going backwards from the fixed south point
-  // Using the new angle (40 degrees)
+  // Using the new angle (55 degrees)
   const newXOffset = Math.sin(newAngleInRadians) * roadLength;
   const newNorthX = southX - newXOffset; // Subtract because we're going backwards
   
-  // Road path with the new north point (tilted 5 degrees left) and fixed south point
+  // Road path with the new north point (tilted 15 degrees to the right) and fixed south point
   const angledRoadPath: BoundaryPoint[] = [
-    [newNorthX, northZ],  // New north point (angled 5 degrees to the left)
-    [southX, southZ]      // South point (kept fixed)
+    [newNorthX, 180],  // New north point (angled 15 degrees to the right)
+    [southX, southZ]   // South point (kept fixed)
   ];
 
   return (
