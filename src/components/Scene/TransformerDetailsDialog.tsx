@@ -1,9 +1,7 @@
-
 import React, { useState } from 'react';
 import { Modal, Typography, Row, Col } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Zap, Thermometer, Activity, AlertTriangle } from 'lucide-react';
-import transformerImg from 'public/lovable-uploads/9e73eb8f-e0a0-4983-9a6e-121c0fb595e8.png';
 
 const { Text } = Typography;
 
@@ -84,7 +82,9 @@ export default function TransformerDetailsDialog({
               <span className="text-xs rounded px-2 py-0.5 bg-teal-100 text-teal-700">在线</span>
             </div>
             <div className="flex justify-center mb-3">
-              <img src={transformerImg} alt="Transformer" className="w-48 object-contain" />
+              <div className="w-48 h-48 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                变电站图片
+              </div>
             </div>
             <div className="text-center mb-1">
               <p className="text-sm text-gray-600">型号：{transformer.model}</p>
