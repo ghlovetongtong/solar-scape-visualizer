@@ -45,6 +45,22 @@ export default function Road({
       side: THREE.DoubleSide,
     });
 
+    // Create the road lines (center line)
+    const roadLineGeometry = new THREE.TubeGeometry(
+      path,
+      boundary.length * 8,
+      0.6, // thin line
+      6,
+      true
+    );
+    
+    const roadLineMaterial = new THREE.MeshStandardMaterial({
+      color: '#F6F6F7',
+      roughness: 0.3,
+      metalness: 0.1,
+      side: THREE.DoubleSide,
+    });
+
     return (
       <group>
         <mesh 
@@ -52,6 +68,12 @@ export default function Road({
           material={roadMaterial} 
           receiveShadow 
           position={[0, 0, 0]}
+        />
+        <mesh
+          geometry={roadLineGeometry}
+          material={roadLineMaterial}
+          receiveShadow
+          position={[0, 0.05, 0]} // Slightly above the road
         />
       </group>
     );
