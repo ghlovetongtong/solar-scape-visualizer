@@ -8,17 +8,15 @@ import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 import Terrain from './Terrain';
 import SolarPanels from './SolarPanel';
 import Inverter from './Inverter';
-import InverterContainer from './InverterContainer';
-import InverterDetailsPopup from './InverterDetailsPopup';
 import Camera from './Camera';
 import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
-import useInverterDetails from '@/hooks/useInverterDetails';
 import Road from './Road';
 
+// New interface for draggable object state management
 interface DraggableObjectState {
   type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
   index?: number;
@@ -176,13 +174,6 @@ export default function SceneContainer() {
     clearAllPanels,
     saveCurrentLayout
   } = usePanelPositions({ initialCount: 0, boundaries: [] });
-  
-  const {
-    isDetailsPopupOpen,
-    selectedInverterData,
-    closeInverterDetails,
-    handleInverterClick
-  } = useInverterDetails();
   
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -775,27 +766,28 @@ export default function SceneContainer() {
             onSelectPanel={selectPanel}
           />
           
-          <InverterContainer
-            inverters={inverterPositions.map((position, index) => ({
-              position,
-              index,
-              power: 50,
-              efficiency: 98.2,
-              mpptChannels: 6,
-              status: 'online',
-              temperature: 45.2,
-              dailyEnergy: 256.8,
-              totalEnergy: 1250.6,
-              serialNumber: `INV-${100000 + index}`,
-              manufacturer: 'SolarTech',
-              model: 'ST-50K'
-            }))}
-            selectedInverterIndex={selectedInverterIndex}
-            onSelectInverter={setSelectedInverterIndex}
-            onDragStart={(index) => handleStartDrag('inverter', index)}
-            onDragEnd={handleEndDrag}
-            onDrag={(index, newPosition) => handleDragInverter(index, newPosition)}
-          />
+          {inverterPositions.map((position, index) => (
+            <Inverter 
+              key={`inverter-${index}`}
+              position={new THREE.Vector3(...position)}
+              inverterIndex={index}
+              isSelected={selectedInverterIndex === index}
+              isDragging={draggingObject?.type === 'inverter' && draggingObject.index === index}
+              onClick={(e) => {
+                console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
+                // Toggle selection state
+                setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
+                // Deselect any panels when selecting an inverter
+                selectPanel(null);
+                // Prevent propagation
+                e.stopPropagation();
+                if (e.nativeEvent) e.nativeEvent.stopPropagation();
+              }}
+              onDragStart={() => handleStartDrag('inverter', index)}
+              onDragEnd={() => handleEndDrag()}
+              onDrag={handleDragInverter}
+            />
+          ))}
           
           {cameraPositions.map((position, index) => (
             <Camera 
@@ -843,12 +835,6 @@ export default function SceneContainer() {
           {showStats && <Stats />}
         </Suspense>
       </Canvas>
-      
-      <InverterDetailsPopup
-        isOpen={isDetailsPopupOpen}
-        onClose={closeInverterDetails}
-        inverterData={selectedInverterData}
-      />
       
       <Controls 
         showStats={showStats}

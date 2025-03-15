@@ -1,6 +1,7 @@
 
 import React from 'react';
 import Inverter from './Inverter';
+import InverterDetailsPopup from './InverterDetailsPopup';
 import useInverterDetails from '@/hooks/useInverterDetails';
 import { Vector3 } from 'three';
 
@@ -35,43 +36,21 @@ export default function InverterContainer({
   onDrag
 }: InverterContainerProps) {
   // Use the hook to manage inverter details popup
-  const { openInverterDetails } = useInverterDetails();
+  const {
+    isDetailsPopupOpen,
+    selectedInverterData,
+    closeInverterDetails,
+    handleInverterClick
+  } = useInverterDetails();
 
   const handleInverterSelect = (event: any, index: number) => {
-    console.log("Inverter selected:", index, event);
-    
     // First handle the selection for parent component
     if (onSelectInverter) {
       onSelectInverter(index);
     }
     
-    // Extract the inverter data from the clicked object
-    const userData = event.object?.userData;
-    console.log("Inverter userData:", userData);
-    
-    // Create a properly formatted inverter data object
-    if (index >= 0 && index < inverters.length) {
-      const inverter = inverters[index];
-      const inverterData = {
-        name: `Inverter #${index + 1}`,
-        power: inverter.power || 0,
-        efficiency: inverter.efficiency || 0,
-        mpptChannels: inverter.mpptChannels || 0,
-        status: inverter.status || 'offline',
-        temperature: inverter.temperature || 0,
-        dailyEnergy: inverter.dailyEnergy || 0,
-        totalEnergy: inverter.totalEnergy || 0,
-        serialNumber: inverter.serialNumber || '',
-        manufacturer: inverter.manufacturer || '',
-        model: inverter.model || '',
-        position: inverter.position
-      };
-      
-      console.log("Opening inverter details with constructed data:", inverterData);
-      openInverterDetails(inverterData);
-    } else {
-      console.error("Invalid inverter index:", index);
-    }
+    // Then show the details popup
+    handleInverterClick(event);
   };
 
   return (
@@ -100,6 +79,13 @@ export default function InverterContainer({
           model={inverter.model}
         />
       ))}
+
+      {/* Render the details popup */}
+      <InverterDetailsPopup
+        isOpen={isDetailsPopupOpen}
+        onClose={closeInverterDetails}
+        inverterData={selectedInverterData}
+      />
     </>
   );
 }
