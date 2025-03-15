@@ -16,7 +16,6 @@ import SkyBox from './SkyBox';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
-// New interface for draggable object state management
 interface DraggableObjectState {
   type: 'inverter' | 'camera' | 'transformer' | 'itHouse';
   index?: number;
@@ -248,12 +247,10 @@ export default function SceneContainer() {
     const width = maxX - minX;
     const depth = maxZ - minZ;
 
-    // Identify panel rows with higher precision
-    const rowTolerance = 1.0; // Smaller tolerance for more accurate row detection
+    const rowTolerance = 1.0;
     const rows = [];
     const processedZCoordinates = new Set();
 
-    // Find all distinct rows
     for (const panel of panelPositions) {
       const z = Math.round(panel.position[2] / rowTolerance) * rowTolerance;
       if (!processedZCoordinates.has(z)) {
@@ -263,12 +260,8 @@ export default function SceneContainer() {
         );
         
         if (rowPanels.length > 0) {
-          // Find min and max X for this row
-          let rowMinX = Infinity, rowMaxX = -Infinity;
-          for (const p of rowPanels) {
-            rowMinX = Math.min(rowMinX, p.position[0]);
-            rowMaxX = Math.max(rowMaxX, p.position[0]);
-          }
+          const rowMinX = Math.min(...rowPanels.map(p => p.position[0]));
+          const rowMaxX = Math.max(...rowPanels.map(p => p.position[0]));
           
           rows.push({
             z,
@@ -281,30 +274,25 @@ export default function SceneContainer() {
       }
     }
 
-    // Sort rows by Z coordinate
     rows.sort((a, b) => a.z - b.z);
     
     console.log(`Found ${rows.length} panel rows`);
 
-    // Generate inverter positions specifically in gaps between rows
     const inverterPositions: [number, number, number][] = [];
     
-    // Skip isolated rows with few panels
     const significantRows = rows.filter(row => row.panelCount >= 3 && row.width > 5);
     significantRows.sort((a, b) => b.panelCount - a.panelCount);
     
     if (significantRows.length >= 2) {
-      // Identify gaps between rows
       const gaps = [];
       for (let i = 0; i < significantRows.length - 1; i++) {
         const currentRow = significantRows[i];
         const nextRow = significantRows[i + 1];
         const gapSize = Math.abs(currentRow.z - nextRow.z);
         
-        // Only consider proper gaps (not too small, not too large)
         if (gapSize > 3 && gapSize < 20) {
           gaps.push({
-            zPosition: (currentRow.z + nextRow.z) / 2, // Center of gap
+            zPosition: (currentRow.z + nextRow.z) / 2,
             size: gapSize,
             width: Math.min(currentRow.width, nextRow.width),
             minX: Math.max(currentRow.minX, nextRow.minX), 
@@ -314,26 +302,21 @@ export default function SceneContainer() {
         }
       }
       
-      // Sort gaps by size (larger gaps first)
       gaps.sort((a, b) => b.size - a.size);
       
-      // Place inverters in the gaps
       if (gaps.length > 0) {
         for (let i = 0; i < Math.min(7, gaps.length); i++) {
           const gap = gaps[i % gaps.length];
           
-          // Calculate how many inverters to place in this gap
           const maxInvertersPerGap = Math.min(3, Math.floor(gap.width / 5));
           
           for (let j = 0; j < maxInvertersPerGap; j++) {
             if (inverterPositions.length >= 7) break;
             
-            // Place inverters evenly along the gap's width
             const xPos = gap.minX + (j + 1) * (gap.width / (maxInvertersPerGap + 1));
             
-            // Check if this position would overlap with a panel
             let tooCloseToPanel = false;
-            const minDistanceToPanel = 1.5; // Minimum required distance to any panel
+            const minDistanceToPanel = 1.5;
             
             for (const panel of panelPositions) {
               const dx = Math.abs(panel.position[0] - xPos);
@@ -352,16 +335,13 @@ export default function SceneContainer() {
       }
     }
     
-    // If we have significant rows but couldn't place inverters in gaps, distribute evenly inside the panel area
     if (significantRows.length > 0 && inverterPositions.length < 7) {
-      // Select the largest rows
       const mainRows = significantRows.slice(0, Math.min(4, significantRows.length));
       
       for (let r = 0; r < mainRows.length; r++) {
         const row = mainRows[r];
         const rowCenter = row.z;
         
-        // Place inverters along the row, avoiding panel positions
         const segmentCount = Math.min(4, Math.ceil(row.width / 15));
         const segmentWidth = row.width / segmentCount;
         
@@ -369,10 +349,9 @@ export default function SceneContainer() {
           if (inverterPositions.length >= 7) break;
           
           const xPos = row.minX + (i + 0.5) * segmentWidth;
-          const zOffset = (r % 2 === 0) ? 2.5 : -2.5; // Alternate offset to avoid aligned inverters
+          const zOffset = (r % 2 === 0) ? 2.5 : -2.5;
           const zPos = rowCenter + zOffset;
           
-          // Check if this position would overlap with any panel
           let overlapsPanel = false;
           for (const panel of panelPositions) {
             const dx = Math.abs(panel.position[0] - xPos);
@@ -390,7 +369,6 @@ export default function SceneContainer() {
       }
     }
     
-    // If we still don't have enough inverters, add them at the perimeter of the panel area
     if (inverterPositions.length < 7) {
       const perimeterPositions: [number, number, number][] = [
         [minX + width * 0.25, 0, minZ - 5],
@@ -472,19 +450,16 @@ export default function SceneContainer() {
     setInverterPositions(prevPositions => {
       const newPositions = [...prevPositions];
       
-      // Check if this is an absolute position (with all values set)
       const isAbsolutePosition = 
         deltaPosition[0] !== 0 && 
         deltaPosition[1] !== 0 && 
         deltaPosition[2] !== 0;
       
       if (isAbsolutePosition) {
-        // Set absolute position
         newPositions[index] = deltaPosition;
         console.log(`Setting inverter ${index + 1} to absolute position:`, deltaPosition);
         toast.success(`Set inverter ${index + 1} position to [${deltaPosition.join(', ')}]`);
       } else {
-        // Apply delta position
         const currentPos = prevPositions[index];
         newPositions[index] = [
           currentPos[0] + deltaPosition[0],
@@ -502,13 +477,11 @@ export default function SceneContainer() {
   const handleStartDrag = useCallback((type: 'inverter' | 'camera' | 'transformer' | 'itHouse', index?: number) => {
     setDraggingObject({ type, index, isDragging: true });
     
-    // Deselect panel when starting to drag another object
     selectPanel(null);
     
     if (type === 'inverter') {
       setSelectedInverterIndex(index !== undefined ? index : null);
     } else {
-      // When dragging non-inverter objects, deselect any inverter
       setSelectedInverterIndex(null);
     }
     
@@ -657,13 +630,11 @@ export default function SceneContainer() {
       }
     }
     
-    // Check for complete layout data
     const savedLayoutData = localStorage.getItem('solar-station-complete-layout');
     if (savedLayoutData) {
       try {
         const parsedLayout = JSON.parse(savedLayoutData) as CompleteLayoutData;
         
-        // Only set equipment positions if we have data and current positions are default/empty
         if (parsedLayout.inverters.length > 0 && inverterPositions.length === 0) {
           setInverterPositions(parsedLayout.inverters);
           console.log("Loaded inverter positions from saved layout:", parsedLayout.inverters);
@@ -683,7 +654,6 @@ export default function SceneContainer() {
           setItHousePosition(parsedLayout.itHouse);
           console.log("Loaded IT house position from saved layout:", parsedLayout.itHouse);
         }
-        
       } catch (error) {
         console.error("Error loading complete layout data:", error);
       }
@@ -705,24 +675,19 @@ export default function SceneContainer() {
     if (userData.type === 'inverter') {
       console.log(`Inverter ${userData.inverterIndex} selected`);
       
-      // Toggle selection - if already selected, deselect it
       if (selectedInverterIndex === userData.inverterIndex) {
         setSelectedInverterIndex(null);
       } else {
         setSelectedInverterIndex(userData.inverterIndex);
-        // Deselect any panels when selecting an inverter
         selectPanel(null);
       }
       
-      // Prevent propagation
       event.stopPropagation();
     } 
     else if (userData.type === 'panel' || userData.type === 'panel-instance') {
-      // Deselect inverter when selecting a panel
       setSelectedInverterIndex(null);
     }
     else {
-      // For other objects, clear selections
       setSelectedInverterIndex(null);
       selectPanel(null);
     }
@@ -775,11 +740,8 @@ export default function SceneContainer() {
               isDragging={draggingObject?.type === 'inverter' && draggingObject.index === index}
               onClick={(e) => {
                 console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
-                // Toggle selection state
                 setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
-                // Deselect any panels when selecting an inverter
                 selectPanel(null);
-                // Prevent propagation
                 e.stopPropagation();
                 if (e.nativeEvent) e.nativeEvent.stopPropagation();
               }}
@@ -853,9 +815,6 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
-        selectedInverterIndex={selectedInverterIndex}
-        onDeselectInverter={() => setSelectedInverterIndex(null)}
-        onUpdateInverterPosition={handleUpdateInverterPosition}
       />
       
       <Loader />
