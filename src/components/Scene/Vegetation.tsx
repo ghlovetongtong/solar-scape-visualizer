@@ -1,6 +1,7 @@
 
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
+import { usePanelPositions } from '@/hooks/usePanelPositions';
 import { getHeightAtPosition } from './Ground';
 
 interface VegetationProps {
@@ -22,6 +23,64 @@ export default function Vegetation({
   const instancedSmallRocks = useRef<THREE.InstancedMesh>(null);
   const instancedTallGrass = useRef<THREE.InstancedMesh>(null);
   
+  // Get panel positions from the hook to accurately determine the solar panel area
+  const { panelPositions, isInitialized } = usePanelPositions();
+  
+  // Calculate bounds of solar panel area
+  const panelBounds = useMemo(() => {
+    if (!isInitialized || panelPositions.length === 0) {
+      return { minX: -120, maxX: 120, minZ: -120, maxZ: 120, positions: [] };
+    }
+    
+    let minX = Infinity, maxX = -Infinity, minZ = Infinity, maxZ = -Infinity;
+    
+    // Extract all panel positions for more precise checking
+    const positions: [number, number, number][] = panelPositions.map(panel => panel.position);
+    
+    positions.forEach(pos => {
+      minX = Math.min(minX, pos[0]);
+      maxX = Math.max(maxX, pos[0]);
+      minZ = Math.min(minZ, pos[2]);
+      maxZ = Math.max(maxZ, pos[2]);
+    });
+    
+    // Add some margin to the bounds (5 units)
+    const margin = 5;
+    return {
+      minX: minX - margin,
+      maxX: maxX + margin,
+      minZ: minZ - margin,
+      maxZ: maxZ + margin,
+      positions
+    };
+  }, [isInitialized, panelPositions]);
+  
+  // Check if a position is near any solar panel
+  const isNearSolarPanel = (x: number, z: number): boolean => {
+    if (!isInitialized) return false;
+    
+    // Quick bounds check first
+    if (x < panelBounds.minX || x > panelBounds.maxX || z < panelBounds.minZ || z > panelBounds.maxZ) {
+      return false;
+    }
+    
+    // If within the general bounds, check distance to each panel
+    // This is more precise but more computationally expensive
+    const safeDistance = 3; // Safe distance from any panel
+    
+    for (const pos of panelBounds.positions) {
+      const dx = x - pos[0];
+      const dz = z - pos[2];
+      const distanceSquared = dx * dx + dz * dz;
+      
+      if (distanceSquared < safeDistance * safeDistance) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+  
   // Generate positions for grass tufts
   const grassPositions = useMemo(() => {
     const positions = [];
@@ -40,9 +99,8 @@ export default function Vegetation({
       x += (Math.random() - 0.5) * 40;
       z += (Math.random() - 0.5) * 40;
       
-      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
+      // Check if the position is within or near any solar panel
+      if (isNearSolarPanel(x, z)) {
         i--; // Try again
         continue;
       }
@@ -52,7 +110,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
   
   // Generate positions for tall grass (a different type of grass)
   const tallGrassPositions = useMemo(() => {
@@ -75,9 +133,8 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 25;
       }
       
-      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
+      // Check if the position is within or near any solar panel
+      if (isNearSolarPanel(x, z)) {
         i--; // Try again
         continue;
       }
@@ -87,7 +144,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
   
   // Generate positions for rocks
   const rockPositions = useMemo(() => {
@@ -111,9 +168,8 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 50;
       }
       
-      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
+      // Check if the position is within or near any solar panel
+      if (isNearSolarPanel(x, z)) {
         i--; // Try again
         continue;
       }
@@ -123,7 +179,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
   
   // Generate positions for small rocks
   const smallRockPositions = useMemo(() => {
@@ -147,9 +203,8 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 60;
       }
       
-      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
-      const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
+      // Check if the position is within or near any solar panel
+      if (isNearSolarPanel(x, z)) {
         i--; // Try again
         continue;
       }
@@ -159,7 +214,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
   
   // Use useEffect instead of useMemo for updating instanced meshes
   // so we can properly rely on the ref values being available
