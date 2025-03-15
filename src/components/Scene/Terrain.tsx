@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
@@ -39,25 +40,28 @@ export default function Terrain({
   // Create a road where:
   // - We keep the south point fixed
   // - Angle the north point 15 degrees to the right from its current position
+  // - Shift the entire road to the right by 40 units
+  const rightShift = 40; // Amount to shift the road to the right
+  
   const currentAngleInRadians = 40 * Math.PI / 180; // Current 40 degrees angle (after previous 5-degree left tilt)
   const newAngleAdjustment = 15 * Math.PI / 180; // 15 degrees to the right (positive angle)
   const newAngleInRadians = currentAngleInRadians + newAngleAdjustment; // 55 degrees in radians
   
   const roadLength = 360; // Total length from north to south
   
-  // Keep the same south point fixed from previous calculations
-  const southX = -75 + Math.sin(45 * Math.PI / 180) * roadLength; // Using original 45 degrees to find the fixed south point
+  // Calculate the fixed south point, but shifted to the right
+  const southX = (-75 + Math.sin(45 * Math.PI / 180) * roadLength) + rightShift; // Add rightShift to move it right
   const southZ = 180 - Math.cos(45 * Math.PI / 180) * roadLength;
   
   // Now calculate the new north point by going backwards from the fixed south point
   // Using the new angle (55 degrees)
   const newXOffset = Math.sin(newAngleInRadians) * roadLength;
-  const newNorthX = southX - newXOffset; // Subtract because we're going backwards
+  const newNorthX = southX - newXOffset + rightShift; // Add rightShift again to ensure consistent shift
   
-  // Road path with the new north point (tilted 15 degrees to the right) and fixed south point
+  // Road path with the new north point (tilted 15 degrees to the right) and fixed south point, both shifted right
   const angledRoadPath: BoundaryPoint[] = [
-    [newNorthX, 180],  // New north point (angled 15 degrees to the right)
-    [southX, southZ]   // South point (kept fixed)
+    [newNorthX, 180],  // New north point (angled 15 degrees to the right and shifted right)
+    [southX, southZ]   // South point (shifted right)
   ];
 
   return (
