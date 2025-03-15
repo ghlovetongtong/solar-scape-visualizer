@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import InverterControls from './InverterControls';
 
 interface ControlsProps {
   showStats: boolean;
@@ -14,11 +13,8 @@ interface ControlsProps {
   setTimeOfDay: (time: number) => void;
   onResetPanels: () => void;
   selectedPanelId: number | null;
-  selectedInverterIndex: number | null;
-  onDeselectInverter: () => void;
   onUpdatePanelPosition: (id: number, position: [number, number, number]) => void;
   onUpdatePanelRotation: (id: number, rotation: [number, number, number]) => void;
-  onUpdateInverterPosition?: (index: number, position: [number, number, number]) => void;
   drawingMode: boolean;
   setDrawingMode: (mode: boolean) => void;
   onSaveBoundary: () => void;
@@ -36,11 +32,8 @@ export default function Controls({
   setTimeOfDay,
   onResetPanels,
   selectedPanelId,
-  selectedInverterIndex,
-  onDeselectInverter,
   onUpdatePanelPosition,
   onUpdatePanelRotation,
-  onUpdateInverterPosition,
   drawingMode,
   setDrawingMode,
   onSaveBoundary,
@@ -125,14 +118,6 @@ export default function Controls({
         </div>
       )}
       
-      {selectedInverterIndex !== null && onUpdateInverterPosition && (
-        <InverterControls
-          selectedInverterIndex={selectedInverterIndex}
-          onDeselectInverter={onDeselectInverter}
-          onUpdateInverterPosition={onUpdateInverterPosition}
-        />
-      )}
-      
       <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
         <div className="flex items-center justify-between">
           <label className="text-sm font-medium">Boundary Drawing Mode</label>
@@ -188,7 +173,6 @@ export default function Controls({
           )}
         </div>
         
-        {/* Update the Save Layout button */}
         {onSaveLayout && (
           <Button 
             className="w-full mt-2" 
