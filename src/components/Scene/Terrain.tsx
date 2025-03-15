@@ -38,13 +38,13 @@ export default function Terrain({
   }, [onBoundaryComplete, roadBoundary]);
 
   // Create a road path where:
-  // - North point stays fixed at [-150, 180]
+  // - North point stays fixed at [-100, 180] (shifted right from -150)
   // - South point is angled 40 degrees to the right
-  const angleInRadians = 40 * Math.PI / 180; // 40 degrees in radians (changed from 30)
+  const angleInRadians = 40 * Math.PI / 180; // 40 degrees in radians
   const roadLength = 360; // Total length from north to south
   
-  // Fixed northern point
-  const northX = -150;
+  // Fixed northern point (shifted to the right from -150 to -100)
+  const northX = -100;
   const northZ = 180;
   
   // Calculate offset for the 40-degree angle (moving east/right)
