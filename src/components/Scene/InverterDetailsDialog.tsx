@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
+import inveterImg from '@/assets/inveter.png';
+
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -168,6 +170,7 @@ export default function InverterDetailsDialog({
               </Tag>
             </div>
             <div className="flex justify-center mb-4">
+              <img src={inveterImg} alt="逆变器图片" className="w-32 h-32 object-contain" />
             </div>
             <div className="text-center">
               <p className="text-sm mb-2">型号：{inverterData.model}</p>
