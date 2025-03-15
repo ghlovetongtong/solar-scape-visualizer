@@ -38,18 +38,13 @@ export default function InverterContainer({
   const { openInverterDetails } = useInverterDetails();
 
   const handleInverterSelect = (event: any, index: number) => {
-    console.log("Inverter selected:", index, event);
-    
-    // First handle the selection for parent component
+    // Only handle selection for parent component
+    // Removed the control page functionality
     if (onSelectInverter) {
       onSelectInverter(index);
     }
     
-    // Extract the inverter data from the clicked object
-    const userData = event.object?.userData;
-    console.log("Inverter userData:", userData);
-    
-    // Create a properly formatted inverter data object
+    // Create a properly formatted inverter data object to display in the popup
     if (index >= 0 && index < inverters.length) {
       const inverter = inverters[index];
       const inverterData = {
@@ -67,10 +62,7 @@ export default function InverterContainer({
         position: inverter.position
       };
       
-      console.log("Opening inverter details with constructed data:", inverterData);
       openInverterDetails(inverterData);
-    } else {
-      console.error("Invalid inverter index:", index);
     }
   };
 
