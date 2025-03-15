@@ -3,19 +3,22 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import { getHeightAtPosition } from './Ground';
+import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 interface VegetationProps {
   count?: number;
   minRadius?: number;
   maxRadius?: number;
+  savedBoundaries?: BoundaryPoint[][]; // Add boundaries for roads
 }
 
 export default function Vegetation({ 
   count = 1000, 
   minRadius = 120, 
-  maxRadius = 180 
+  maxRadius = 180,
+  savedBoundaries = []
 }: VegetationProps) {
-  // Double the vegetation density again
+  // Vegetation density
   const actualCount = count * 2;
   
   const instancedGrass = useRef<THREE.InstancedMesh>(null);
@@ -55,6 +58,47 @@ export default function Vegetation({
     };
   }, [isInitialized, panelPositions]);
   
+  // Check if a position is within any boundary (road)
+  const isWithinBoundary = (x: number, z: number): boolean => {
+    for (const boundary of savedBoundaries) {
+      if (boundary.length < 3) continue; // Skip invalid boundaries
+      
+      // Use ray casting algorithm to determine if point is inside polygon
+      let inside = false;
+      for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+        const xi = boundary[i][0], zi = boundary[i][1];
+        const xj = boundary[j][0], zj = boundary[j][1];
+        
+        const intersect = ((zi > z) !== (zj > z)) && 
+                          (x < (xj - xi) * (z - zi) / (zj - zi) + xi);
+        if (intersect) inside = !inside;
+      }
+      
+      // Also check if too close to boundary edges (buffer zone around roads)
+      if (!inside) {
+        const roadBuffer = 3; // Buffer distance from road edges
+        for (let i = 0, j = boundary.length - 1; i < boundary.length; j = i++) {
+          const xi = boundary[i][0], zi = boundary[i][1];
+          const xj = boundary[j][0], zj = boundary[j][1];
+          
+          // Calculate distance from point to line segment
+          const lineLength = Math.sqrt((xj - xi) * (xj - xi) + (zj - zi) * (zj - zi));
+          if (lineLength === 0) continue;
+          
+          const t = Math.max(0, Math.min(1, ((x - xi) * (xj - xi) + (z - zi) * (zj - zi)) / (lineLength * lineLength)));
+          const projX = xi + t * (xj - xi);
+          const projZ = zi + t * (zj - zi);
+          
+          const distance = Math.sqrt((x - projX) * (x - projX) + (z - projZ) * (z - projZ));
+          if (distance < roadBuffer) return true;
+        }
+      }
+      
+      if (inside) return true;
+    }
+    return false;
+  };
+  
   // Check if a position is near any solar panel
   const isNearSolarPanel = (x: number, z: number): boolean => {
     if (!isInitialized) return false;
@@ -81,143 +125,181 @@ export default function Vegetation({
     return false;
   };
   
-  // Generate positions for grass tufts
-  const grassPositions = useMemo(() => {
-    const positions = [];
-    for (let i = 0; i < actualCount; i++) {
-      // Position grass more densely across the terrain
-      let x, z;
-      
-      // Distribute vegetation widely across the whole terrain
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius); // Use minRadius to ensure minimum distance
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Add more irregularity and natural clustering
-      x += (Math.random() - 0.5) * 40;
-      z += (Math.random() - 0.5) * 40;
-      
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
-      }
-      
-      // Add slight elevation to make grass more visible (0.1 to 0.3 units above ground)
-      const y = 0.1 + Math.random() * 0.2;
-      positions.push([x, y, z]);
-    }
-    return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
-  
-  // Generate positions for tall grass (a different type of grass)
-  const tallGrassPositions = useMemo(() => {
-    const positions = [];
-    const tallGrassCount = Math.floor(actualCount / 2); // Increase tall grass proportion
+  // Use Perlin noise-like distribution for more natural clustering
+  const noise2D = (x: number, y: number): number => {
+    // Simple hash function
+    const hash = (n: number): number => Math.sin(n) * 43758.5453 % 1;
     
-    for (let i = 0; i < tallGrassCount; i++) {
-      let x, z;
-      
-      // Create more patches of tall grass across the terrain
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Create more defined clusters for tall grass
-      if (Math.random() > 0.3) { // Increase cluster probability
-        x += (Math.random() - 0.5) * 25;
-        z += (Math.random() - 0.5) * 25;
-      }
-      
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
-      }
-      
-      // Add more significant elevation to tall grass (0.15 to 0.4 units above ground)
-      const y = 0.15 + Math.random() * 0.25;
-      positions.push([x, y, z]);
-    }
-    return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
-  
-  // Generate positions for rocks
-  const rockPositions = useMemo(() => {
-    const positions = [];
-    // Increase rock count
-    const rockCount = Math.floor(actualCount / 3);
+    // Floor values
+    const xi = Math.floor(x);
+    const yi = Math.floor(y);
     
-    for (let i = 0; i < rockCount; i++) {
+    // Fractional parts
+    const xf = x - xi;
+    const yf = y - yi;
+    
+    // Smooth interpolation
+    const u = xf * xf * (3 - 2 * xf);
+    const v = yf * yf * (3 - 2 * yf);
+    
+    // Four corners
+    const a = hash(xi + yi * 57);
+    const b = hash(xi + 1 + yi * 57);
+    const c = hash(xi + (yi + 1) * 57);
+    const d = hash(xi + 1 + (yi + 1) * 57);
+    
+    // Interpolate
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  };
+  
+  // Generate positions with improved natural distribution
+  const generatePositions = (count: number, type: 'grass' | 'tallGrass' | 'rock' | 'smallRock'): [number, number, number][] => {
+    const positions: [number, number, number][] = [];
+    const attempts = count * 3; // Allow more attempts to ensure we get close to the desired count
+    
+    // Define density maps for different vegetation types
+    const densityFactor = {
+      grass: 1.5,      // Higher density for grass
+      tallGrass: 1.2,  // Medium-high density for tall grass
+      rock: 0.8,       // Lower density for rocks
+      smallRock: 1.0   // Medium density for small rocks
+    };
+    
+    // Create clusters by dividing the space into sections
+    const gridSize = 30;
+    const gridCount = Math.ceil(maxRadius * 2 / gridSize);
+    const clusterCenters: {x: number, z: number, strength: number}[] = [];
+    
+    // Generate random cluster centers
+    for (let i = 0; i < 40; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = minRadius * 0.7 + Math.random() * (maxRadius - minRadius * 0.7);
+      
+      const x = Math.cos(angle) * radius;
+      const z = Math.sin(angle) * radius;
+      
+      // Avoid placing clusters near equipment
+      if (isNearSolarPanel(x, z) || isWithinBoundary(x, z)) continue;
+      
+      clusterCenters.push({
+        x,
+        z,
+        strength: 0.5 + Math.random() * 0.8 // Random cluster density
+      });
+    }
+    
+    // For rocks, create some rocky areas
+    const rockyClusters: {x: number, z: number, radius: number}[] = [];
+    if (type === 'rock' || type === 'smallRock') {
+      for (let i = 0; i < 15; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius * 0.5 + Math.random() * (maxRadius - minRadius * 0.5);
+        
+        const x = Math.cos(angle) * radius;
+        const z = Math.sin(angle) * radius;
+        
+        // Avoid placing rocky areas near equipment
+        if (isNearSolarPanel(x, z) || isWithinBoundary(x, z)) continue;
+        
+        rockyClusters.push({
+          x,
+          z,
+          radius: 15 + Math.random() * 30 // Size of rocky area
+        });
+      }
+    }
+    
+    for (let i = 0; i < attempts && positions.length < count; i++) {
       let x, z;
       
-      // Distribute rocks more widely
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Create more clusters of rocks
-      if (Math.random() > 0.5) {
+      // First approach: completely random points across the terrain
+      if (Math.random() < 0.3) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        
+        // Add more natural randomness
         x += (Math.random() - 0.5) * 50;
         z += (Math.random() - 0.5) * 50;
       }
+      // Second approach: cluster-based positioning
+      else {
+        // Select a random cluster as a starting point
+        if (clusterCenters.length === 0) {
+          continue; // Skip if no valid clusters
+        }
+        
+        const clusterIndex = Math.floor(Math.random() * clusterCenters.length);
+        const cluster = clusterCenters[clusterIndex];
+        
+        // Generate position near the cluster
+        const distance = Math.random() * 40 * cluster.strength; // Stronger clusters create denser vegetation
+        const angle = Math.random() * Math.PI * 2;
+        
+        x = cluster.x + Math.cos(angle) * distance;
+        z = cluster.z + Math.sin(angle) * distance;
+      }
       
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
+      // For rocks, preferentially place them in rocky areas
+      if ((type === 'rock' || type === 'smallRock') && rockyClusters.length > 0 && Math.random() < 0.7) {
+        const clusterIndex = Math.floor(Math.random() * rockyClusters.length);
+        const cluster = rockyClusters[clusterIndex];
+        
+        // Calculate distance from center of cluster
+        const distance = Math.random() * cluster.radius;
+        const angle = Math.random() * Math.PI * 2;
+        
+        x = cluster.x + Math.cos(angle) * distance;
+        z = cluster.z + Math.sin(angle) * distance;
+      }
+      
+      // Avoid being too close to the center (0,0)
+      const distanceFromCenter = Math.sqrt(x * x + z * z);
+      if (distanceFromCenter < 10) continue;
+      
+      // Check if the position is near any solar panel or within a road
+      if (isNearSolarPanel(x, z) || isWithinBoundary(x, z)) {
         continue;
       }
       
-      // Add slight elevation for rocks (0.1 to 0.5 units above ground)
-      const y = 0.1 + Math.random() * 0.4;
+      // Use noise to create more natural variations in density
+      const noiseValue = noise2D(x / 100, z / 100);
+      if (noiseValue < 0.4 && Math.random() > densityFactor[type]) {
+        continue; // Skip based on noise value and density factor
+      }
+      
+      // Place item at valid position
+      const y = type === 'tallGrass' ? 0.15 + Math.random() * 0.25 :
+               type === 'grass' ? 0.1 + Math.random() * 0.2 :
+               type === 'rock' ? 0.1 + Math.random() * 0.4 :
+               0.05 + Math.random() * 0.15; // smallRock
+      
       positions.push([x, y, z]);
     }
-    return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
-  
-  // Generate positions for small rocks
-  const smallRockPositions = useMemo(() => {
-    const positions = [];
-    // Use even more small rocks for detail
-    const smallRockCount = Math.floor(actualCount / 2);
     
-    for (let i = 0; i < smallRockCount; i++) {
-      let x, z;
-      
-      // Small rocks can be more widespread
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Small rocks tend to appear in larger groups
-      if (Math.random() > 0.3) { // Increase clustering
-        x += (Math.random() - 0.5) * 60; 
-        z += (Math.random() - 0.5) * 60;
-      }
-      
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
-      }
-      
-      // Add slight elevation for small rocks (0.05 to 0.2 units above ground)
-      const y = 0.05 + Math.random() * 0.15;
-      positions.push([x, y, z]);
-    }
     return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
+  };
   
-  // Use useEffect instead of useMemo for updating instanced meshes
-  // so we can properly rely on the ref values being available
+  // Generate positions for each vegetation type
+  const grassPositions = useMemo(() => 
+    generatePositions(actualCount, 'grass'), 
+    [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isWithinBoundary, isNearSolarPanel]);
+  
+  const tallGrassPositions = useMemo(() => 
+    generatePositions(Math.floor(actualCount / 2), 'tallGrass'), 
+    [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isWithinBoundary, isNearSolarPanel]);
+  
+  const rockPositions = useMemo(() => 
+    generatePositions(Math.floor(actualCount / 3), 'rock'), 
+    [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isWithinBoundary, isNearSolarPanel]);
+  
+  const smallRockPositions = useMemo(() => 
+    generatePositions(Math.floor(actualCount / 2), 'smallRock'), 
+    [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isWithinBoundary, isNearSolarPanel]);
+  
+  // Use useEffect for updating instanced meshes
   useEffect(() => {
     if (instancedGrass.current) {
       const dummy = new THREE.Object3D();

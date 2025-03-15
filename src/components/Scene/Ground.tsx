@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 import groundImg from '@/assets/ground_color.jpg';
+import Vegetation from './Vegetation';
 
 
 interface GroundProps {
@@ -86,6 +87,14 @@ export default function Ground({
 
       {/* Render all saved boundaries */}
       <group>{boundaryLines}</group>
+      
+      {/* Add vegetation with boundaries to avoid roads */}
+      <Vegetation 
+        count={1000} 
+        minRadius={120} 
+        maxRadius={180}
+        savedBoundaries={savedBoundaries}
+      />
     </>
   );
 }
