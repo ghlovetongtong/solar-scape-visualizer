@@ -27,24 +27,15 @@ export default function useInverterDetails() {
   };
 
   const closeInverterDetails = () => {
-    console.log("Closing inverter details popup");
     setIsDetailsPopupOpen(false);
   };
 
   const handleInverterClick = (event: any) => {
     // Extract inverter data from userData if available
-    console.log("handleInverterClick called with event:", event);
     const userData = event.object?.userData;
-    console.log("userData:", userData);
     
     if (userData?.type === 'inverter' && userData.details) {
-      console.log("Inverter clicked, calling openInverterDetails with:", userData.details);
       openInverterDetails(userData.details);
-    } else {
-      console.log("Inverter click criteria not met:", {
-        type: userData?.type,
-        hasDetails: !!userData?.details
-      });
     }
   };
 
