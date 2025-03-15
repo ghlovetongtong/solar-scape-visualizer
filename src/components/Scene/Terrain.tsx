@@ -37,30 +37,11 @@ export default function Terrain({
     }
   }, [onBoundaryComplete, roadBoundary]);
 
-  // Create a predefined road path that avoids equipment areas
-  const predefinedRoadPath: BoundaryPoint[] = [
-    [-150, -150],
-    [-100, -120],
-    [-50, -100],
-    [0, -80],
-    [50, -70],
-    [100, -80],
-    [150, -100],
-    [170, -50],
-    [180, 0],
-    [170, 50],
-    [150, 100],
-    [100, 130],
-    [50, 140],
-    [0, 140],
-    [-50, 130],
-    [-100, 110],
-    [-150, 100],
-    [-170, 50],
-    [-180, 0],
-    [-170, -50],
-    [-150, -100],
-    [-150, -150]
+  // Create a straight road path that avoids equipment areas
+  // This road runs along the west edge of the terrain to avoid overlapping with equipment
+  const straightRoadPath: BoundaryPoint[] = [
+    [-180, -180], // Start point (southwest corner)
+    [-180, 180]   // End point (northwest corner)
   ];
 
   return (
@@ -68,10 +49,10 @@ export default function Terrain({
       <Ground size={400} savedBoundaries={savedBoundaries} />
       <Vegetation />
       
-      {/* Add the predefined road */}
+      {/* Add the straight road */}
       <Road 
-        boundary={predefinedRoadPath} 
-        width={12} 
+        boundary={straightRoadPath} 
+        width={15} 
         color="#403E43" 
         elevation={0.05} 
       />
