@@ -13,6 +13,7 @@ import ITHouse from './ITHouse';
 import TransformerStation from './TransformerStation';
 import Controls from './Controls';
 import SkyBox from './SkyBox';
+import InverterDetailsDialog from './InverterDetailsDialog';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
@@ -675,13 +676,10 @@ export default function SceneContainer() {
     if (userData.type === 'inverter') {
       console.log(`Inverter ${userData.inverterIndex} selected`);
       
-      if (selectedInverterIndex === userData.inverterIndex) {
-        setSelectedInverterIndex(null);
-      } else {
-        setSelectedInverterIndex(userData.inverterIndex);
-        selectPanel(null);
-      }
+      setSelectedInverterIndex(userData.inverterIndex);
+      setInverterDialogOpen(true);
       
+      selectPanel(null);
       event.stopPropagation();
     } 
     else if (userData.type === 'panel' || userData.type === 'panel-instance') {
@@ -691,7 +689,7 @@ export default function SceneContainer() {
       setSelectedInverterIndex(null);
       selectPanel(null);
     }
-  }, [selectPanel, selectedInverterIndex]);
+  }, [selectPanel]);
 
   return (
     <div className="h-full w-full relative">
@@ -741,6 +739,7 @@ export default function SceneContainer() {
               onClick={(e) => {
                 console.log(`Inverter onClick callback, index=${index}, current selectedIndex=${selectedInverterIndex}`);
                 setSelectedInverterIndex(selectedInverterIndex === index ? null : index);
+                setInverterDialogOpen(true);
                 selectPanel(null);
                 e.stopPropagation();
                 if (e.nativeEvent) e.nativeEvent.stopPropagation();
@@ -815,6 +814,12 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
+      />
+      
+      <InverterDetailsDialog
+        open={inverterDialogOpen}
+        onOpenChange={setInverterDialogOpen}
+        inverterId={selectedInverterIndex}
       />
       
       <Loader />
