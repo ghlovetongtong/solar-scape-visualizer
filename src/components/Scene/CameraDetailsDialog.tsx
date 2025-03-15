@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Modal, Button, Typography } from 'antd';
 import { MapPin, Volume2, VolumeX, Play, Pause } from 'lucide-react';
-
+import cameraImg from '@/assets/camera.png';
 interface CameraDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -67,7 +67,7 @@ const CameraDetailsDialog: React.FC<CameraDetailsDialogProps> = ({ open, onOpenC
           <div className="flex justify-center mb-6">
             <div className="w-48 h-48 bg-white rounded-md flex items-center justify-center border border-gray-200">
               <img 
-                src="/lovable-uploads/1205c67d-a415-4468-8ff7-f69dc12f85fe.png" 
+                src={cameraImg} 
                 alt="Camera" 
                 className="w-40 h-auto object-contain"
                 onError={(e) => {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Modal, Typography, Row, Col } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Zap, Thermometer, Activity, AlertTriangle } from 'lucide-react';
-
+import tansformerImg from '@/assets/tansformer.png';
 const { Text } = Typography;
 
 // Mock data for transformer
@@ -83,7 +83,7 @@ export default function TransformerDetailsDialog({
             </div>
             <div className="flex justify-center mb-3">
               <div className="w-48 h-48 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                变电站图片
+                <img src={tansformerImg} />
               </div>
             </div>
             <div className="text-center mb-1">

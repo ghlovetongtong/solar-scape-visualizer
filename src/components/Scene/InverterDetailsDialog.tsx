@@ -171,7 +171,7 @@ export default function InverterDetailsDialog({
             <div className="flex justify-center mb-4">
               {/* <img src={inveterImg} alt="逆变器图片" className="w-32 h-32 object-contain" /> */}
               <div className="w-32 h-32 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
-                设备图片
+                <img src={inveterImg} />
               </div>
             </div>
             <div className="text-center">
