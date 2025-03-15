@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
@@ -37,27 +36,36 @@ export default function Terrain({
     }
   }, [onBoundaryComplete, roadBoundary]);
 
-  // Create a road path where:
-  // - North point stays fixed at [-75, 180]
-  // - South point is angled 45 degrees to the right
-  const angleInRadians = 45 * Math.PI / 180; // 45 degrees in radians
+  // Create a road where:
+  // - We keep the south point fixed
+  // - Angle the north point 5 degrees to the left from its current position
+  const currentAngleInRadians = 45 * Math.PI / 180; // Current 45 degrees angle
+  const newAngleAdjustment = -5 * Math.PI / 180; // 5 degrees to the left (negative angle)
+  const newAngleInRadians = currentAngleInRadians + newAngleAdjustment; // 40 degrees in radians
+  
   const roadLength = 360; // Total length from north to south
   
-  // Fixed northern point (updated from -50 to -75)
-  const northX = -75;
+  // Calculate the south point based on the old angle (45 degrees)
+  // Starting from the fixed north point (-75, 180)
+  const oldNorthX = -75;
   const northZ = 180;
   
-  // Calculate offset for the 45-degree angle (moving east/right)
-  const xOffset = Math.sin(angleInRadians) * roadLength;
-  const zOffset = Math.cos(angleInRadians) * roadLength;
+  const oldXOffset = Math.sin(currentAngleInRadians) * roadLength;
+  const zOffset = Math.cos(currentAngleInRadians) * roadLength;
   
-  // Calculate southern point with 45-degree angle to the right
-  const southX = northX + xOffset; // Add because we're going right/east
-  const southZ = northZ - zOffset; // Subtract because we're going south
+  // South point (fixed)
+  const southX = oldNorthX + oldXOffset;
+  const southZ = northZ - zOffset;
   
+  // Now calculate the new north point by going backwards from the fixed south point
+  // Using the new angle (40 degrees)
+  const newXOffset = Math.sin(newAngleInRadians) * roadLength;
+  const newNorthX = southX - newXOffset; // Subtract because we're going backwards
+  
+  // Road path with the new north point (tilted 5 degrees left) and fixed south point
   const angledRoadPath: BoundaryPoint[] = [
-    [northX, northZ],    // North point (fixed)
-    [southX, southZ]     // South point (angled 45 degrees to the right)
+    [newNorthX, northZ],  // New north point (angled 5 degrees to the left)
+    [southX, southZ]      // South point (kept fixed)
   ];
 
   return (
