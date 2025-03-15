@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
@@ -42,14 +43,14 @@ export default function Terrain({
   // - We keep the south point fixed
   // - Angle the north point 15 degrees to the right from its current position
   // - Shift the entire road to the left by 30 units (changed from right shift)
-  // - Set road length to 450 (changed back from 460)
+  // - Set road length to 470 (changed from 450)
   const leftShift = -30; // Amount to shift the road to the left (changed from rightShift of 40)
   
   const currentAngleInRadians = 40 * Math.PI / 180; // Current 40 degrees angle (after previous 5-degree left tilt)
   const newAngleAdjustment = 15 * Math.PI / 180; // 15 degrees to the right (positive angle)
   const newAngleInRadians = currentAngleInRadians + newAngleAdjustment; // 55 degrees in radians
   
-  const roadLength = 450; // Changed back from 460 to 450 as requested
+  const roadLength = 470; // Changed from 450 to 470 as requested
   
   // Calculate the fixed south point, but shifted to the left
   const southX = (-75 + Math.sin(45 * Math.PI / 180) * roadLength) + leftShift; // Add leftShift to move it left
