@@ -849,7 +849,7 @@ export default function SceneContainer() {
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
             target={new THREE.Vector3(...panelCenter)}
-            // Set initial rotation to match the reference image
+            // Set initial rotation to match the requested 180-degree rotation
             makeDefault
           />
           
