@@ -2,6 +2,7 @@
 import React, { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useDrawBoundary, type BoundaryPoint } from '@/hooks/useDrawBoundary';
+import { Line } from '@react-three/drei';
 
 interface BoundaryDrawingProps {
   enabled: boolean;
@@ -21,9 +22,6 @@ export default function BoundaryDrawing({
     onComplete 
   });
   
-  // Using proper type annotation for Three.js Object3D
-  const lineRef = useRef<THREE.Object3D>();
-
   // Create points for the line with a slight y-offset to position above the ground
   const linePoints = useMemo(() => {
     if (points.length < 2) return [];
@@ -39,24 +37,14 @@ export default function BoundaryDrawing({
     return vertices;
   }, [points, isDrawing]);
 
-  // Create the buffer geometry once when points change
-  const geometry = useMemo(() => {
-    if (linePoints.length < 2) return null;
-    
-    const positions = new Float32Array(linePoints.flatMap(v => [v.x, v.y, v.z]));
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    return geometry;
-  }, [linePoints]);
+  if (linePoints.length < 2) return null;
 
-  if (!geometry || linePoints.length < 2) return null;
-
+  // Use @react-three/drei's Line component instead of THREE.Line primitive
   return (
-    <group>
-      <primitive object={new THREE.Line(
-        geometry,
-        new THREE.LineBasicMaterial({ color, linewidth: lineWidth })
-      )} ref={lineRef} />
-    </group>
+    <Line
+      points={linePoints}
+      color={color}
+      lineWidth={lineWidth}
+    />
   );
 }

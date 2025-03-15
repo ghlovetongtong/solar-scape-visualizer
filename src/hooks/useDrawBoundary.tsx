@@ -77,7 +77,6 @@ export function useDrawBoundary({ enabled, onComplete }: UseDrawBoundaryProps) {
       
       // Use the ref to safely get the most up-to-date callback
       if (onCompleteRef.current && simplifiedPoints.length > 2) {
-        // Call the callback directly without setTimeout
         onCompleteRef.current(simplifiedPoints);
       }
     }
