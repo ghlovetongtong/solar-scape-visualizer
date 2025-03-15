@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Modal, Typography, Divider, Row, Col, Tabs, Card, Tag, Space, Progress } from 'antd';
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -20,7 +19,6 @@ import {
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
-// 模拟24小时发电数据
 const powerOutputData = [
   { time: '00:00', power: 0 },
   { time: '01:00', power: 0 },
@@ -48,7 +46,6 @@ const powerOutputData = [
   { time: '23:00', power: 0 },
 ];
 
-// 模拟组串数据
 const stringData = [
   { id: 'PV1', voltage: 360, current: 1.53, status: 'normal' },
   { id: 'PV2', voltage: 360, current: 1.53, status: 'normal' },
@@ -75,7 +72,7 @@ export default function InverterDetailsDialog({
 }: InverterDetailsDialogProps) {
   const [activeTab, setActiveTab] = useState<string>('1');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 6; // 每页显示的组串数量
+  const pageSize = 6;
 
   if (inverterId === null) return null;
 
@@ -86,14 +83,13 @@ export default function InverterDetailsDialog({
   const inverterData = {
     name: `逆变器${inverterId + 1}`,
     model: 'SUN2000-10KTL-M1',
-    status: 'online', // online, offline, warning
+    status: 'online',
     warningCount: 2,
     dailyEnergy: 29,
     totalEnergy: 999.999,
     efficiency: 98.48,
     powerFactor: 1.00,
     temperature: 32.9,
-    // 电气参数
     dcInputPower: 13.66,
     acActivePower: 13.66,
     acReactivePower: 50.03,
@@ -102,34 +98,28 @@ export default function InverterDetailsDialog({
     pidStatus: 0.00,
     totalRunningTime: 6313.3,
     dailyRunningTime: 4.25,
-    // 运营统计
     connectedPanels: 375,
     stringCount: 8,
     firmwareVersion: 'V3.5.3',
     dailyOperationTime: 452,
     lastMaintenanceDate: '2023-12-13',
     operationTime: 50.03,
-    // 设备规格
     manufacturer: '华为',
     serialNumber: 'WRC-01CU-001',
     ratedPower: 10,
     installationDate: '2023-12-12',
-    // 网格参数
     gridConnector: '华为',
     gridType: '三相',
     nominalVoltage: 400,
     gridCompliance: 'IEC 61727',
-    // Power & Energy 标签页数据
     dailyPeakPower: 55.15,
     powerGenerationTime: 9.9,
     performanceRatio: 0.92,
-    // 组串数据统计
     normalStrings: 20,
     warningStrings: 3,
     offlineStrings: 2
   };
 
-  // 计算当前页的组串数据
   const currentStringData = stringData.slice(
     (currentPage - 1) * pageSize, 
     currentPage * pageSize
@@ -160,18 +150,16 @@ export default function InverterDetailsDialog({
 
   return (
     <Modal
-      visible={open}
+      open={open}
       onCancel={handleCancel}
       footer={null}
-      title={`${inverterData.name} (设备号)`}
+      title={`${inverterData.name} (设备号)}`}
       width={800}
       bodyStyle={{ padding: '0', maxHeight: '80vh', overflowY: 'auto' }}
       destroyOnClose
     >
       <div className="p-0">
-        {/* 顶部信息卡片区域 */}
         <div className="flex flex-row flex-wrap">
-          {/* 左侧逆变器信息 */}
           <div className="w-full md:w-1/2 p-4 bg-gray-50">
             <div className="flex items-start mb-2">
               <Tag color="#87d068" className="mr-2">
@@ -180,7 +168,6 @@ export default function InverterDetailsDialog({
               </Tag>
             </div>
             <div className="flex justify-center mb-4">
-              {/* <img src="/public/lovable-uploads/cff0e8de-f76a-4bda-9c45-f67fc8b8a7f8.png" alt="逆变器图片" className="w-32 h-32 object-contain" /> */}
             </div>
             <div className="text-center">
               <p className="text-sm mb-2">型号：{inverterData.model}</p>
@@ -193,7 +180,6 @@ export default function InverterDetailsDialog({
             </div>
           </div>
           
-          {/* 右侧能源信息 */}
           <div className="w-full md:w-1/2 p-4">
             <div className="mb-6 mt-2">
               <div className="flex items-center mb-1">
@@ -219,7 +205,6 @@ export default function InverterDetailsDialog({
           </div>
         </div>
         
-        {/* 标签页区域 */}
         <Tabs 
           defaultActiveKey="1" 
           activeKey={activeTab}
@@ -228,10 +213,8 @@ export default function InverterDetailsDialog({
           type="card"
           centered
         >
-          {/* 概览标签页 */}
           <TabPane tab="Overview" key="1">
             <div className="p-4">
-              {/* 关键指标区域 */}
               <div className="flex flex-wrap -mx-2 mb-6">
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
                   <div className="bg-gray-50 p-3 rounded-md">
@@ -262,7 +245,6 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
               
-              {/* 电气参数区域 */}
               <div className="mb-6">
                 <Title level={5} className="mb-3 font-medium pb-2 border-b">电气参数</Title>
                 <Row gutter={[16, 16]}>
@@ -301,7 +283,6 @@ export default function InverterDetailsDialog({
                 </Row>
               </div>
               
-              {/* 运营统计区域 */}
               <div className="mb-6">
                 <Title level={5} className="mb-3 font-medium pb-2 border-b">运营统计</Title>
                 <Row gutter={[16, 16]}>
@@ -332,7 +313,6 @@ export default function InverterDetailsDialog({
                 </Row>
               </div>
               
-              {/* 设备规格 & 网格参数区域 */}
               <div className="flex flex-wrap -mx-2">
                 <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
                   <Title level={5} className="mb-3 font-medium pb-2 border-b">设备规格</Title>
@@ -381,10 +361,8 @@ export default function InverterDetailsDialog({
             </div>
           </TabPane>
           
-          {/* 电力与能源标签页 */}
           <TabPane tab="Power & Energy" key="2">
             <div className="p-4">
-              {/* 关键指标区域 */}
               <div className="flex flex-wrap -mx-2 mb-6">
                 <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
                   <div className="bg-gray-50 p-3 rounded-md">
@@ -415,7 +393,6 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
               
-              {/* 24小时输出功率图表 */}
               <div className="mb-6">
                 <Title level={5} className="mb-3 font-medium">输出功率 (24h)</Title>
                 <div style={{ width: '100%', height: 300 }}>
@@ -452,10 +429,8 @@ export default function InverterDetailsDialog({
             </div>
           </TabPane>
           
-          {/* 组串数据标签页 */}
           <TabPane tab="String Data" key="3">
             <div className="p-4">
-              {/* 组串状态统计 */}
               <div className="flex mb-6 justify-center space-x-6">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>
@@ -471,7 +446,6 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
               
-              {/* 组串信息列表 */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-2">
                   <Text strong>逆变器</Text>
@@ -516,7 +490,6 @@ export default function InverterDetailsDialog({
           </TabPane>
         </Tabs>
         
-        {/* 底部按钮区域 */}
         <div className="flex justify-center p-4 border-t">
           <button 
             onClick={handleCancel}
