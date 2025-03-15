@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Modal, Typography, Divider, Row, Col, Card, Tag, Space, Progress } from 'antd';
+import { Modal, Typography, Divider, Row, Col, Tag, Space, Progress } from 'antd';
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { 
   Zap, 
@@ -17,7 +17,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import inveterImg from '@/assets/inveter.png';
-
 
 const { Title, Text } = Typography;
 
@@ -160,9 +159,10 @@ export default function InverterDetailsDialog({
       bodyStyle={{ padding: '0', maxHeight: '80vh', overflowY: 'auto' }}
       destroyOnClose
     >
-      <div className="p-0">
-        <div className="flex flex-row flex-wrap">
-          <div className="w-full md:w-1/2 p-4 bg-gray-50">
+      <div className="p-6">
+        <div className="flex flex-row flex-wrap mb-6 gap-4">
+          {/* Left card: Device info */}
+          <div className="w-full md:w-[45%] bg-white rounded-lg shadow-md p-4">
             <div className="flex items-start mb-2">
               <Tag color="#87d068" className="mr-2">
                 <Wifi className="inline mr-1" size={14} />
@@ -170,7 +170,10 @@ export default function InverterDetailsDialog({
               </Tag>
             </div>
             <div className="flex justify-center mb-4">
-              <img src={inveterImg} alt="逆变器图片" className="w-32 h-32 object-contain" />
+              {/* <img src={inveterImg} alt="逆变器图片" className="w-32 h-32 object-contain" /> */}
+              <div className="w-32 h-32 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                设备图片
+              </div>
             </div>
             <div className="text-center">
               <p className="text-sm mb-2">型号：{inverterData.model}</p>
@@ -183,8 +186,10 @@ export default function InverterDetailsDialog({
             </div>
           </div>
           
-          <div className="w-full md:w-1/2 p-4">
-            <div className="mb-6 mt-2">
+          {/* Right side: Two separate cards */}
+          <div className="w-full md:w-[calc(55%-1rem)] flex flex-col gap-4">
+            {/* First card: Daily Energy */}
+            <div className="bg-white rounded-lg shadow-md p-4">
               <div className="flex items-center mb-1">
                 <Zap className="mr-2 text-teal-500" size={16} />
                 <Text className="text-gray-500 text-sm">Daily Energy</Text>
@@ -195,7 +200,8 @@ export default function InverterDetailsDialog({
               </div>
             </div>
             
-            <div className="mb-2">
+            {/* Second card: Total Energy */}
+            <div className="bg-white rounded-lg shadow-md p-4">
               <div className="flex items-center mb-1">
                 <Zap className="mr-2 text-teal-500" size={16} />
                 <Text className="text-gray-500 text-sm">Total Energy</Text>
@@ -209,11 +215,11 @@ export default function InverterDetailsDialog({
         </div>
         
         {/* Custom Tab Implementation */}
-        <div className="border-b">
+        <div className="border-b mb-6">
           <div className="flex">
             <button 
               onClick={() => setActiveTab('1')}
-              className={`px-4 py-2 text-sm font-medium ${activeTab === '1' 
+              className={`px-6 py-2 text-base font-medium ${activeTab === '1' 
                 ? 'border-b-2 border-blue-500 text-blue-600' 
                 : 'text-gray-500 hover:text-gray-700'}`}
             >
@@ -221,7 +227,7 @@ export default function InverterDetailsDialog({
             </button>
             <button 
               onClick={() => setActiveTab('2')}
-              className={`px-4 py-2 text-sm font-medium ${activeTab === '2' 
+              className={`px-6 py-2 text-base font-medium ${activeTab === '2' 
                 ? 'border-b-2 border-blue-500 text-blue-600' 
                 : 'text-gray-500 hover:text-gray-700'}`}
             >
@@ -229,7 +235,7 @@ export default function InverterDetailsDialog({
             </button>
             <button 
               onClick={() => setActiveTab('3')}
-              className={`px-4 py-2 text-sm font-medium ${activeTab === '3' 
+              className={`px-6 py-2 text-base font-medium ${activeTab === '3' 
                 ? 'border-b-2 border-blue-500 text-blue-600' 
                 : 'text-gray-500 hover:text-gray-700'}`}
             >
@@ -239,12 +245,12 @@ export default function InverterDetailsDialog({
         </div>
         
         {/* Tab Content */}
-        <div className="p-4">
+        <div className="space-y-6">
           {activeTab === '1' && (
             <div>
-              <div className="flex flex-wrap -mx-2 mb-6">
-                <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+              <div className="flex flex-wrap gap-4 mb-6">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Activity size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">逆变器效率 (%)</Text>
@@ -252,8 +258,8 @@ export default function InverterDetailsDialog({
                     <div className="text-lg font-bold">{inverterData.efficiency}%</div>
                   </div>
                 </div>
-                <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Activity size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">功率因数</Text>
@@ -261,8 +267,8 @@ export default function InverterDetailsDialog({
                     <div className="text-lg font-bold">{inverterData.powerFactor}</div>
                   </div>
                 </div>
-                <div className="w-full md:w-1/3 px-2">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Thermometer size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">内部温度 (°C)</Text>
@@ -272,9 +278,9 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
               
-              <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-                <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">电气参数</Title>
-                <Row gutter={[16, 16]}>
+              <div className="mb-6 bg-white p-5 rounded-lg shadow-md">
+                <Title level={5} className="mb-4 text-base font-medium pb-2 border-b">电气参数</Title>
+                <Row gutter={[24, 16]}>
                   <Col span={8}>
                     <Text className="text-gray-500 block text-xs">直流输入功率 (kW)</Text>
                     <Text strong className="text-sm">{inverterData.dcInputPower}</Text>
@@ -310,9 +316,9 @@ export default function InverterDetailsDialog({
                 </Row>
               </div>
               
-              <div className="mb-6 bg-white p-4 rounded-lg shadow-md">
-                <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">运营统计</Title>
-                <Row gutter={[16, 16]}>
+              <div className="mb-6 bg-white p-5 rounded-lg shadow-md">
+                <Title level={5} className="mb-4 text-base font-medium pb-2 border-b">运营统计</Title>
+                <Row gutter={[24, 16]}>
                   <Col span={8}>
                     <Text className="text-gray-500 block text-xs">连接面板</Text>
                     <Text strong className="text-sm">{inverterData.connectedPanels}枚</Text>
@@ -340,11 +346,11 @@ export default function InverterDetailsDialog({
                 </Row>
               </div>
               
-              <div className="flex flex-wrap -mx-2">
-                <div className="w-full md:w-1/2 px-2 mb-4 md:mb-0">
-                  <div className="bg-white p-4 rounded-lg shadow-md h-full">
-                    <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">设备规格</Title>
-                    <Row gutter={[16, 16]}>
+              <div className="flex flex-wrap gap-4">
+                <div className="w-full md:w-[calc(50%-0.5rem)]">
+                  <div className="bg-white p-5 rounded-lg shadow-md h-full">
+                    <Title level={5} className="mb-4 text-base font-medium pb-2 border-b">设备规格</Title>
+                    <Row gutter={[24, 16]}>
                       <Col span={12}>
                         <Text className="text-gray-500 block text-xs">制造商</Text>
                         <Text strong className="text-sm">{inverterData.manufacturer}</Text>
@@ -365,10 +371,10 @@ export default function InverterDetailsDialog({
                   </div>
                 </div>
                 
-                <div className="w-full md:w-1/2 px-2">
-                  <div className="bg-white p-4 rounded-lg shadow-md h-full">
-                    <Title level={5} className="mb-3 text-base font-medium pb-2 border-b">Grid Parameters</Title>
-                    <Row gutter={[16, 16]}>
+                <div className="w-full md:w-[calc(50%-0.5rem)]">
+                  <div className="bg-white p-5 rounded-lg shadow-md h-full">
+                    <Title level={5} className="mb-4 text-base font-medium pb-2 border-b">Grid Parameters</Title>
+                    <Row gutter={[24, 16]}>
                       <Col span={12}>
                         <Text className="text-gray-500 block text-xs">电网连接商</Text>
                         <Text strong className="text-sm">{inverterData.gridConnector}</Text>
@@ -394,9 +400,9 @@ export default function InverterDetailsDialog({
           
           {activeTab === '2' && (
             <div>
-              <div className="flex flex-wrap -mx-2 mb-6">
-                <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+              <div className="flex flex-wrap gap-4 mb-6">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Activity size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">Daily Peak Power</Text>
@@ -404,8 +410,8 @@ export default function InverterDetailsDialog({
                     <div className="text-lg font-bold">{inverterData.dailyPeakPower}kW</div>
                   </div>
                 </div>
-                <div className="w-full md:w-1/3 px-2 mb-4 md:mb-0">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Clock size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">Power Generation Time</Text>
@@ -413,8 +419,8 @@ export default function InverterDetailsDialog({
                     <div className="text-lg font-bold">{inverterData.powerGenerationTime}h</div>
                   </div>
                 </div>
-                <div className="w-full md:w-1/3 px-2">
-                  <div className="bg-white p-3 rounded-lg shadow-md">
+                <div className="w-full md:w-[calc(33%-0.75rem)]">
+                  <div className="bg-white p-4 rounded-lg shadow-md">
                     <div className="flex items-center mb-2">
                       <Activity size={16} className="mr-2 text-blue-600" />
                       <Text className="text-sm">Performance Ratio</Text>
@@ -424,8 +430,8 @@ export default function InverterDetailsDialog({
                 </div>
               </div>
               
-              <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-                <Title level={5} className="mb-3 text-base font-medium">输出功率 (24h)</Title>
+              <div className="bg-white p-5 rounded-lg shadow-md mb-6">
+                <Title level={5} className="mb-4 text-base font-medium">输出功率 (24h)</Title>
                 <div style={{ width: '100%', height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
@@ -461,7 +467,7 @@ export default function InverterDetailsDialog({
           )}
           
           {activeTab === '3' && (
-            <div className="bg-white p-4 rounded-lg shadow-md">
+            <div className="bg-white p-5 rounded-lg shadow-md">
               <div className="flex mb-6 justify-center space-x-6">
                 <div className="flex items-center">
                   <div className="w-3 h-3 rounded-full bg-teal-500 mr-2"></div>
@@ -521,7 +527,7 @@ export default function InverterDetailsDialog({
           )}
         </div>
         
-        <div className="flex justify-center p-4 border-t">
+        <div className="flex justify-center pt-6 border-t mt-6">
           <button 
             onClick={handleCancel}
             className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"

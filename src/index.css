@@ -108,6 +108,14 @@
   }
 }
 
+.card {
+  @apply bg-white rounded-lg shadow-md p-4;
+}
+
+.card-header {
+  @apply text-base font-medium pb-2 border-b mb-4;
+}
+
 .controls-panel {
   position: absolute;
   top: 20px;
