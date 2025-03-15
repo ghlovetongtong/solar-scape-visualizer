@@ -1,8 +1,8 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { Sky } from '@react-three/drei';
+import { Sky, useTexture } from '@react-three/drei';
 
 interface SkyBoxProps {
   timeOfDay: number;
@@ -35,14 +35,46 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   // Higher turbidity for overall darker sky appearance
   const turbidity = 12 - 5 * Math.sin(Math.PI * timeOfDay); // Increased from 10 to 12 for darker sky
   
+  // Create a skybox with texture
+  const skyboxTexture = useMemo(() => {
+    // Create a new cube texture loader
+    const loader = new THREE.CubeTextureLoader();
+    
+    // Load sky textures based on time of day
+    if (timeOfDay < 0.2 || timeOfDay > 0.8) {
+      // Sunset/sunrise skies - orangish/reddish
+      return loader.load([
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/px.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/nx.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/py.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/ny.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/pz.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/nz.jpg'
+      ]);
+    } else {
+      // Day skies - blue tones
+      return loader.load([
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/px.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/nx.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/py.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/ny.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/pz.jpg',
+        'https://raw.githubusercontent.com/mrdoob/three.js/master/examples/textures/cube/skybox/nz.jpg'
+      ]);
+    }
+  }, [timeOfDay]);
+  
   useEffect(() => {
-    // Cleanup previous background
+    // Apply the skybox texture to the scene background
+    scene.background = skyboxTexture;
+    
+    // Cleanup previous background on unmount or texture change
     return () => {
       if (scene.background && scene.background instanceof THREE.Texture) {
         scene.background.dispose();
       }
     };
-  }, [scene]);
+  }, [scene, skyboxTexture]);
 
   return (
     <Sky
