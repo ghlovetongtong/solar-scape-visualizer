@@ -1,5 +1,5 @@
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useDrawBoundary, type BoundaryPoint } from '@/hooks/useDrawBoundary';
 import { Line } from '@react-three/drei';
