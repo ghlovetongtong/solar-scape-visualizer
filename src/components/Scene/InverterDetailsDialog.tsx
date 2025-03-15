@@ -26,7 +26,7 @@ export default function InverterDetailsDialog({
   
   return (
     <Modal
-      open={open}
+      visible={open}
       onCancel={handleCancel}
       footer={null}
       title={`Inverter ${inverterId + 1} Details`}

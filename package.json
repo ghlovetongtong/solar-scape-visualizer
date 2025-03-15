@@ -17,7 +17,7 @@
     "@react-three/fiber": "^8.15.19",
     "@tanstack/react-query": "^5.56.2",
     "@types/three": "^0.155.1",
-    "antd": "^5.15.2",
+    "antd": "^4.24.16",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.462.0",
