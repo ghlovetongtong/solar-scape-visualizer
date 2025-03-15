@@ -1,10 +1,10 @@
 
 import React, { useState } from 'react';
 import { toast } from 'sonner';
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { Button, Slider, Switch, Divider, Typography } from 'antd';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
+
+const { Title, Text } = Typography;
 
 interface ControlsProps {
   showStats: boolean;
@@ -81,73 +81,77 @@ export default function Controls({
   
   return (
     <div className="absolute left-4 bottom-4 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg max-w-xs space-y-4 border border-gray-200 dark:border-gray-700">
-      <div className="text-lg font-bold">Solar Panel Controls</div>
+      <Title level={5} style={{ margin: 0 }}>Solar Panel Controls</Title>
       
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Time of Day</label>
-          <span className="text-sm text-gray-500">{getTimeLabel(timeOfDay)}</span>
+          <Text strong>Time of Day</Text>
+          <Text type="secondary">{getTimeLabel(timeOfDay)}</Text>
         </div>
         <Slider
-          value={[timeOfDay]}
+          value={timeOfDay}
           min={0}
           max={1}
           step={0.01}
-          onValueChange={(values) => setTimeOfDay(values[0])}
+          onChange={(value) => setTimeOfDay(value)}
         />
       </div>
       
       {selectedPanelId !== null && (
-        <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-          <div className="text-sm font-medium">Selected Panel: #{selectedPanelId}</div>
-          <Slider
-            value={[adjustValue]}
-            min={0}
-            max={1}
-            step={0.01}
-            onValueChange={(values) => setAdjustValue(values[0])}
-          />
-          <div className="grid grid-cols-3 gap-1">
-            <Button size="sm" onClick={() => handlePanelAdjustment('x')}>Move X</Button>
-            <Button size="sm" onClick={() => handlePanelAdjustment('y')}>Move Y</Button>
-            <Button size="sm" onClick={() => handlePanelAdjustment('z')}>Move Z</Button>
-            <Button size="sm" onClick={() => handlePanelAdjustment('x', true)}>Rotate X</Button>
-            <Button size="sm" onClick={() => handlePanelAdjustment('y', true)}>Rotate Y</Button>
-            <Button size="sm" onClick={() => handlePanelAdjustment('z', true)}>Rotate Z</Button>
+        <>
+          <Divider style={{ margin: '12px 0' }} />
+          <div className="space-y-2">
+            <Text strong>Selected Panel: #{selectedPanelId}</Text>
+            <Slider
+              value={adjustValue}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={(value) => setAdjustValue(value)}
+            />
+            <div className="grid grid-cols-3 gap-1">
+              <Button size="small" onClick={() => handlePanelAdjustment('x')}>Move X</Button>
+              <Button size="small" onClick={() => handlePanelAdjustment('y')}>Move Y</Button>
+              <Button size="small" onClick={() => handlePanelAdjustment('z')}>Move Z</Button>
+              <Button size="small" onClick={() => handlePanelAdjustment('x', true)}>Rotate X</Button>
+              <Button size="small" onClick={() => handlePanelAdjustment('y', true)}>Rotate Y</Button>
+              <Button size="small" onClick={() => handlePanelAdjustment('z', true)}>Rotate Z</Button>
+            </div>
           </div>
-        </div>
+        </>
       )}
       
-      <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
+      <Divider style={{ margin: '12px 0' }} />
+      <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Boundary Drawing Mode</label>
+          <Text strong>Boundary Drawing Mode</Text>
           <Switch
             checked={drawingMode}
-            onCheckedChange={setDrawingMode}
+            onChange={setDrawingMode}
           />
         </div>
         
         {drawingMode && (
           <>
-            <div className="grid grid-cols-2 gap-1">
-              <Button size="sm" onClick={onSaveBoundary}>Save Boundary</Button>
-              <Button size="sm" variant="outline" onClick={onClearBoundary}>Clear Drawing</Button>
+            <div className="grid grid-cols-2 gap-1 mt-2">
+              <Button size="small" onClick={onSaveBoundary}>Save Boundary</Button>
+              <Button size="small" danger onClick={onClearBoundary}>Clear Drawing</Button>
             </div>
             
             <div className="grid grid-cols-1 gap-1 mt-2">
               {onGenerateNewPanelsInBoundary && (
                 <Button 
-                  className="w-full" 
+                  type="primary"
+                  style={{ width: '100%' }}
                   onClick={onGenerateNewPanelsInBoundary}
-                  variant="default"
                 >
                   Generate Panels in All Boundaries
                 </Button>
               )}
               {onClearAllBoundaries && (
                 <Button 
-                  className="w-full" 
-                  variant="outline" 
+                  danger
+                  style={{ width: '100%' }}
                   onClick={onClearAllBoundaries}
                 >
                   Clear All Boundaries
@@ -158,14 +162,15 @@ export default function Controls({
         )}
       </div>
       
-      <div className="space-y-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <div className="text-sm font-medium">Panel Management</div>
+      <Divider style={{ margin: '12px 0' }} />
+      <div className="space-y-2">
+        <Text strong>Panel Management</Text>
         <div className="grid grid-cols-2 gap-1">
-          <Button size="sm" variant="outline" onClick={onResetPanels}>Reset Panels</Button>
+          <Button size="small" onClick={onResetPanels}>Reset Panels</Button>
           {onClearAllPanels && (
             <Button 
-              size="sm" 
-              variant="destructive" 
+              size="small" 
+              danger
               onClick={onClearAllPanels}
             >
               Clear All Panels
@@ -175,8 +180,8 @@ export default function Controls({
         
         {onSaveLayout && (
           <Button 
-            className="w-full mt-2" 
-            variant="default"
+            type="primary"
+            style={{ width: '100%', marginTop: '8px' }}
             onClick={onSaveLayout}
           >
             Save Complete Layout
@@ -184,15 +189,13 @@ export default function Controls({
         )}
       </div>
       
-      <div className="flex flex-wrap gap-2 border-t border-gray-200 dark:border-gray-700 pt-2">
-        <div className="flex items-center space-x-2">
-          <Switch
-            checked={showStats}
-            onCheckedChange={setShowStats}
-            id="stats-mode"
-          />
-          <label htmlFor="stats-mode" className="text-sm cursor-pointer">Stats</label>
-        </div>
+      <Divider style={{ margin: '12px 0' }} />
+      <div className="flex items-center space-x-2">
+        <Switch
+          checked={showStats}
+          onChange={setShowStats}
+        />
+        <Text>Stats</Text>
       </div>
     </div>
   );
