@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
 import BoundaryDrawing from './BoundaryDrawing';
@@ -67,10 +67,54 @@ export default function Terrain({
     [southX, southZ]   // South point (shifted left)
   ];
 
+  // Create expanded road boundary to ensure vegetation doesn't grow on or too close to the road
+  const expandedRoadBoundary = useMemo(() => {
+    if (angledRoadPath.length < 2) return [];
+    
+    const roadWidth = 20; // Slightly wider than actual road width to create buffer
+    const [start, end] = angledRoadPath;
+    
+    // Calculate direction vector
+    const dirX = end[0] - start[0];
+    const dirZ = end[1] - start[1];
+    const length = Math.sqrt(dirX * dirX + dirZ * dirZ);
+    
+    // Normalize direction vector
+    const normalizedDirX = dirX / length;
+    const normalizedDirZ = dirZ / length;
+    
+    // Calculate perpendicular vector (rotate 90 degrees)
+    const perpX = -normalizedDirZ;
+    const perpZ = normalizedDirX;
+    
+    // Create polygon points around the road
+    const halfWidth = roadWidth / 2;
+    const boundary: BoundaryPoint[] = [
+      [start[0] + perpX * halfWidth, start[1] + perpZ * halfWidth],
+      [end[0] + perpX * halfWidth, end[1] + perpZ * halfWidth],
+      [end[0] - perpX * halfWidth, end[1] - perpZ * halfWidth],
+      [start[0] - perpX * halfWidth, start[1] - perpZ * halfWidth],
+    ];
+    
+    return boundary;
+  }, [angledRoadPath]);
+
+  // Combine road boundary with user-defined boundaries
+  const allBoundaries = useMemo(() => {
+    return expandedRoadBoundary.length > 0 
+      ? [...savedBoundaries, expandedRoadBoundary] 
+      : savedBoundaries;
+  }, [savedBoundaries, expandedRoadBoundary]);
+
   return (
     <group>
-      <Ground size={groundSize} savedBoundaries={savedBoundaries} />
-      <Vegetation />
+      <Ground size={groundSize} savedBoundaries={allBoundaries} />
+      <Vegetation 
+        count={500} // Reduced from 1000 to 500 (half the original amount)
+        minRadius={120} 
+        maxRadius={180}
+        savedBoundaries={allBoundaries} 
+      />
       
       {/* Add the angled road */}
       <Road 

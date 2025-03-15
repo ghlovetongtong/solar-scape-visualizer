@@ -88,13 +88,7 @@ export default function Ground({
       {/* Render all saved boundaries */}
       <group>{boundaryLines}</group>
       
-      {/* Add vegetation with boundaries to avoid roads */}
-      <Vegetation 
-        count={1000} 
-        minRadius={120} 
-        maxRadius={180}
-        savedBoundaries={savedBoundaries}
-      />
+      {/* Remove Vegetation from here since it's now handled in Terrain */}
     </>
   );
 }
