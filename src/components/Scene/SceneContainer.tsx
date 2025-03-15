@@ -180,8 +180,7 @@ export default function SceneContainer() {
   const {
     isDetailsPopupOpen,
     selectedInverterData,
-    closeInverterDetails,
-    handleInverterClick
+    closeInverterDetails
   } = useInverterDetails();
   
   useEffect(() => {
