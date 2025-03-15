@@ -740,10 +740,10 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [100, 80, 100],
-          fov: 45,
-          near: 0.1,  // Changed from 1 to 0.1 to prevent near-clipping issues
-          far: 2000   // Changed from 1000 to 2000 to allow seeing more distant objects
+          position: [180, 140, 180],  // Modified camera position for better overview
+          fov: 35,  // Narrower field of view for better perspective
+          near: 0.1,
+          far: 2000
         }}
         gl={{ 
           antialias: true,
@@ -846,10 +846,12 @@ export default function SceneContainer() {
             enableDamping 
             dampingFactor={0.05} 
             maxDistance={800}
-            minDistance={0.5}  // Changed from 10 to 0.5 to allow zooming in closer
+            minDistance={0.5}
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
             target={new THREE.Vector3(...panelCenter)}
+            // Set initial rotation to match the reference image
+            makeDefault
           />
           
           {showStats && <Stats />}

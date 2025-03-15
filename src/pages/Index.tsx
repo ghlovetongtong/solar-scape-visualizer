@@ -47,7 +47,11 @@ const Index = () => {
         console.log("Preloading Three.js...");
         await import('three');
         console.log("Three.js loaded successfully");
-        setIsLoading(false);
+        
+        // Add a small delay to ensure smooth transition to the scene
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 500);
       } catch (error) {
         console.error("Failed to load Three.js:", error);
         setLoadingError(error instanceof Error ? error : new Error("Failed to load Three.js"));
