@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
@@ -39,9 +40,9 @@ export default function Terrain({
   // Create a road where:
   // - We keep the south point fixed
   // - Angle the north point 15 degrees to the right from its current position
-  // - Shift the entire road to the right by 40 units
+  // - Shift the entire road to the left by 30 units (changed from right shift)
   // - Increase the road length for a longer road
-  const rightShift = 40; // Amount to shift the road to the right
+  const leftShift = -30; // Amount to shift the road to the left (changed from rightShift of 40)
   
   const currentAngleInRadians = 40 * Math.PI / 180; // Current 40 degrees angle (after previous 5-degree left tilt)
   const newAngleAdjustment = 15 * Math.PI / 180; // 15 degrees to the right (positive angle)
@@ -49,19 +50,19 @@ export default function Terrain({
   
   const roadLength = 500; // Increased from 360 to 500 to make the road longer
   
-  // Calculate the fixed south point, but shifted to the right
-  const southX = (-75 + Math.sin(45 * Math.PI / 180) * roadLength) + rightShift; // Add rightShift to move it right
+  // Calculate the fixed south point, but shifted to the left
+  const southX = (-75 + Math.sin(45 * Math.PI / 180) * roadLength) + leftShift; // Add leftShift to move it left
   const southZ = 180 - Math.cos(45 * Math.PI / 180) * roadLength;
   
   // Now calculate the new north point by going backwards from the fixed south point
   // Using the new angle (55 degrees)
   const newXOffset = Math.sin(newAngleInRadians) * roadLength;
-  const newNorthX = southX - newXOffset + rightShift; // Add rightShift again to ensure consistent shift
+  const newNorthX = southX - newXOffset + leftShift; // Add leftShift again to ensure consistent shift
   
-  // Road path with the new north point (tilted 15 degrees to the right) and fixed south point, both shifted right
+  // Road path with the new north point (angled 15 degrees to the right) and fixed south point, both shifted left
   const angledRoadPath: BoundaryPoint[] = [
-    [newNorthX, 180],  // New north point (angled 15 degrees to the right and shifted right)
-    [southX, southZ]   // South point (shifted right)
+    [newNorthX, 180],  // New north point (angled 15 degrees to the right and shifted left)
+    [southX, southZ]   // South point (shifted left)
   ];
 
   return (
