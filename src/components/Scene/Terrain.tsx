@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState } from 'react';
 import Ground from './Ground';
 import Vegetation from './Vegetation';
@@ -10,12 +9,14 @@ interface TerrainProps {
   drawingEnabled?: boolean;
   onBoundaryComplete?: (points: BoundaryPoint[]) => void;
   savedBoundaries?: BoundaryPoint[][];
+  groundSize?: number;
 }
 
 export default function Terrain({ 
   drawingEnabled = false, 
   onBoundaryComplete,
-  savedBoundaries = []
+  savedBoundaries = [],
+  groundSize = 400
 }: TerrainProps) {
   // State to store the road boundary
   const [roadBoundary, setRoadBoundary] = useState<BoundaryPoint[]>([]);
@@ -67,7 +68,7 @@ export default function Terrain({
 
   return (
     <group>
-      <Ground size={400} savedBoundaries={savedBoundaries} />
+      <Ground size={groundSize} savedBoundaries={savedBoundaries} />
       <Vegetation />
       
       {/* Add the angled road */}
@@ -75,7 +76,8 @@ export default function Terrain({
         boundary={angledRoadPath} 
         width={15} 
         color="#403E43" 
-        elevation={0.05} 
+        elevation={0.05}
+        groundSize={groundSize}
       />
       
       {drawingEnabled && (
