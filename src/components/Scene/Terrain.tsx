@@ -37,27 +37,27 @@ export default function Terrain({
     }
   }, [onBoundaryComplete, roadBoundary]);
 
-  // Create an angled road path 
-  // - South point stays at [-150, -180]
-  // - North point is angled 30 degrees to the left
+  // Create a road path where:
+  // - North point stays fixed at [-150, 180]
+  // - South point is angled 30 degrees to the left
   const angleInRadians = 30 * Math.PI / 180; // 30 degrees in radians
-  const roadLength = 360; // Total length from south to north
+  const roadLength = 360; // Total length from north to south
   
-  // Calculate the northern point with the 30-degree angle to the left
-  // Starting from the southern point at [-150, -180]
-  const southX = -150;
-  const southZ = -180;
+  // Fixed northern point
+  const northX = -150;
+  const northZ = 180;
   
   // Calculate offset for the 30-degree angle (moving west/left)
   const xOffset = Math.sin(angleInRadians) * roadLength;
   const zOffset = Math.cos(angleInRadians) * roadLength;
   
-  const northX = southX - xOffset; // Subtract because we're going left/west
-  const northZ = southZ + zOffset; // Add because we're going north
+  // Calculate southern point with 30-degree angle to the left
+  const southX = northX - xOffset; // Subtract because we're going left/west
+  const southZ = northZ - zOffset; // Subtract because we're going south
   
   const angledRoadPath: BoundaryPoint[] = [
-    [northX, northZ],  // North point (angled 30 degrees to the left)
-    [southX, southZ]   // South point (fixed)
+    [northX, northZ],    // North point (fixed)
+    [southX, southZ]     // South point (angled 30 degrees to the left)
   ];
 
   return (
