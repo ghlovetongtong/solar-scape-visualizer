@@ -37,11 +37,11 @@ export default function Terrain({
     }
   }, [onBoundaryComplete, roadBoundary]);
 
-  // Create a straight road path that avoids equipment areas
-  // This road runs along the west edge of the terrain to avoid overlapping with equipment
+  // Create a straight road path along the west edge of the terrain
+  // This ensures it doesn't overlap with equipment
   const straightRoadPath: BoundaryPoint[] = [
-    [-180, -180], // Start point (southwest corner)
-    [-180, 180]   // End point (northwest corner)
+    [-150, 180],  // North point
+    [-150, -180]  // South point
   ];
 
   return (

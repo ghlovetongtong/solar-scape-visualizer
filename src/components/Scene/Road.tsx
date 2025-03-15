@@ -20,20 +20,25 @@ export default function Road({
   const roadMesh = useMemo(() => {
     if (boundary.length < 2) return null;
 
-    // Create a path from the boundary points
-    const path = new THREE.CatmullRomCurve3(
-      boundary.map(([x, z]) => new THREE.Vector3(x, elevation, z))
-    );
+    // Create a flat road instead of a tube
+    const startPoint = new THREE.Vector3(boundary[0][0], elevation, boundary[0][1]);
+    const endPoint = new THREE.Vector3(boundary[1][0], elevation, boundary[1][1]);
     
-    // Create the road geometry
-    const tubeGeometry = new THREE.TubeGeometry(
-      path,
-      boundary.length * 8, // segments for smoother curve
-      width / 2, // radius - half the desired road width
-      18, // radial segments for smoother tube
-      false // not closed for straight road
-    );
-
+    // Calculate road direction vector
+    const direction = new THREE.Vector3().subVectors(endPoint, startPoint).normalize();
+    
+    // Calculate perpendicular vector for road width
+    const perpendicular = new THREE.Vector3(-direction.z, 0, direction.x).normalize();
+    
+    // Calculate road length
+    const roadLength = startPoint.distanceTo(endPoint);
+    
+    // Create road geometry as a flat plane
+    const roadGeometry = new THREE.PlaneGeometry(width, roadLength);
+    
+    // Rotate and position the road to align with the path
+    const angle = Math.atan2(direction.x, direction.z);
+    
     // Create road material
     const roadMaterial = new THREE.MeshStandardMaterial({
       color: color,
@@ -41,16 +46,16 @@ export default function Road({
       metalness: 0.2,
       side: THREE.DoubleSide,
     });
-
-    // Create the center line (dashed)
-    const centerLineGeometry = new THREE.TubeGeometry(
-      path,
-      boundary.length * 8,
-      0.15, // very thin line
-      6,
-      false
+    
+    // Calculate road center position
+    const centerPos = new THREE.Vector3(
+      (startPoint.x + endPoint.x) / 2,
+      elevation,
+      (startPoint.z + endPoint.z) / 2
     );
     
+    // Create center line (dashed)
+    const centerLineGeometry = new THREE.PlaneGeometry(0.3, roadLength - 1);
     const centerLineMaterial = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
       roughness: 0.3,
@@ -58,65 +63,46 @@ export default function Road({
       side: THREE.DoubleSide,
     });
     
-    // Create edge lines (solid)
-    const edgeLineWidth = width / 2 - 0.3; // Slightly inside the road edge
-    
-    // Left edge line
-    const leftEdgePath = new THREE.CatmullRomCurve3(
-      boundary.map(([x, z]) => new THREE.Vector3(x - edgeLineWidth, elevation + 0.05, z))
-    );
-    
-    const leftEdgeGeometry = new THREE.TubeGeometry(
-      leftEdgePath,
-      boundary.length * 8,
-      0.15, // thin line
-      6,
-      false
-    );
-    
-    // Right edge line
-    const rightEdgePath = new THREE.CatmullRomCurve3(
-      boundary.map(([x, z]) => new THREE.Vector3(x + edgeLineWidth, elevation + 0.05, z))
-    );
-    
-    const rightEdgeGeometry = new THREE.TubeGeometry(
-      rightEdgePath,
-      boundary.length * 8,
-      0.15, // thin line
-      6,
-      false
-    );
-    
+    // Create edge lines
+    const edgeLineGeometry = new THREE.PlaneGeometry(0.3, roadLength);
     const edgeLineMaterial = new THREE.MeshStandardMaterial({
       color: '#FFFFFF',
       roughness: 0.3,
       metalness: 0.1,
       side: THREE.DoubleSide,
     });
-
+    
+    // Calculate positions for the edge lines
+    const halfWidth = width / 2 - 0.3;
+    
     return (
-      <group>
+      <group position={centerPos} rotation={[0, -angle, 0]}>
         <mesh 
-          geometry={tubeGeometry} 
+          geometry={roadGeometry} 
           material={roadMaterial} 
           receiveShadow 
-          position={[0, 0, 0]}
+          rotation={[-Math.PI / 2, 0, 0]}
         />
         <mesh
           geometry={centerLineGeometry}
           material={centerLineMaterial}
           receiveShadow
-          position={[0, 0.05, 0]} // Slightly above the road
+          position={[0, 0.01, 0]} // Slightly above the road
+          rotation={[-Math.PI / 2, 0, 0]}
         />
         <mesh
-          geometry={leftEdgeGeometry}
+          geometry={edgeLineGeometry}
           material={edgeLineMaterial}
           receiveShadow
+          position={[-halfWidth, 0.01, 0]} // Left edge line
+          rotation={[-Math.PI / 2, 0, 0]}
         />
         <mesh
-          geometry={rightEdgeGeometry}
+          geometry={edgeLineGeometry}
           material={edgeLineMaterial}
           receiveShadow
+          position={[halfWidth, 0.01, 0]} // Right edge line
+          rotation={[-Math.PI / 2, 0, 0]}
         />
       </group>
     );
