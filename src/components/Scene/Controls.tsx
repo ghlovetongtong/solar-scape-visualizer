@@ -1,7 +1,6 @@
 
 import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { Button, Slider, Switch, Divider, Typography } from 'antd';
+import { Button, Slider, Switch, Divider, Typography, message } from 'antd';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 const { Title, Text } = Typography;
@@ -47,7 +46,7 @@ export default function Controls({
   
   const handlePanelAdjustment = (axis: 'x' | 'y' | 'z', isRotation: boolean = false) => {
     if (selectedPanelId === null) {
-      toast.error("No panel selected");
+      message.error("No panel selected");
       return;
     }
     

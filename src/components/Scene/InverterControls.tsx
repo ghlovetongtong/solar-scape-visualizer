@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { toast } from 'sonner';
+import { Button, Slider, Switch, Divider, Typography, Input } from 'antd';
+import { message } from 'antd';
+
+const { Title, Text } = Typography;
 
 interface InverterControlsProps {
   selectedInverterIndex: number;
@@ -24,7 +23,7 @@ export default function InverterControls({
 
   const handleInverterAdjustment = (axis: 'x' | 'y' | 'z') => {
     if (selectedInverterIndex === null) {
-      toast.error("No inverter selected");
+      message.error("No inverter selected");
       return;
     }
     
@@ -40,7 +39,7 @@ export default function InverterControls({
 
   const handleManualPositionUpdate = () => {
     if (selectedInverterIndex === null) {
-      toast.error("No inverter selected");
+      message.error("No inverter selected");
       return;
     }
 
@@ -49,12 +48,12 @@ export default function InverterControls({
     const z = manualZ ? parseFloat(manualZ) : 0;
 
     if (isNaN(x) || isNaN(y) || isNaN(z)) {
-      toast.error("Please enter valid numbers for position");
+      message.error("Please enter valid numbers for position");
       return;
     }
 
     onUpdateInverterPosition(selectedInverterIndex, [x, y, z]);
-    toast.success(`Inverter ${selectedInverterIndex + 1} position set to X:${x} Y:${y} Z:${z}`);
+    message.success(`Inverter ${selectedInverterIndex + 1} position set to X:${x} Y:${y} Z:${z}`);
     
     // Clear inputs after update
     setManualX('');
@@ -68,49 +67,46 @@ export default function InverterControls({
       
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-medium">Adjustment Amount</label>
-          <span className="text-sm text-gray-500">{(adjustValue - 0.5) * 2}</span>
+          <Text strong>Adjustment Amount</Text>
+          <Text type="secondary">{(adjustValue - 0.5) * 2}</Text>
         </div>
         <Slider
-          value={[adjustValue]}
+          value={adjustValue}
           min={0}
           max={1}
           step={0.01}
-          onValueChange={(values) => setAdjustValue(values[0])}
+          onChange={(value) => setAdjustValue(value)}
         />
       </div>
       
       <div className="grid grid-cols-3 gap-1">
-        <Button size="sm" onClick={() => handleInverterAdjustment('x')}>Move X</Button>
-        <Button size="sm" onClick={() => handleInverterAdjustment('y')}>Move Y</Button>
-        <Button size="sm" onClick={() => handleInverterAdjustment('z')}>Move Z</Button>
+        <Button size="small" onClick={() => handleInverterAdjustment('x')}>Move X</Button>
+        <Button size="small" onClick={() => handleInverterAdjustment('y')}>Move Y</Button>
+        <Button size="small" onClick={() => handleInverterAdjustment('z')}>Move Z</Button>
       </div>
       
       <div className="space-y-2 mt-2">
         <div className="text-sm font-medium">Set Exact Position</div>
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <Label htmlFor="position-x" className="text-xs">X Position</Label>
+            <Text strong>X Position</Text>
             <Input 
-              id="position-x" 
               placeholder="X" 
               value={manualX} 
               onChange={(e) => setManualX(e.target.value)}
             />
           </div>
           <div>
-            <Label htmlFor="position-y" className="text-xs">Y Position</Label>
+            <Text strong>Y Position</Text>
             <Input 
-              id="position-y" 
               placeholder="Y" 
               value={manualY} 
               onChange={(e) => setManualY(e.target.value)}
             />
           </div>
           <div>
-            <Label htmlFor="position-z" className="text-xs">Z Position</Label>
+            <Text strong>Z Position</Text>
             <Input 
-              id="position-z" 
               placeholder="Z" 
               value={manualZ} 
               onChange={(e) => setManualZ(e.target.value)}
@@ -118,8 +114,8 @@ export default function InverterControls({
           </div>
         </div>
         <Button 
-          size="sm" 
-          className="w-full"
+          size="small" 
+          style={{ width: '100%' }}
           onClick={handleManualPositionUpdate}
         >
           Set Position
@@ -127,9 +123,9 @@ export default function InverterControls({
       </div>
       
       <Button 
-        size="sm" 
-        className="w-full mt-2"
-        variant="outline"
+        size="small" 
+        style={{ width: '100%', marginTop: '8px' }}
+        danger
         onClick={onDeselectInverter}
       >
         Deselect Inverter
