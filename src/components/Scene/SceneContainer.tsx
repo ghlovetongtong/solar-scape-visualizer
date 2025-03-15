@@ -164,6 +164,8 @@ export default function SceneContainer() {
   const [itHousePosition, setItHousePosition] = useState<[number, number, number]>([0, 0, 0]);
   const [inverterDialogOpen, setInverterDialogOpen] = useState(false);
   const [transformerDialogOpen, setTransformerDialogOpen] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [autoRotateSpeed, setAutoRotateSpeed] = useState(0.5);
   
   const [draggingObject, setDraggingObject] = useState<DraggableObjectState | null>(null);
   
@@ -849,7 +851,8 @@ export default function SceneContainer() {
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
             target={new THREE.Vector3(...panelCenter)}
-            // Set initial rotation to match the requested 180-degree rotation
+            autoRotate={autoRotate}
+            autoRotateSpeed={autoRotateSpeed}
             makeDefault
           />
           
@@ -874,6 +877,10 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
+        autoRotate={autoRotate}
+        setAutoRotate={setAutoRotate}
+        autoRotateSpeed={autoRotateSpeed}
+        setAutoRotateSpeed={setAutoRotateSpeed}
       />
       
       <InverterDetailsDialog

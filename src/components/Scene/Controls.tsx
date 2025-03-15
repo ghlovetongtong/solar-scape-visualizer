@@ -22,6 +22,10 @@ interface ControlsProps {
   onClearAllPanels?: () => void;
   onGenerateNewPanelsInBoundary?: () => void;
   onSaveLayout?: () => void;
+  autoRotate?: boolean;
+  setAutoRotate?: (rotate: boolean) => void;
+  autoRotateSpeed?: number;
+  setAutoRotateSpeed?: (speed: number) => void;
 }
 
 export default function Controls({
@@ -40,7 +44,11 @@ export default function Controls({
   onClearAllBoundaries,
   onClearAllPanels,
   onGenerateNewPanelsInBoundary,
-  onSaveLayout
+  onSaveLayout,
+  autoRotate = true,
+  setAutoRotate = () => {},
+  autoRotateSpeed = 0.5,
+  setAutoRotateSpeed = () => {}
 }: ControlsProps) {
   const [adjustValue, setAdjustValue] = useState(0.5);
   
@@ -119,6 +127,33 @@ export default function Controls({
           </div>
         </>
       )}
+      
+      <Divider style={{ margin: '12px 0' }} />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Text strong>Camera Rotation</Text>
+          <Switch
+            checked={autoRotate}
+            onChange={setAutoRotate}
+          />
+        </div>
+        
+        {autoRotate && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Text>Rotation Speed</Text>
+              <Text type="secondary">{autoRotateSpeed.toFixed(1)}</Text>
+            </div>
+            <Slider
+              value={autoRotateSpeed}
+              min={0.1}
+              max={5}
+              step={0.1}
+              onChange={(value) => setAutoRotateSpeed(value)}
+            />
+          </div>
+        )}
+      </div>
       
       <Divider style={{ margin: '12px 0' }} />
       <div className="space-y-2">
