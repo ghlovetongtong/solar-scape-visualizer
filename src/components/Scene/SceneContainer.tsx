@@ -15,6 +15,7 @@ import Controls from './Controls';
 import SkyBox from './SkyBox';
 import InverterDetailsDialog from './InverterDetailsDialog';
 import TransformerDetailsDialog from './TransformerDetailsDialog';
+import CameraDetailsDialog from './CameraDetailsDialog';
 import { usePanelPositions, CompleteLayoutData } from '@/hooks/usePanelPositions';
 import Road from './Road';
 
@@ -155,6 +156,8 @@ export default function SceneContainer() {
   const [savedBoundaries, setSavedBoundaries] = useState<BoundaryPoint[][]>([]);
   const [selectedInverterIndex, setSelectedInverterIndex] = useState<number | null>(null);
   const [selectedTransformerIndex, setSelectedTransformerIndex] = useState<number | null>(null);
+  const [selectedCameraIndex, setSelectedCameraIndex] = useState<number | null>(null);
+  const [cameraDialogOpen, setCameraDialogOpen] = useState(false);
   const [inverterPositions, setInverterPositions] = useState<[number, number, number][]>([]);
   const [cameraPositions, setCameraPositions] = useState<[number, number, number][]>([]);
   const [transformerPositions, setTransformerPositions] = useState<[number, number, number][]>([]);
@@ -488,9 +491,12 @@ export default function SceneContainer() {
       setSelectedInverterIndex(index !== undefined ? index : null);
     } else if (type === 'transformer') {
       setSelectedTransformerIndex(index !== undefined ? index : null);
+    } else if (type === 'camera') {
+      setSelectedCameraIndex(index !== undefined ? index : null);
     } else {
       setSelectedInverterIndex(null);
       setSelectedTransformerIndex(null);
+      setSelectedCameraIndex(null);
     }
     
     console.log(`Started dragging ${type}${index !== undefined ? ' ' + (index + 1) : ''}`);
@@ -674,6 +680,7 @@ export default function SceneContainer() {
     if (!event.object) {
       setSelectedInverterIndex(null);
       setSelectedTransformerIndex(null);
+      setSelectedCameraIndex(null);
       selectPanel(null);
       return;
     }
@@ -686,6 +693,7 @@ export default function SceneContainer() {
       
       setSelectedInverterIndex(userData.inverterIndex);
       setSelectedTransformerIndex(null);
+      setSelectedCameraIndex(null);
       setInverterDialogOpen(true);
       
       selectPanel(null);
@@ -696,7 +704,19 @@ export default function SceneContainer() {
       
       setSelectedTransformerIndex(userData.transformerIndex);
       setSelectedInverterIndex(null);
+      setSelectedCameraIndex(null);
       setTransformerDialogOpen(true);
+      
+      selectPanel(null);
+      event.stopPropagation();
+    }
+    else if (userData.type === 'camera') {
+      console.log(`Camera ${userData.cameraIndex} selected`);
+      
+      setSelectedCameraIndex(userData.cameraIndex);
+      setSelectedInverterIndex(null);
+      setSelectedTransformerIndex(null);
+      setCameraDialogOpen(true);
       
       selectPanel(null);
       event.stopPropagation();
@@ -704,10 +724,12 @@ export default function SceneContainer() {
     else if (userData.type === 'panel' || userData.type === 'panel-instance') {
       setSelectedInverterIndex(null);
       setSelectedTransformerIndex(null);
+      setSelectedCameraIndex(null);
     }
     else {
       setSelectedInverterIndex(null);
       setSelectedTransformerIndex(null);
+      setSelectedCameraIndex(null);
       selectPanel(null);
     }
   }, [selectPanel]);
@@ -780,6 +802,14 @@ export default function SceneContainer() {
               onDragStart={() => handleStartDrag('camera', index)}
               onDragEnd={() => handleEndDrag()}
               onDrag={handleDragCamera}
+              onClick={(index) => {
+                console.log(`Camera onClick callback, index=${index}`);
+                setSelectedCameraIndex(selectedCameraIndex === index ? null : index);
+                setCameraDialogOpen(true);
+                setSelectedInverterIndex(null);
+                setSelectedTransformerIndex(null);
+                selectPanel(null);
+              }}
             />
           ))}
           
@@ -856,7 +886,14 @@ export default function SceneContainer() {
         transformerId={selectedTransformerIndex}
       />
       
+      <CameraDetailsDialog
+        open={cameraDialogOpen}
+        onOpenChange={setCameraDialogOpen}
+        cameraId={selectedCameraIndex}
+      />
+      
       <Loader />
     </div>
   );
 }
+

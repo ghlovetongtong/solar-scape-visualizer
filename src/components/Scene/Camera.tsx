@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { Text } from '@react-three/drei';
@@ -11,6 +11,7 @@ interface CameraProps {
   onDragStart?: (index: number) => void;
   onDragEnd?: (index: number, position: [number, number, number]) => void;
   onDrag?: (index: number, position: [number, number, number]) => void;
+  onClick?: (index: number) => void;
 }
 
 export default function Camera({ 
@@ -19,11 +20,13 @@ export default function Camera({
   isDragging = false,
   onDragStart,
   onDragEnd,
-  onDrag
+  onDrag,
+  onClick
 }: CameraProps) {
   const cameraRef = useRef<THREE.Group>(null);
   const dragOffsetRef = useRef<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
+  const [hovered, setHovered] = useState(false);
   
   // Setup scene-level event listeners for dragging
   useEffect(() => {
@@ -90,6 +93,12 @@ export default function Camera({
   const handlePointerDown = (e: THREE.Event) => {
     e.stopPropagation();
     
+    if (e.button === 0) { // Left click
+      if (onClick) {
+        onClick(cameraIndex);
+      }
+    }
+    
     if (onDragStart) {
       onDragStart(cameraIndex);
       
@@ -102,11 +111,23 @@ export default function Camera({
         raycaster.ray.intersectPlane(dragPlane, intersection);
         
         if (intersection) {
-          // Store the offset from intersection to object position
           dragOffsetRef.current = intersection.clone().sub(new THREE.Vector3(position.x, position.y, position.z));
         }
       }
     }
+  };
+  
+  // Add hover effects
+  const handlePointerOver = (e: THREE.Event) => {
+    e.stopPropagation();
+    setHovered(true);
+    document.body.style.cursor = 'pointer';
+  };
+  
+  const handlePointerOut = (e: THREE.Event) => {
+    e.stopPropagation();
+    setHovered(false);
+    document.body.style.cursor = 'auto';
   };
 
   return (
@@ -114,12 +135,14 @@ export default function Camera({
       position={position} 
       ref={cameraRef}
       onPointerDown={handlePointerDown}
-      scale={[2.2, 2.2, 2.2]} // Increase the scale of the entire camera
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+      userData={{ type: 'camera', cameraIndex }}
     >
       {/* Camera mount/pole */}
       <mesh castShadow position={[0, -5, 0]}>
         <cylinderGeometry args={[0.1, 0.1, 10, 8]} />
-        <meshStandardMaterial color={isDragging ? "#aaaaaa" : "#888888"} roughness={0.6} />
+        <meshStandardMaterial color={hovered ? "#aaaaaa" : (isDragging ? "#aaaaaa" : "#888888")} roughness={0.6} />
       </mesh>
       
       {/* Camera housing */}
@@ -127,7 +150,7 @@ export default function Camera({
         {/* Main camera body */}
         <mesh castShadow position={[0, 0, 0.2]}>
           <boxGeometry args={[0.3, 0.3, 0.8]} />
-          <meshStandardMaterial color={isDragging ? "#555555" : "#333333"} roughness={0.5} metalness={0.7} />
+          <meshStandardMaterial color={hovered ? "#555555" : (isDragging ? "#555555" : "#333333")} roughness={0.5} metalness={0.7} />
         </mesh>
         
         {/* Camera lens */}
@@ -156,11 +179,11 @@ export default function Camera({
       <Text
         position={[0, 0.5, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.5}  // Increased from 0.3 to 0.5
+        fontSize={0.5}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"
-        outlineWidth={0.05}  // Increased from 0.03 to 0.05
+        outlineWidth={0.05}
         outlineColor="#000000"
       >
         {`Camera ${cameraIndex + 1}`}
