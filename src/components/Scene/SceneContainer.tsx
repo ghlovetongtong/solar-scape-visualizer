@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -739,7 +740,7 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [-180, 140, -180],  // Rotated 180 degrees from the current position
+          position: [-90, 140, -180],  // Updated X position to -90
           fov: 35,  // Narrower field of view for better perspective
           near: 0.1,
           far: 2000
