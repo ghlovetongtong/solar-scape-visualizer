@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Modal, Typography, Divider, Row, Col, Tag, Space, Progress } from 'antd';
 import { Area, AreaChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
