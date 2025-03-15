@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -181,7 +180,8 @@ export default function SceneContainer() {
   const {
     isDetailsPopupOpen,
     selectedInverterData,
-    closeInverterDetails
+    closeInverterDetails,
+    handleInverterClick
   } = useInverterDetails();
   
   useEffect(() => {
@@ -867,6 +867,9 @@ export default function SceneContainer() {
         onClearAllPanels={handleClearAllPanels}
         onGenerateNewPanelsInBoundary={handleGenerateNewPanelsInBoundary}
         onSaveLayout={handleSaveLayout}
+        selectedInverterIndex={selectedInverterIndex}
+        onDeselectInverter={() => setSelectedInverterIndex(null)}
+        onUpdateInverterPosition={handleUpdateInverterPosition}
       />
       
       <Loader />
