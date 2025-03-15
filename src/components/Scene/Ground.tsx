@@ -73,6 +73,7 @@ export default function Ground({
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]} 
         receiveShadow
+        frustumCulled={false} // Prevent disappearing when zooming in close
       >
         <primitive object={groundGeometry} />
         <meshStandardMaterial 

@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Stats, OrbitControls, useProgress } from '@react-three/drei';
@@ -741,8 +742,8 @@ export default function SceneContainer() {
         camera={{ 
           position: [100, 80, 100],
           fov: 45,
-          near: 1,
-          far: 1000
+          near: 0.1,  // Changed from 1 to 0.1 to prevent near-clipping issues
+          far: 2000   // Changed from 1000 to 2000 to allow seeing more distant objects
         }}
         gl={{ 
           antialias: true,
@@ -845,7 +846,7 @@ export default function SceneContainer() {
             enableDamping 
             dampingFactor={0.05} 
             maxDistance={800}
-            minDistance={10}
+            minDistance={0.5}  // Changed from 10 to 0.5 to allow zooming in closer
             maxPolarAngle={Math.PI / 2 - 0.1}
             minPolarAngle={0.1}
             target={new THREE.Vector3(...panelCenter)}
@@ -896,4 +897,3 @@ export default function SceneContainer() {
     </div>
   );
 }
-
