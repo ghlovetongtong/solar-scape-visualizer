@@ -63,13 +63,13 @@ const stringData = [
 ];
 
 interface InverterDetailsDialogProps {
-  visible: boolean;
+  open: boolean;
   onOpenChange: (open: boolean) => void;
   inverterId: number | null;
 }
 
 export default function InverterDetailsDialog({
-  visible,
+  open,
   onOpenChange,
   inverterId
 }: InverterDetailsDialogProps) {
@@ -160,7 +160,7 @@ export default function InverterDetailsDialog({
 
   return (
     <Modal
-      visible={visible}
+      open={open}
       onCancel={handleCancel}
       footer={null}
       title={`${inverterData.name} (设备号)`}

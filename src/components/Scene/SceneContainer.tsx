@@ -818,7 +818,7 @@ export default function SceneContainer() {
       />
       
       <InverterDetailsDialog
-        visible={inverterDialogOpen}
+        open={inverterDialogOpen}
         onOpenChange={setInverterDialogOpen}
         inverterId={selectedInverterIndex}
       />
