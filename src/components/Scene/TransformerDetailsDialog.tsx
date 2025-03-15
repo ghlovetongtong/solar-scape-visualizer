@@ -1,47 +1,45 @@
 
 import React, { useState } from 'react';
-import { Modal, Typography, Divider, Row, Col, Tag, Space, Progress } from 'antd';
+import { Modal, Typography, Row, Col } from 'antd';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Zap, Thermometer, Activity, AlertTriangle } from 'lucide-react';
+import transformerImg from 'public/lovable-uploads/9e73eb8f-e0a0-4983-9a6e-121c0fb595e8.png';
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 // Mock data for transformer
 const getTransformerData = (transformerId: number | null) => {
-  const mockTempData = Array.from({ length: 24 }, (_, i) => ({
-    time: `${i}:00`,
-    temperature: Math.round(35 + Math.sin(i / 24 * Math.PI * 2) * 10 + Math.random() * 5)
-  }));
-
   const mockLoadData = Array.from({ length: 24 }, (_, i) => ({
     time: `${i}:00`,
-    load: Math.round(60 + Math.sin(i / 24 * Math.PI * 2) * 20 + Math.random() * 10)
+    load: Math.round(10 + Math.sin((i - 6) / 24 * Math.PI * 2) * 70 + Math.random() * 10)
+  }));
+
+  const mockTempData = Array.from({ length: 24 }, (_, i) => ({
+    time: `${i}:00`,
+    temperature: Math.round(10 + Math.sin((i - 6) / 24 * Math.PI * 2) * 75 + Math.random() * 10)
   }));
 
   return {
     id: transformerId,
-    name: `Transformer ${transformerId !== null ? transformerId + 1 : ''}`,
-    model: 'TS-8000/35',
-    status: 'Running',
-    power: {
-      capacity: 8000, // kVA
-      current: 6240, // kVA
-    },
-    voltage: {
-      input: 35000, // V
-      output: 400, // V
-    },
-    temperature: 42, // °C
-    oil: {
-      level: 92, // %
-      temperature: 38, // °C
-    },
-    efficiency: 98.2, // %
-    maintenance: {
-      lastDate: '2023-08-15',
-      nextDate: '2024-02-15',
-    },
-    temperatureData: mockTempData,
-    loadData: mockLoadData
+    name: `箱变${transformerId !== null ? transformerId + 1 : ''}`,
+    model: 'TBEA-ZGSF11-Z.T-2500/35',
+    status: 'online',
+    warningCount: 2,
+    capacityWh: 3,
+    load: 29,
+    temperature: 56,
+    connectedInverters: 4,
+    manufacturer: '华为',
+    installationDate: '2024.12.12',
+    lastMaintenance: '2025.03.12',
+    voltageRating: '33kV / 120kV',
+    coolingType: 'ONAN/ONAF',
+    connectedInvertersList: 'INV #4, INV #5, INV #6, INV #7',
+    oilLevel: '95%',
+    impedance: '6.25%',
+    efficiency: '98.7%',
+    loadData: mockLoadData,
+    tempData: mockTempData
   };
 };
 
@@ -63,232 +61,251 @@ export default function TransformerDetailsDialog({
   const handleCancel = () => {
     onOpenChange(false);
   };
+
+  if (transformerId === null) return null;
   
   return (
     <Modal
-      title={
-        <div className="flex items-center">
-          <span className="text-xl font-bold">{transformer.name}</span>
-          <Tag color="green" className="ml-2">
-            {transformer.status}
-          </Tag>
-        </div>
-      }
+      title={`${transformer.name} (设备号)`}
       open={open}
       onCancel={handleCancel}
       footer={null}
       width={800}
-      className="transformer-details-dialog"
+      bodyStyle={{ padding: '0', overflow: 'auto' }}
+      destroyOnClose
     >
-      <div className="tab-container mb-4">
-        <div className="tabs flex">
-          <div 
-            className={`tab-item px-4 py-2 cursor-pointer ${activeTab === 'overview' ? 'active' : ''}`}
-            onClick={() => setActiveTab('overview')}
-          >
-            Overview
-          </div>
-          <div 
-            className={`tab-item px-4 py-2 cursor-pointer ${activeTab === 'monitoring' ? 'active' : ''}`}
-            onClick={() => setActiveTab('monitoring')}
-          >
-            Monitoring
-          </div>
-          <div 
-            className={`tab-item px-4 py-2 cursor-pointer ${activeTab === 'maintenance' ? 'active' : ''}`}
-            onClick={() => setActiveTab('maintenance')}
-          >
-            Maintenance
-          </div>
-        </div>
-      </div>
-      
-      {activeTab === 'overview' && (
-        <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="info-card">
-              <Title level={5}>Device Information</Title>
-              <div className="info-item">
-                <Text type="secondary">Model:</Text>
-                <Text strong>{transformer.model}</Text>
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Capacity:</Text>
-                <Text strong>{transformer.power.capacity} kVA</Text>
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Status:</Text>
-                <Tag color="green">{transformer.status}</Tag>
-              </div>
+      <div className="p-6">
+        {/* Top cards section */}
+        <div className="flex flex-row flex-wrap mb-6 gap-4">
+          {/* Device info card */}
+          <div className="w-full md:w-[32%] bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+            <div className="flex items-start mb-2">
+              <span className="text-xs rounded px-2 py-0.5 bg-purple-100 text-purple-700 mr-2">变电站</span>
+              <span className="text-xs rounded px-2 py-0.5 bg-teal-100 text-teal-700">在线</span>
             </div>
-            
-            <div className="info-card">
-              <Title level={5}>Power</Title>
-              <div className="info-item">
-                <Text type="secondary">Current Load:</Text>
-                <Text strong>{transformer.power.current} kVA</Text>
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Utilization:</Text>
-                <Progress 
-                  percent={Math.round((transformer.power.current / transformer.power.capacity) * 100)} 
-                  size="small" 
-                  status="active"
-                />
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Efficiency:</Text>
-                <Text strong>{transformer.efficiency}%</Text>
-              </div>
+            <div className="flex justify-center mb-3">
+              <img src={transformerImg} alt="Transformer" className="w-48 object-contain" />
             </div>
-            
-            <div className="info-card">
-              <Title level={5}>Voltage</Title>
-              <div className="info-item">
-                <Text type="secondary">Input:</Text>
-                <Text strong>{transformer.voltage.input / 1000} kV</Text>
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Output:</Text>
-                <Text strong>{transformer.voltage.output} V</Text>
-              </div>
-              <div className="info-item">
-                <Text type="secondary">Conversion Ratio:</Text>
-                <Text strong>{(transformer.voltage.input / transformer.voltage.output).toFixed(1)}:1</Text>
-              </div>
+            <div className="text-center mb-1">
+              <p className="text-sm text-gray-600">型号：{transformer.model}</p>
+            </div>
+            <div className="text-center">
+              {transformer.warningCount > 0 && (
+                <div className="inline-flex items-center px-2 py-0.5 rounded text-orange-700 bg-orange-50 text-xs">
+                  <AlertTriangle size={12} className="mr-1" />
+                  {transformer.warningCount}警告
+                </div>
+              )}
             </div>
           </div>
           
-          <Divider />
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="info-card">
-              <Title level={5}>Temperature</Title>
-              <div className="info-item">
-                <Text type="secondary">Current Temperature:</Text>
-                <Text strong className={transformer.temperature > 50 ? 'text-red-500' : ''}>{transformer.temperature}°C</Text>
+          {/* Stats cards grid */}
+          <div className="w-full md:w-[65%] grid grid-cols-2 gap-4">
+            {/* Capacity card */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center mb-1">
+                <Zap className="mr-2 text-teal-500" size={16} />
+                <Text className="text-gray-500 text-sm">Capacity</Text>
               </div>
-              <div className="info-item">
-                <Text type="secondary">Oil Temperature:</Text>
-                <Text strong>{transformer.oil.temperature}°C</Text>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold">{transformer.capacityWh}</span>
+                <span className="ml-1 text-gray-500 text-sm">Wh</span>
               </div>
             </div>
             
-            <div className="info-card">
-              <Title level={5}>Oil Level</Title>
-              <div className="info-item">
-                <Text type="secondary">Current Level:</Text>
-                <Progress 
-                  percent={transformer.oil.level} 
-                  size="small"
-                  status={transformer.oil.level < 80 ? "exception" : "active"}
-                />
+            {/* Load card */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center mb-1">
+                <Activity className="mr-2 text-teal-500" size={16} />
+                <Text className="text-gray-500 text-sm">Load</Text>
+              </div>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold">{transformer.load}</span>
+                <span className="ml-1 text-gray-500 text-sm">%</span>
+              </div>
+            </div>
+            
+            {/* Temperature card */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center mb-1">
+                <Thermometer className="mr-2 text-teal-500" size={16} />
+                <Text className="text-gray-500 text-sm">Temperature</Text>
+              </div>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold">{transformer.temperature}</span>
+                <span className="ml-1 text-gray-500 text-sm">°C</span>
+              </div>
+            </div>
+            
+            {/* Connected Inverters card */}
+            <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div className="flex items-center mb-1">
+                <Zap className="mr-2 text-teal-500" size={16} />
+                <Text className="text-gray-500 text-sm">Connected Inverters</Text>
+              </div>
+              <div className="flex items-baseline">
+                <span className="text-4xl font-bold">{transformer.connectedInverters}</span>
+                <span className="ml-1 text-gray-500 text-sm">units</span>
               </div>
             </div>
           </div>
         </div>
-      )}
-      
-      {activeTab === 'monitoring' && (
-        <div className="p-4">
-          <Row gutter={[16, 16]}>
-            <Col span={24}>
-              <div className="chart-card">
-                <Title level={5}>Transformer Temperature (24h)</Title>
-                <div style={{ height: 200 }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart
-                      data={transformer.temperatureData}
-                      margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis label={{ value: 'Temperature (°C)', angle: -90, position: 'insideLeft' }} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="temperature" stroke="#ff7300" fill="#ff730066" />
-                    </AreaChart>
-                  </ResponsiveContainer>
+        
+        {/* Tabs */}
+        <div className="border rounded-lg overflow-hidden mb-6">
+          <div className="flex border-b">
+            <button 
+              onClick={() => setActiveTab('overview')}
+              className={`flex-1 px-4 py-3 text-center text-sm ${activeTab === 'overview' ? 'bg-white font-medium' : 'bg-gray-50 text-gray-500'}`}
+            >
+              Overview
+            </button>
+            <button 
+              onClick={() => setActiveTab('loadHistory')}
+              className={`flex-1 px-4 py-3 text-center text-sm ${activeTab === 'loadHistory' ? 'bg-white font-medium' : 'bg-gray-50 text-gray-500'}`}
+            >
+              Load History
+            </button>
+            <button 
+              onClick={() => setActiveTab('temperature')}
+              className={`flex-1 px-4 py-3 text-center text-sm ${activeTab === 'temperature' ? 'bg-white font-medium' : 'bg-gray-50 text-gray-500'}`}
+            >
+              Temperature
+            </button>
+          </div>
+          
+          {/* Tab Content */}
+          <div className="bg-white p-5">
+            {activeTab === 'overview' && (
+              <div>
+                <h3 className="text-base font-medium mb-4">Transformer Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-y-6">
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Manufacturer</Text>
+                    <Text strong className="text-sm">{transformer.manufacturer}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Installation Date</Text>
+                    <Text strong className="text-sm">{transformer.installationDate}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Last Maintenance</Text>
+                    <Text strong className="text-sm">{transformer.lastMaintenance}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Voltage Rating</Text>
+                    <Text strong className="text-sm">{transformer.voltageRating}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Cooling Type</Text>
+                    <Text strong className="text-sm">{transformer.coolingType}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Connected Inverters</Text>
+                    <Text strong className="text-sm">{transformer.connectedInvertersList}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Oil Level</Text>
+                    <Text strong className="text-sm">{transformer.oilLevel}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Impedance</Text>
+                    <Text strong className="text-sm">{transformer.impedance}</Text>
+                  </div>
+                  <div>
+                    <Text className="text-gray-500 block text-xs">Efficiency</Text>
+                    <Text strong className="text-sm">{transformer.efficiency}</Text>
+                  </div>
                 </div>
               </div>
-            </Col>
+            )}
             
-            <Col span={24}>
-              <div className="chart-card">
-                <Title level={5}>Load (24h)</Title>
-                <div style={{ height: 200 }}>
+            {activeTab === 'loadHistory' && (
+              <div>
+                <h3 className="text-base font-medium mb-4">Load History (Last 24 Hours)</h3>
+                <div style={{ width: '100%', height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart
                       data={transformer.loadData}
                       margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="time" />
-                      <YAxis label={{ value: 'Load (%)', angle: -90, position: 'insideLeft' }} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="time" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis 
+                        label={{ value: '%', angle: -90, position: 'insideLeft', offset: -5, fontSize: 11 }}
+                        domain={[0, 100]}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
                       <Tooltip />
-                      <Area type="monotone" dataKey="load" stroke="#8884d8" fill="#8884d866" />
+                      <Area 
+                        type="monotone" 
+                        dataKey="load" 
+                        stroke="#4FD1C5" 
+                        fill="#4FD1C5" 
+                        fillOpacity={0.2}
+                      />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
-            </Col>
-          </Row>
-        </div>
-      )}
-      
-      {activeTab === 'maintenance' && (
-        <div className="p-4">
-          <div className="info-card">
-            <Title level={5}>Maintenance Schedule</Title>
-            <div className="info-item">
-              <Text type="secondary">Last Maintenance:</Text>
-              <Text strong>{transformer.maintenance.lastDate}</Text>
-            </div>
-            <div className="info-item">
-              <Text type="secondary">Next Scheduled:</Text>
-              <Text strong>{transformer.maintenance.nextDate}</Text>
-            </div>
-            <div className="info-item mt-2">
-              <Tag color="blue">Regular Inspection</Tag>
-              <Tag color="purple">Oil Change</Tag>
-              <Tag color="orange">Cooling System Check</Tag>
-            </div>
-          </div>
-          
-          <Divider />
-          
-          <div className="info-card">
-            <Title level={5}>Maintenance History</Title>
-            <div className="maintenance-timeline">
-              <div className="timeline-item">
-                <div className="timeline-date">2023-08-15</div>
-                <div className="timeline-content">
-                  <Text strong>Regular Maintenance</Text>
-                  <div>Oil level check, bushing inspection, cooling system maintenance</div>
-                  <Tag color="green">Completed</Tag>
+            )}
+            
+            {activeTab === 'temperature' && (
+              <div>
+                <h3 className="text-base font-medium mb-4">Temperature History (Last 24 Hours)</h3>
+                <div style={{ width: '100%', height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart
+                      data={transformer.tempData}
+                      margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="time" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis 
+                        label={{ value: '°C', angle: -90, position: 'insideLeft', offset: -5, fontSize: 11 }}
+                        domain={[0, 100]}
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <Tooltip />
+                      <Area 
+                        type="monotone" 
+                        dataKey="temperature" 
+                        stroke="#FBB360" 
+                        fill="#FBB360" 
+                        fillOpacity={0.2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
-              
-              <div className="timeline-item">
-                <div className="timeline-date">2023-02-10</div>
-                <div className="timeline-content">
-                  <Text strong>Oil Change</Text>
-                  <div>Complete oil replacement and filtering</div>
-                  <Tag color="green">Completed</Tag>
-                </div>
-              </div>
-              
-              <div className="timeline-item">
-                <div className="timeline-date">2022-08-20</div>
-                <div className="timeline-content">
-                  <Text strong>Regular Maintenance</Text>
-                  <div>Insulation test, thermal imaging inspection</div>
-                  <Tag color="green">Completed</Tag>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
-      )}
+        
+        {/* Bottom button */}
+        <div className="flex justify-center">
+          <button 
+            onClick={handleCancel}
+            className="px-16 py-2 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"
+          >
+            关闭
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }
