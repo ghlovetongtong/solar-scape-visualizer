@@ -1,5 +1,5 @@
 
-import React, { useMemo, useRef } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { getHeightAtPosition } from './Ground';
 
@@ -10,7 +10,7 @@ interface VegetationProps {
 }
 
 export default function Vegetation({ 
-  count = 1000, // Significantly increase the default count for more vegetation
+  count = 1000, 
   minRadius = 120, 
   maxRadius = 180 
 }: VegetationProps) {
@@ -31,7 +31,7 @@ export default function Vegetation({
       
       // Distribute vegetation widely across the whole terrain
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * maxRadius; // Allow grass to appear anywhere
+      const radius = minRadius + Math.random() * (maxRadius - minRadius); // Use minRadius to ensure minimum distance
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
@@ -42,17 +42,17 @@ export default function Vegetation({
       
       // If we randomly generated a position inside the solar panel area, skip it
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 100) {
+      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
         i--; // Try again
         continue;
       }
       
-      // Use flat ground (y = 0)
-      const y = 0;
+      // Add slight elevation to make grass more visible (0.1 to 0.3 units above ground)
+      const y = 0.1 + Math.random() * 0.2;
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, maxRadius]);
+  }, [actualCount, minRadius, maxRadius]);
   
   // Generate positions for tall grass (a different type of grass)
   const tallGrassPositions = useMemo(() => {
@@ -64,7 +64,7 @@ export default function Vegetation({
       
       // Create more patches of tall grass across the terrain
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * maxRadius;
+      const radius = minRadius + Math.random() * (maxRadius - minRadius);
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
@@ -77,16 +77,17 @@ export default function Vegetation({
       
       // Avoid solar panel area
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 105) {
+      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
         i--; // Try again
         continue;
       }
       
-      const y = 0;
+      // Add more significant elevation to tall grass (0.15 to 0.4 units above ground)
+      const y = 0.15 + Math.random() * 0.25;
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, maxRadius]);
+  }, [actualCount, minRadius, maxRadius]);
   
   // Generate positions for rocks
   const rockPositions = useMemo(() => {
@@ -99,7 +100,7 @@ export default function Vegetation({
       
       // Distribute rocks more widely
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * maxRadius;
+      const radius = minRadius + Math.random() * (maxRadius - minRadius);
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
@@ -112,16 +113,17 @@ export default function Vegetation({
       
       // Avoid solar panel area
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 110) {
+      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
         i--; // Try again
         continue;
       }
       
-      const y = 0;
+      // Add slight elevation for rocks (0.1 to 0.5 units above ground)
+      const y = 0.1 + Math.random() * 0.4;
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, maxRadius]);
+  }, [actualCount, minRadius, maxRadius]);
   
   // Generate positions for small rocks
   const smallRockPositions = useMemo(() => {
@@ -134,7 +136,7 @@ export default function Vegetation({
       
       // Small rocks can be more widespread
       const angle = Math.random() * Math.PI * 2;
-      const radius = Math.random() * maxRadius;
+      const radius = minRadius + Math.random() * (maxRadius - minRadius);
       
       x = Math.cos(angle) * radius;
       z = Math.sin(angle) * radius;
@@ -147,28 +149,30 @@ export default function Vegetation({
       
       // Avoid solar panel area
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 105) {
+      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
         i--; // Try again
         continue;
       }
       
-      const y = 0;
+      // Add slight elevation for small rocks (0.05 to 0.2 units above ground)
+      const y = 0.05 + Math.random() * 0.15;
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, maxRadius]);
+  }, [actualCount, minRadius, maxRadius]);
   
-  // Update instanced grass mesh matrices
-  useMemo(() => {
+  // Use useEffect instead of useMemo for updating instanced meshes
+  // so we can properly rely on the ref values being available
+  useEffect(() => {
     if (instancedGrass.current) {
       const dummy = new THREE.Object3D();
       
       grassPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Random scale for grass tufts with more variation
-        const scale = 0.3 + Math.random() * 0.8;
-        dummy.scale.set(scale, scale + Math.random() * 0.7, scale);
+        // Increase size for better visibility, with more variation
+        const scale = 0.5 + Math.random() * 1.0; // Larger scale range
+        dummy.scale.set(scale, scale + Math.random() * 0.9, scale);
         
         // Random rotation
         dummy.rotation.y = Math.random() * Math.PI * 2;
@@ -177,24 +181,22 @@ export default function Vegetation({
         instancedGrass.current.setMatrixAt(i, dummy.matrix);
       });
       
-      // Only update if needed
-      if (instancedGrass.current.instanceMatrix) {
-        instancedGrass.current.instanceMatrix.needsUpdate = true;
-      }
+      // Update the instance matrix
+      instancedGrass.current.instanceMatrix.needsUpdate = true;
     }
-  }, [grassPositions]);
+  }, [grassPositions, instancedGrass]);
   
   // Update instanced tall grass mesh matrices
-  useMemo(() => {
+  useEffect(() => {
     if (instancedTallGrass.current) {
       const dummy = new THREE.Object3D();
       
       tallGrassPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Tall grass should be taller but thinner with more variation
-        const baseScale = 0.25 + Math.random() * 0.5;
-        const heightScale = 1.0 + Math.random() * 1.2; // More height variation
+        // Increase size for better visibility
+        const baseScale = 0.4 + Math.random() * 0.6; // Wider base
+        const heightScale = 1.5 + Math.random() * 1.2; // Taller
         dummy.scale.set(baseScale, heightScale, baseScale);
         
         // Random rotation
@@ -204,23 +206,20 @@ export default function Vegetation({
         instancedTallGrass.current.setMatrixAt(i, dummy.matrix);
       });
       
-      if (instancedTallGrass.current.instanceMatrix) {
-        instancedTallGrass.current.instanceMatrix.needsUpdate = true;
-      }
+      instancedTallGrass.current.instanceMatrix.needsUpdate = true;
     }
-  }, [tallGrassPositions]);
+  }, [tallGrassPositions, instancedTallGrass]);
   
   // Update instanced rocks mesh matrices
-  useMemo(() => {
+  useEffect(() => {
     if (instancedRocks.current) {
       const dummy = new THREE.Object3D();
       
       rockPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Random scale for rocks with more variation
-        const scale = 0.25 + Math.random() * 0.9;
-        // Varied scales for x, y, z to make rocks less uniform
+        // Increase size for better visibility
+        const scale = 0.4 + Math.random() * 1.1; // Larger rocks
         dummy.scale.set(
           scale * (0.7 + Math.random() * 0.6), 
           scale * (0.6 + Math.random() * 0.8), 
@@ -236,22 +235,20 @@ export default function Vegetation({
         instancedRocks.current.setMatrixAt(i, dummy.matrix);
       });
       
-      if (instancedRocks.current.instanceMatrix) {
-        instancedRocks.current.instanceMatrix.needsUpdate = true;
-      }
+      instancedRocks.current.instanceMatrix.needsUpdate = true;
     }
-  }, [rockPositions]);
+  }, [rockPositions, instancedRocks]);
   
   // Update instanced small rocks mesh matrices
-  useMemo(() => {
+  useEffect(() => {
     if (instancedSmallRocks.current) {
       const dummy = new THREE.Object3D();
       
       smallRockPositions.forEach((position, i) => {
         dummy.position.set(position[0], position[1], position[2]);
         
-        // Small rocks with more variation
-        const scale = 0.08 + Math.random() * 0.4;
+        // Increase size slightly for visibility
+        const scale = 0.12 + Math.random() * 0.5; // Slightly larger
         dummy.scale.set(
           scale * (0.8 + Math.random() * 0.4),
           scale * (0.6 + Math.random() * 0.8),
@@ -267,15 +264,13 @@ export default function Vegetation({
         instancedSmallRocks.current.setMatrixAt(i, dummy.matrix);
       });
       
-      if (instancedSmallRocks.current.instanceMatrix) {
-        instancedSmallRocks.current.instanceMatrix.needsUpdate = true;
-      }
+      instancedSmallRocks.current.instanceMatrix.needsUpdate = true;
     }
-  }, [smallRockPositions]);
+  }, [smallRockPositions, instancedSmallRocks]);
   
   return (
     <>
-      {/* Instanced grass */}
+      {/* Instanced grass - brighter color */}
       <instancedMesh
         ref={instancedGrass}
         args={[undefined, undefined, actualCount]}
@@ -284,53 +279,53 @@ export default function Vegetation({
       >
         <coneGeometry args={[1, 3, 8]} />
         <meshStandardMaterial 
-          color="#718355" 
+          color="#85b555" // Brighter green for better visibility
           roughness={0.8}
           flatShading={true}
         />
       </instancedMesh>
       
-      {/* Instanced tall grass */}
+      {/* Instanced tall grass - brighter color */}
       <instancedMesh
         ref={instancedTallGrass}
-        args={[undefined, undefined, Math.floor(actualCount / 2)]} // Increased count
+        args={[undefined, undefined, Math.floor(actualCount / 2)]}
         castShadow
         receiveShadow
       >
         <coneGeometry args={[0.8, 5, 6]} />
         <meshStandardMaterial 
-          color="#5E7348" 
+          color="#7da348" // Brighter green for better visibility
           roughness={0.9}
           flatShading={true}
         />
       </instancedMesh>
       
-      {/* Instanced rocks */}
+      {/* Instanced rocks - lighter color */}
       <instancedMesh
         ref={instancedRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 3)]} // Increased count
+        args={[undefined, undefined, Math.floor(actualCount / 3)]}
         castShadow
         receiveShadow
       >
         <dodecahedronGeometry args={[1, 0]} />
         <meshStandardMaterial 
-          color="#8A898C" 
+          color="#a9a9ad" // Lighter grey for better visibility
           roughness={0.9}
           metalness={0.1}
           flatShading={true}
         />
       </instancedMesh>
       
-      {/* Instanced small rocks */}
+      {/* Instanced small rocks - lighter color */}
       <instancedMesh
         ref={instancedSmallRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 2)]} // Increased count
+        args={[undefined, undefined, Math.floor(actualCount / 2)]}
         castShadow
         receiveShadow
       >
         <icosahedronGeometry args={[1, 0]} />
         <meshStandardMaterial 
-          color="#939398" 
+          color="#b8b8bd" // Lighter grey for better visibility
           roughness={0.8}
           metalness={0.2}
           flatShading={true}
