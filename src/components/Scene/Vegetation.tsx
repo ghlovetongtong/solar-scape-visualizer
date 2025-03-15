@@ -40,9 +40,9 @@ export default function Vegetation({
       x += (Math.random() - 0.5) * 40;
       z += (Math.random() - 0.5) * 40;
       
-      // If we randomly generated a position inside the solar panel area, skip it
+      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
+      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
         i--; // Try again
         continue;
       }
@@ -75,9 +75,9 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 25;
       }
       
-      // Avoid solar panel area
+      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
+      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
         i--; // Try again
         continue;
       }
@@ -111,9 +111,9 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 50;
       }
       
-      // Avoid solar panel area
+      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
+      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
         i--; // Try again
         continue;
       }
@@ -147,9 +147,9 @@ export default function Vegetation({
         z += (Math.random() - 0.5) * 60;
       }
       
-      // Avoid solar panel area
+      // Create a wider exclusion zone for the solar panel area (increased from 95 to 120)
       const distanceFromCenter = Math.sqrt(x * x + z * z);
-      if (distanceFromCenter < 95) { // Slightly reduce the restricted area
+      if (distanceFromCenter < 120) { // Much larger restricted area to cover all solar panels
         i--; // Try again
         continue;
       }
