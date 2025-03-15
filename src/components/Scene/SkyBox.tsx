@@ -22,16 +22,18 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
     500 * Math.sin(phi) * Math.sin(theta)
   ];
   
-  // Adjust sky parameters based on time of day
+  // Adjust sky parameters based on time of day - make sky darker overall
   const mieCoefficient = timeOfDay < 0.2 || timeOfDay > 0.8 
     ? 0.005 + 0.03 * Math.sin(Math.PI * timeOfDay) // More scattering during sunrise/sunset
     : 0.005; // Less scattering during day
     
+  // Increased rayleigh value for deeper sky colors
   const rayleigh = timeOfDay < 0.2 || timeOfDay > 0.8
-    ? 1 + Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset (redder)
-    : 1; // Normal during day
+    ? 2 + Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset (redder)
+    : 2; // Increased for deeper blue during day (changed from 1 to 2)
     
-  const turbidity = 10 - 5 * Math.sin(Math.PI * timeOfDay); // More clouds/haziness at sunrise/sunset
+  // Higher turbidity for overall darker sky appearance
+  const turbidity = 12 - 5 * Math.sin(Math.PI * timeOfDay); // Increased from 10 to 12 for darker sky
   
   useEffect(() => {
     // Cleanup previous background

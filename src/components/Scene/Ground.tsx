@@ -13,7 +13,7 @@ interface GroundProps {
 }
 
 export default function Ground({ 
-  size = 400, 
+  size = 600, // Increased from 400 to 600 to make the ground larger
   resolution = 128,
   savedBoundaries = [] 
 }: GroundProps) {
@@ -30,7 +30,7 @@ export default function Ground({
   useMemo(() => {
     if (texture) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(4, 4);
+      texture.repeat.set(6, 6); // Increased repeat from 4 to 6 to maintain texture density with larger ground
     }
   }, [texture]);
   
