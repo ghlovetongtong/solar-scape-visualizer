@@ -67,10 +67,17 @@ export default function Terrain({
     [southX, southZ]   // South point (shifted left)
   ];
 
+  // Create road buffer boundary polygon for the vegetation to avoid
+  const roadBoundaryForVegetation = angledRoadPath;
+
   return (
     <group>
       <Ground size={groundSize} savedBoundaries={savedBoundaries} />
-      <Vegetation />
+      <Vegetation 
+        count={500}  // Reduce vegetation count by half
+        roadBoundary={roadBoundaryForVegetation}
+        savedBoundaries={savedBoundaries}
+      />
       
       {/* Add the angled road */}
       <Road 

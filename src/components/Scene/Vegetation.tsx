@@ -3,20 +3,25 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { usePanelPositions } from '@/hooks/usePanelPositions';
 import { getHeightAtPosition } from './Ground';
+import { BoundaryPoint } from '@/hooks/useDrawBoundary';
 
 interface VegetationProps {
   count?: number;
   minRadius?: number;
   maxRadius?: number;
+  roadBoundary?: BoundaryPoint[];
+  savedBoundaries?: BoundaryPoint[][];
 }
 
 export default function Vegetation({ 
-  count = 1000, 
+  count = 500, // Reduced from 1000 to 500 (half)
   minRadius = 120, 
-  maxRadius = 180 
+  maxRadius = 180,
+  roadBoundary = [],
+  savedBoundaries = []
 }: VegetationProps) {
-  // Double the vegetation density again
-  const actualCount = count * 2;
+  // Vegetation density is now halved compared to before
+  const actualCount = count;
   
   const instancedGrass = useRef<THREE.InstancedMesh>(null);
   const instancedRocks = useRef<THREE.InstancedMesh>(null);
@@ -55,6 +60,101 @@ export default function Vegetation({
     };
   }, [isInitialized, panelPositions]);
   
+  // Process road boundary if provided
+  const roadBoundaryPolygon = useMemo(() => {
+    if (!roadBoundary || roadBoundary.length < 2) return null;
+    
+    // Convert the road boundary to a simplified polygon for easier collision checks
+    // For a road with just two points, create a wider corridor
+    if (roadBoundary.length === 2) {
+      const [startPoint, endPoint] = roadBoundary;
+      const roadVector = {
+        x: endPoint[0] - startPoint[0],
+        z: endPoint[1] - startPoint[1]
+      };
+      const length = Math.sqrt(roadVector.x * roadVector.x + roadVector.z * roadVector.z);
+      
+      // Normalize the road vector
+      const normalizedRoad = {
+        x: roadVector.x / length,
+        z: roadVector.z / length
+      };
+      
+      // Calculate perpendicular vector (rotate 90 degrees)
+      const perpendicular = {
+        x: -normalizedRoad.z,
+        z: normalizedRoad.x
+      };
+      
+      // Road width is 15 units, make the corridor a bit wider (20 units)
+      const roadWidth = 10;
+      
+      // Create four corners of the road corridor
+      return [
+        [startPoint[0] + perpendicular.x * roadWidth, startPoint[1] + perpendicular.z * roadWidth],
+        [endPoint[0] + perpendicular.x * roadWidth, endPoint[1] + perpendicular.z * roadWidth],
+        [endPoint[0] - perpendicular.x * roadWidth, endPoint[1] - perpendicular.z * roadWidth],
+        [startPoint[0] - perpendicular.x * roadWidth, startPoint[1] - perpendicular.z * roadWidth]
+      ];
+    }
+    
+    // Just return the boundary points for more complex road shapes
+    return roadBoundary;
+  }, [roadBoundary]);
+
+  // Add saved boundaries to no-vegetation zones
+  const allBoundaries = useMemo(() => {
+    const boundaries: BoundaryPoint[][] = [];
+    
+    // Add road boundary if it exists
+    if (roadBoundaryPolygon) {
+      boundaries.push(roadBoundaryPolygon);
+    }
+    
+    // Add other saved boundaries
+    if (savedBoundaries && savedBoundaries.length > 0) {
+      boundaries.push(...savedBoundaries);
+    }
+    
+    return boundaries;
+  }, [roadBoundaryPolygon, savedBoundaries]);
+  
+  // Check if a point is inside a polygon (using ray casting algorithm)
+  const isPointInPolygon = (point: [number, number], polygon: BoundaryPoint[]): boolean => {
+    if (!polygon || polygon.length < 3) return false;
+    
+    let inside = false;
+    const x = point[0];
+    const y = point[1];
+    
+    for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+      const xi = polygon[i][0];
+      const yi = polygon[i][1];
+      const xj = polygon[j][0];
+      const yj = polygon[j][1];
+      
+      const intersect = ((yi > y) !== (yj > y)) &&
+          (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+      
+      if (intersect) inside = !inside;
+    }
+    
+    return inside;
+  };
+  
+  // Check if a point is inside any boundary
+  const isPointInAnyBoundary = (point: [number, number]): boolean => {
+    if (!allBoundaries || allBoundaries.length === 0) return false;
+    
+    for (const boundary of allBoundaries) {
+      if (isPointInPolygon(point, boundary)) {
+        return true;
+      }
+    }
+    
+    return false;
+  };
+  
   // Check if a position is near any solar panel
   const isNearSolarPanel = (x: number, z: number): boolean => {
     if (!isInitialized) return false;
@@ -88,21 +188,39 @@ export default function Vegetation({
       // Position grass more densely across the terrain
       let x, z;
       
-      // Distribute vegetation widely across the whole terrain
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius); // Use minRadius to ensure minimum distance
+      // Try up to 10 times to find a valid position
+      let tries = 0;
+      let validPosition = false;
       
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
+      while (!validPosition && tries < 10) {
+        tries++;
+        
+        // Distribute vegetation widely across the whole terrain
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius); // Use minRadius to ensure minimum distance
+        
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        
+        // Add more irregularity and natural clustering
+        x += (Math.random() - 0.5) * 40;
+        z += (Math.random() - 0.5) * 40;
+        
+        // Check if the position is within or near any solar panel
+        if (isNearSolarPanel(x, z)) {
+          continue;
+        }
+        
+        // Check if the position is within any boundary (road, etc.)
+        if (isPointInAnyBoundary([x, z])) {
+          continue;
+        }
+        
+        validPosition = true;
+      }
       
-      // Add more irregularity and natural clustering
-      x += (Math.random() - 0.5) * 40;
-      z += (Math.random() - 0.5) * 40;
-      
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
+      if (!validPosition) {
+        continue; // Skip this element if we couldn't find a valid position
       }
       
       // Add slight elevation to make grass more visible (0.1 to 0.3 units above ground)
@@ -110,33 +228,49 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel, isPointInAnyBoundary, allBoundaries]);
   
   // Generate positions for tall grass (a different type of grass)
   const tallGrassPositions = useMemo(() => {
     const positions = [];
-    const tallGrassCount = Math.floor(actualCount / 2); // Increase tall grass proportion
+    const tallGrassCount = Math.floor(actualCount / 2); // Half as many tall grass as regular grass
     
     for (let i = 0; i < tallGrassCount; i++) {
       let x, z;
+      let tries = 0;
+      let validPosition = false;
       
-      // Create more patches of tall grass across the terrain
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Create more defined clusters for tall grass
-      if (Math.random() > 0.3) { // Increase cluster probability
-        x += (Math.random() - 0.5) * 25;
-        z += (Math.random() - 0.5) * 25;
+      while (!validPosition && tries < 10) {
+        tries++;
+        
+        // Create more patches of tall grass across the terrain
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        
+        // Create more defined clusters for tall grass
+        if (Math.random() > 0.3) { // Increase cluster probability
+          x += (Math.random() - 0.5) * 25;
+          z += (Math.random() - 0.5) * 25;
+        }
+        
+        // Check if the position is within or near any solar panel
+        if (isNearSolarPanel(x, z)) {
+          continue;
+        }
+        
+        // Check if the position is within any boundary (road, etc.)
+        if (isPointInAnyBoundary([x, z])) {
+          continue;
+        }
+        
+        validPosition = true;
       }
       
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
+      if (!validPosition) {
+        continue; // Skip this element if we couldn't find a valid position
       }
       
       // Add more significant elevation to tall grass (0.15 to 0.4 units above ground)
@@ -144,34 +278,50 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel, isPointInAnyBoundary, allBoundaries]);
   
   // Generate positions for rocks
   const rockPositions = useMemo(() => {
     const positions = [];
-    // Increase rock count
-    const rockCount = Math.floor(actualCount / 3);
+    // Reduce rock count to 1/4 of the total (was 1/3)
+    const rockCount = Math.floor(actualCount / 4);
     
     for (let i = 0; i < rockCount; i++) {
       let x, z;
+      let tries = 0;
+      let validPosition = false;
       
-      // Distribute rocks more widely
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Create more clusters of rocks
-      if (Math.random() > 0.5) {
-        x += (Math.random() - 0.5) * 50;
-        z += (Math.random() - 0.5) * 50;
+      while (!validPosition && tries < 10) {
+        tries++;
+        
+        // Distribute rocks more widely
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        
+        // Create more clusters of rocks
+        if (Math.random() > 0.5) {
+          x += (Math.random() - 0.5) * 50;
+          z += (Math.random() - 0.5) * 50;
+        }
+        
+        // Check if the position is within or near any solar panel
+        if (isNearSolarPanel(x, z)) {
+          continue;
+        }
+        
+        // Check if the position is within any boundary (road, etc.)
+        if (isPointInAnyBoundary([x, z])) {
+          continue;
+        }
+        
+        validPosition = true;
       }
       
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
+      if (!validPosition) {
+        continue; // Skip this element if we couldn't find a valid position
       }
       
       // Add slight elevation for rocks (0.1 to 0.5 units above ground)
@@ -179,34 +329,50 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel, isPointInAnyBoundary, allBoundaries]);
   
   // Generate positions for small rocks
   const smallRockPositions = useMemo(() => {
     const positions = [];
-    // Use even more small rocks for detail
-    const smallRockCount = Math.floor(actualCount / 2);
+    // Reduce small rock count to 1/4 of the total (was 1/2)
+    const smallRockCount = Math.floor(actualCount / 4);
     
     for (let i = 0; i < smallRockCount; i++) {
       let x, z;
+      let tries = 0;
+      let validPosition = false;
       
-      // Small rocks can be more widespread
-      const angle = Math.random() * Math.PI * 2;
-      const radius = minRadius + Math.random() * (maxRadius - minRadius);
-      
-      x = Math.cos(angle) * radius;
-      z = Math.sin(angle) * radius;
-      
-      // Small rocks tend to appear in larger groups
-      if (Math.random() > 0.3) { // Increase clustering
-        x += (Math.random() - 0.5) * 60; 
-        z += (Math.random() - 0.5) * 60;
+      while (!validPosition && tries < 10) {
+        tries++;
+        
+        // Small rocks can be more widespread
+        const angle = Math.random() * Math.PI * 2;
+        const radius = minRadius + Math.random() * (maxRadius - minRadius);
+        
+        x = Math.cos(angle) * radius;
+        z = Math.sin(angle) * radius;
+        
+        // Small rocks tend to appear in larger groups
+        if (Math.random() > 0.3) { // Increase clustering
+          x += (Math.random() - 0.5) * 60; 
+          z += (Math.random() - 0.5) * 60;
+        }
+        
+        // Check if the position is within or near any solar panel
+        if (isNearSolarPanel(x, z)) {
+          continue;
+        }
+        
+        // Check if the position is within any boundary (road, etc.)
+        if (isPointInAnyBoundary([x, z])) {
+          continue;
+        }
+        
+        validPosition = true;
       }
       
-      // Check if the position is within or near any solar panel
-      if (isNearSolarPanel(x, z)) {
-        i--; // Try again
-        continue;
+      if (!validPosition) {
+        continue; // Skip this element if we couldn't find a valid position
       }
       
       // Add slight elevation for small rocks (0.05 to 0.2 units above ground)
@@ -214,7 +380,7 @@ export default function Vegetation({
       positions.push([x, y, z]);
     }
     return positions;
-  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel]);
+  }, [actualCount, minRadius, maxRadius, panelBounds, isInitialized, isNearSolarPanel, isPointInAnyBoundary, allBoundaries]);
   
   // Use useEffect instead of useMemo for updating instanced meshes
   // so we can properly rely on the ref values being available
@@ -328,7 +494,7 @@ export default function Vegetation({
       {/* Instanced grass - brighter color */}
       <instancedMesh
         ref={instancedGrass}
-        args={[undefined, undefined, actualCount]}
+        args={[undefined, undefined, grassPositions.length]}
         castShadow
         receiveShadow
       >
@@ -343,7 +509,7 @@ export default function Vegetation({
       {/* Instanced tall grass - brighter color */}
       <instancedMesh
         ref={instancedTallGrass}
-        args={[undefined, undefined, Math.floor(actualCount / 2)]}
+        args={[undefined, undefined, tallGrassPositions.length]}
         castShadow
         receiveShadow
       >
@@ -358,7 +524,7 @@ export default function Vegetation({
       {/* Instanced rocks - lighter color */}
       <instancedMesh
         ref={instancedRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 3)]}
+        args={[undefined, undefined, rockPositions.length]}
         castShadow
         receiveShadow
       >
@@ -374,7 +540,7 @@ export default function Vegetation({
       {/* Instanced small rocks - lighter color */}
       <instancedMesh
         ref={instancedSmallRocks}
-        args={[undefined, undefined, Math.floor(actualCount / 2)]}
+        args={[undefined, undefined, smallRockPositions.length]}
         castShadow
         receiveShadow
       >
