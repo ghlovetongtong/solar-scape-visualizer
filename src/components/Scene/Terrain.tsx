@@ -17,7 +17,7 @@ export default function Terrain({
   drawingEnabled = false, 
   onBoundaryComplete,
   savedBoundaries = [],
-  groundSize = 600  // Updated default value from 400 to 600
+  groundSize = 1600  // Updated default value from 400 to 600
 }: TerrainProps) {
   // State to store the road boundary
   const [roadBoundary, setRoadBoundary] = useState<BoundaryPoint[]>([]);
