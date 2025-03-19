@@ -12,14 +12,22 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   const { scene } = useThree();
   const skyRef = useRef<any>(null);
   
-  // Calculate sun position based on time of day
-  const phi = 2 * Math.PI * (timeOfDay - 0.5); // Full rotation
-  const theta = Math.PI * (0.25 + 0.2 * Math.sin(phi)); // Elevation angle
+  // Optimized sun position calculation
+  // Convert timeOfDay (0-1) to an angle in radians (0-2π)
+  const angleRad = 2 * Math.PI * (timeOfDay - 0.5);
   
+  // Calculate sun elevation - higher at noon, lower at dawn/dusk
+  // Using a smoothed sine function for more realistic arc
+  const elevation = Math.PI * (0.25 + 0.2 * Math.sin(angleRad));
+  
+  // Calculate distance (constant for now, but could vary)
+  const distance = 500;
+  
+  // Convert spherical coordinates to Cartesian
   const sunPosition: [number, number, number] = [
-    500 * Math.cos(phi) * Math.sin(theta),
-    500 * Math.cos(theta),
-    500 * Math.sin(phi) * Math.sin(theta)
+    distance * Math.cos(angleRad) * Math.sin(elevation),
+    distance * Math.cos(elevation),
+    distance * Math.sin(angleRad) * Math.sin(elevation)
   ];
   
   // Adjust sky parameters for a much deeper sky color
