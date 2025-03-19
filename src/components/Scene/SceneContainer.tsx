@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Stats, OrbitControls, useProgress } from '@react-three/drei';
+import { Stats, OrbitControls, useProgress, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import { message } from 'antd';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
@@ -89,64 +89,6 @@ function Loader() {
   );
 }
 
-function CustomEnvironment({ timeOfDay = 0.5 }) {
-  const sunPosition: [number, number, number] = [
-    Math.sin(timeOfDay * Math.PI) * 100,
-    Math.sin(timeOfDay * Math.PI - Math.PI/2) * 50 + 50,
-    Math.cos(timeOfDay * Math.PI) * 100
-  ];
-  
-  const lightIntensity = Math.sin(timeOfDay * Math.PI) * 0.8 + 0.7;
-  const ambientIntensity = Math.sin(timeOfDay * Math.PI) * 0.3 + 0.4;
-  
-  const sunriseColor = new THREE.Color(0xffb347);
-  const noonColor = new THREE.Color(0xffffff);
-  const sunsetColor = new THREE.Color(0xff7e5f);
-  
-  let sunColor;
-  if (timeOfDay < 0.25) {
-    sunColor = sunriseColor.clone().lerp(noonColor, timeOfDay * 4);
-  } else if (timeOfDay < 0.75) {
-    const normalizedTime = (timeOfDay - 0.25) * 2;
-    sunColor = noonColor.clone();
-  } else {
-    sunColor = noonColor.clone().lerp(sunsetColor, (timeOfDay - 0.75) * 4);
-  }
-
-  const directionalLightRef = useRef<THREE.DirectionalLight>(null);
-  
-  useEffect(() => {
-    if (directionalLightRef.current) {
-      if (directionalLightRef.current.shadow.camera.visible) {
-        directionalLightRef.current.shadow.camera.updateProjectionMatrix();
-      }
-    }
-  }, [timeOfDay]);
-
-  return (
-    <>
-      <ambientLight intensity={ambientIntensity} />
-      <hemisphereLight intensity={0.4 * lightIntensity} color="#b1e1ff" groundColor="#385a7c" />
-      
-      <directionalLight 
-        ref={directionalLightRef}
-        position={sunPosition}
-        intensity={1.8 * lightIntensity} 
-        castShadow 
-        shadow-mapSize={[4096, 4096]}
-        shadow-camera-left={-2500}
-        shadow-camera-right={2500}
-        shadow-camera-top={2500}
-        shadow-camera-bottom={-2500}
-        shadow-camera-near={0.1}
-        shadow-camera-far={4000}
-        shadow-bias={-0.0001}
-        color={sunColor}
-      />
-    </>
-  );
-}
-
 export default function SceneContainer() {
   const [showStats, setShowStats] = useState(false);
   const [timeOfDay, setTimeOfDay] = useState(0.5);
@@ -199,7 +141,7 @@ export default function SceneContainer() {
     }
   }, [drawingMode, draggingObject]);
 
-  const calculatePanelCenter = useCallback((): [number, number, number] => {
+  const calculatePanelCenter = useCallback(() => {
     if (!panelPositions || panelPositions.length === 0) {
       return [0, 0, 0];
     }
@@ -741,8 +683,8 @@ export default function SceneContainer() {
       <Canvas
         shadows
         camera={{ 
-          position: [-450, 140, -180],  // Updated X position to -450
-          fov: 35,  // Narrower field of view for better perspective
+          position: [-450, 140, -180],
+          fov: 35,
           near: 0.1,
           far: 2000
         }}
@@ -757,7 +699,15 @@ export default function SceneContainer() {
         onError={handleCanvasError}
         onClick={handleSceneObjectClick}
       >
-        <CustomEnvironment timeOfDay={timeOfDay} />
+        <Environment 
+          preset="sunset" 
+          background={true} 
+          ground={{
+            height: 0,
+            radius: 2000,
+            scale: 100
+          }}
+        />
         
         <SkyBox timeOfDay={timeOfDay} />
         

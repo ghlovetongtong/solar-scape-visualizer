@@ -22,18 +22,18 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
     500 * Math.sin(phi) * Math.sin(theta)
   ];
   
-  // Adjust sky parameters for a much deeper sky color
+  // Even deeper sky color parameters
   const mieCoefficient = timeOfDay < 0.2 || timeOfDay > 0.8 
-    ? 0.003 + 0.01 * Math.sin(Math.PI * timeOfDay) // Less scattering during sunrise/sunset
-    : 0.001; // Significantly reduced for deeper sky
+    ? 0.001 + 0.01 * Math.sin(Math.PI * timeOfDay) // Minimal scattering during sunrise/sunset
+    : 0.0005; // Almost no scattering for extreme deep blue
     
-  // Dramatically increased rayleigh for much deeper sky colors
+  // Ultra high rayleigh for extremely deep sky colors
   const rayleigh = timeOfDay < 0.2 || timeOfDay > 0.8
-    ? 3 + 2 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
-    : 4; // Much higher value for deeper blue during day
+    ? 4 + 2 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
+    : 6; // Ultra high value for extremely deep blue
     
-  // Much higher turbidity for darker, deeper sky appearance
-  const turbidity = 18 - 8 * Math.sin(Math.PI * timeOfDay); // Significantly increased for deeper sky
+  // Extremely high turbidity for very dark, deep sky appearance
+  const turbidity = 20 - 8 * Math.sin(Math.PI * timeOfDay); // Maximum turbidity for deepest possible sky
   
   useEffect(() => {
     // Cleanup previous background
@@ -50,7 +50,7 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
       distance={450000}
       sunPosition={sunPosition}
       mieCoefficient={mieCoefficient}
-      mieDirectionalG={0.9} // Increased from 0.8 for more directional scattering
+      mieDirectionalG={0.95} // Increased for even more directional scattering
       rayleigh={rayleigh}
       turbidity={turbidity}
     />
