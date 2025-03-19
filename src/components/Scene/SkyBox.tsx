@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
@@ -49,14 +48,16 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   
   return (
     <>
+      {/* Make Sky invisible by setting opacity to 0, but keep for lighting calculations */}
       <Sky
         ref={skyRef}
         distance={450000}
         sunPosition={sunPosition}
         mieCoefficient={mieCoefficient}
-        mieDirectionalG={0.99} // Increased for even more directional scattering
+        mieDirectionalG={0.99}
         rayleigh={rayleigh}
         turbidity={turbidity}
+        opacity={0}
       />
       
       {/* Add directional light to simulate sun */}

@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect, Suspense, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Stats, OrbitControls, useProgress } from '@react-three/drei';
+import { Stats, OrbitControls, useProgress, Environment } from '@react-three/drei';
 import * as THREE from 'three';
 import { message } from 'antd';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
@@ -699,6 +699,16 @@ export default function SceneContainer() {
         onError={handleCanvasError}
         onClick={handleSceneObjectClick}
       >
+        <Environment 
+          preset="city" 
+          background={false} 
+          ground={{
+            height: 0,
+            radius: 2000,
+            scale: 100
+          }}
+        />
+        
         <SkyBox timeOfDay={timeOfDay} />
         
         <Suspense fallback={null}>
@@ -845,3 +855,4 @@ export default function SceneContainer() {
     </div>
   );
 }
+
