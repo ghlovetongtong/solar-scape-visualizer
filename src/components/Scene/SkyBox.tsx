@@ -22,18 +22,18 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
     500 * Math.sin(phi) * Math.sin(theta)
   ];
   
-  // Ultra-deep sky color parameters
+  // Adjust sky parameters for a much deeper sky color
   const mieCoefficient = timeOfDay < 0.2 || timeOfDay > 0.8 
-    ? 0.0005 + 0.005 * Math.sin(Math.PI * timeOfDay) // Minimal scattering during sunrise/sunset
-    : 0.0001; // Almost no scattering for extreme deep blue
+    ? 0.003 + 0.01 * Math.sin(Math.PI * timeOfDay) // Less scattering during sunrise/sunset
+    : 0.001; // Significantly reduced for deeper sky
     
-  // Ultra high rayleigh for extremely deep sky colors
+  // Dramatically increased rayleigh for much deeper sky colors
   const rayleigh = timeOfDay < 0.2 || timeOfDay > 0.8
-    ? 5 + 3 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
-    : 10; // Ultra high value for extremely deep blue
+    ? 3 + 2 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
+    : 4; // Much higher value for deeper blue during day
     
-  // Extremely high turbidity for very dark, deep sky appearance
-  const turbidity = 30 - 10 * Math.sin(Math.PI * timeOfDay); // Maximum turbidity for deepest possible sky
+  // Much higher turbidity for darker, deeper sky appearance
+  const turbidity = 18 - 8 * Math.sin(Math.PI * timeOfDay); // Significantly increased for deeper sky
   
   useEffect(() => {
     // Cleanup previous background
@@ -44,38 +44,15 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
     };
   }, [scene]);
 
-  // Add a directional light to simulate sunlight
-  const sunIntensity = Math.max(0.1, Math.sin(Math.PI * timeOfDay));
-  
   return (
-    <>
-      <Sky
-        ref={skyRef}
-        distance={450000}
-        sunPosition={sunPosition}
-        mieCoefficient={mieCoefficient}
-        mieDirectionalG={0.99}
-        rayleigh={rayleigh}
-        turbidity={turbidity}
-      />
-      
-      {/* Add directional light to simulate sun */}
-      <directionalLight 
-        position={sunPosition} 
-        intensity={sunIntensity * 1.5}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-      />
-      
-      {/* Add ambient light for overall scene brightness */}
-      <ambientLight intensity={0.2 + 0.3 * sunIntensity} />
-      
-      {/* Add hemisphere light for better ground illumination */}
-      <hemisphereLight 
-        color="#ffffff" 
-        groundColor="#222222" 
-        intensity={0.5 * sunIntensity} 
-      />
-    </>
+    <Sky
+      ref={skyRef}
+      distance={450000}
+      sunPosition={sunPosition}
+      mieCoefficient={mieCoefficient}
+      mieDirectionalG={0.9} // Increased from 0.8 for more directional scattering
+      rayleigh={rayleigh}
+      turbidity={turbidity}
+    />
   );
 }
