@@ -30,7 +30,6 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   // Ultra high rayleigh for extremely deep sky colors
   const rayleigh = timeOfDay < 0.2 || timeOfDay > 0.8
     ? 5 + 3 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
-    ? 3 + 3 * Math.sin(Math.PI * timeOfDay) // Higher during sunrise/sunset
     : 10; // Ultra high value for extremely deep blue
     
   // Extremely high turbidity for very dark, deep sky appearance
