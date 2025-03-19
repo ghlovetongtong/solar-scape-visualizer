@@ -55,18 +55,21 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   // Cloud parameters - make them depend on time of day
   const cloudOpacity = useMemo(() => {
     // Clouds more visible during day, less during sunset/sunrise
-    return timeOfDay > 0.25 && timeOfDay < 0.75 ? 0.9 : 0.7;
+    return timeOfDay > 0.25 && timeOfDay < 0.75 ? 0.8 : 0.65;
   }, [timeOfDay]);
   
-  // Cloud positions
+  // Enhanced cloud positions with larger scales and more variety
   const cloudPositions = useMemo(() => [
-    { position: [50, 35, -100] as [number, number, number], scale: 10, speed: 0.2 },
-    { position: [-80, 40, -40] as [number, number, number], scale: 12, speed: 0.1 },
-    { position: [120, 45, 20] as [number, number, number], scale: 15, speed: 0.15 },
-    { position: [-50, 38, 80] as [number, number, number], scale: 8, speed: 0.25 },
-    { position: [100, 50, 150] as [number, number, number], scale: 18, speed: 0.12 },
-    { position: [-120, 42, -140] as [number, number, number], scale: 14, speed: 0.18 },
-    { position: [30, 55, 200] as [number, number, number], scale: 20, speed: 0.08 },
+    { position: [50, 80, -300] as [number, number, number], scale: 25, speed: 0.12, volume: 0.8 },
+    { position: [-150, 90, -200] as [number, number, number], scale: 30, speed: 0.08, volume: 0.9 },
+    { position: [200, 100, -100] as [number, number, number], scale: 35, speed: 0.1, volume: 0.75 },
+    { position: [-100, 85, 100] as [number, number, number], scale: 28, speed: 0.15, volume: 0.85 },
+    { position: [180, 110, 250] as [number, number, number], scale: 40, speed: 0.06, volume: 0.9 },
+    { position: [-220, 95, -240] as [number, number, number], scale: 32, speed: 0.09, volume: 0.8 },
+    { position: [80, 115, 350] as [number, number, number], scale: 45, speed: 0.05, volume: 0.95 },
+    { position: [-300, 105, 150] as [number, number, number], scale: 38, speed: 0.07, volume: 0.85 },
+    { position: [250, 120, -350] as [number, number, number], scale: 42, speed: 0.04, volume: 0.9 },
+    { position: [-150, 95, 320] as [number, number, number], scale: 36, speed: 0.11, volume: 0.8 },
   ], []);
   
   return (
@@ -81,7 +84,7 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
         turbidity={turbidity}
       />
       
-      {/* Add volumetric clouds to the scene */}
+      {/* Add more realistic volumetric clouds to the scene */}
       {cloudPositions.map((cloud, index) => (
         <MovingCloud 
           key={`cloud-${index}`}
@@ -89,6 +92,7 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
           scale={cloud.scale}
           speed={cloud.speed}
           opacity={cloudOpacity}
+          volume={cloud.volume}
         />
       ))}
     </>
@@ -101,12 +105,13 @@ interface MovingCloudProps {
   scale: number;
   speed: number;
   opacity: number;
+  volume: number;
 }
 
-function MovingCloud({ position, scale, speed, opacity }: MovingCloudProps) {
+function MovingCloud({ position, scale, speed, opacity, volume }: MovingCloudProps) {
   const cloudRef = useRef<THREE.Group>(null);
   const initialX = position[0];
-  const rangeX = 300; // Total range of movement
+  const rangeX = 400; // Increased range of movement for more realistic cloud drift
   
   // Animate the cloud
   useFrame(({ clock }) => {
@@ -125,10 +130,12 @@ function MovingCloud({ position, scale, speed, opacity }: MovingCloudProps) {
       scale={scale}
       opacity={opacity}
       speed={0} // Internal speed parameter (keep at 0 as we're animating manually)
-      segments={6} // Lower segment count for better performance
-      bounds={[50, 50, 50]} // Size of the cloud
-      volume={0.6} // Volume/density of the cloud
+      segments={8} // Increased segment count for more detailed clouds
+      bounds={[100, 50, 100]} // Larger bounds for bigger clouds
+      volume={volume} // Variable volume/density per cloud for more realism
       color={new THREE.Color(0xffffff)}
+      depthTest={true}
+      noisiness={0.6} // Increased noisiness for more natural, fluffy appearance
     />
   );
 }
