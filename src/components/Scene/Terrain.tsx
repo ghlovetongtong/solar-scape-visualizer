@@ -73,11 +73,11 @@ export default function Terrain({
   return (
     <group>
       <Ground size={groundSize} savedBoundaries={savedBoundaries} />
-      <Vegetation 
+      {/* <Vegetation 
         count={500}  // Reduce vegetation count by half
         roadBoundary={roadBoundaryForVegetation}
         savedBoundaries={savedBoundaries}
-      />
+      /> */}
       
       {/* Add the angled road */}
       <Road 

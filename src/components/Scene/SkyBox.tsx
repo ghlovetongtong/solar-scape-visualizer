@@ -75,11 +75,11 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   return (
     <Sky
       ref={skyRef}
-      distance={3000}
-      sunPosition={[1,1,1]}
+      distance={1000}
+      sunPosition={[0,1000,0]}
       mieCoefficient={mieCoefficient}
       mieDirectionalG={0.1} // Increased from 0.8 for more directional scattering
-      rayleigh={0.1}
+      rayleigh={0.04}
       turbidity={turbidity}
       inclination={1}
       azimuth={0.5}

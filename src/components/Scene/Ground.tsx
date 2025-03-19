@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import groundImg from '@/assets/ground.jpg';
+import groundImg from '@/assets/ground_2.jpg';
 
 
 interface GroundProps {
