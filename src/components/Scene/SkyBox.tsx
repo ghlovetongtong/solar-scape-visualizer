@@ -44,15 +44,38 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
     };
   }, [scene]);
 
+  // Add a directional light to simulate sunlight
+  const sunIntensity = Math.max(0.1, Math.sin(Math.PI * timeOfDay));
+  
   return (
-    <Sky
-      ref={skyRef}
-      distance={450000}
-      sunPosition={sunPosition}
-      mieCoefficient={mieCoefficient}
-      mieDirectionalG={0.99} // Increased for even more directional scattering
-      rayleigh={rayleigh}
-      turbidity={turbidity}
-    />
+    <>
+      <Sky
+        ref={skyRef}
+        distance={450000}
+        sunPosition={sunPosition}
+        mieCoefficient={mieCoefficient}
+        mieDirectionalG={0.99} // Increased for even more directional scattering
+        rayleigh={rayleigh}
+        turbidity={turbidity}
+      />
+      
+      {/* Add directional light to simulate sun */}
+      <directionalLight 
+        position={sunPosition} 
+        intensity={sunIntensity * 1.5}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+      />
+      
+      {/* Add ambient light for overall scene brightness */}
+      <ambientLight intensity={0.2 + 0.3 * sunIntensity} />
+      
+      {/* Add hemisphere light for better ground illumination */}
+      <hemisphereLight 
+        color="#ffffff" 
+        groundColor="#222222" 
+        intensity={0.5 * sunIntensity} 
+      />
+    </>
   );
 }
