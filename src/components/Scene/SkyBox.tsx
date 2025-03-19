@@ -60,13 +60,13 @@ export default function SkyBox({ timeOfDay }: SkyBoxProps) {
   
   // Cloud positions
   const cloudPositions = useMemo(() => [
-    { position: [50, 35, -100], scale: 10, speed: 0.2 },
-    { position: [-80, 40, -40], scale: 12, speed: 0.1 },
-    { position: [120, 45, 20], scale: 15, speed: 0.15 },
-    { position: [-50, 38, 80], scale: 8, speed: 0.25 },
-    { position: [100, 50, 150], scale: 18, speed: 0.12 },
-    { position: [-120, 42, -140], scale: 14, speed: 0.18 },
-    { position: [30, 55, 200], scale: 20, speed: 0.08 },
+    { position: [50, 35, -100] as [number, number, number], scale: 10, speed: 0.2 },
+    { position: [-80, 40, -40] as [number, number, number], scale: 12, speed: 0.1 },
+    { position: [120, 45, 20] as [number, number, number], scale: 15, speed: 0.15 },
+    { position: [-50, 38, 80] as [number, number, number], scale: 8, speed: 0.25 },
+    { position: [100, 50, 150] as [number, number, number], scale: 18, speed: 0.12 },
+    { position: [-120, 42, -140] as [number, number, number], scale: 14, speed: 0.18 },
+    { position: [30, 55, 200] as [number, number, number], scale: 20, speed: 0.08 },
   ], []);
   
   return (
