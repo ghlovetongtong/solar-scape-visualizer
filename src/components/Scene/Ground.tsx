@@ -56,12 +56,13 @@ export default function Ground({
       const color = colors[colorIndex];
       
       return (
-        <line 
+        <primitive 
           key={`boundary-${boundaryIndex}`} 
-          geometry={geometry}
-        >
-          <lineBasicMaterial color={color} linewidth={2} />
-        </line>
+          object={new THREE.Line(
+            geometry,
+            new THREE.LineBasicMaterial({ color, linewidth: 2 })
+          )} 
+        />
       );
     }).filter(Boolean);
   }, [savedBoundaries]);
