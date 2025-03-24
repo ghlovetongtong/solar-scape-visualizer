@@ -113,6 +113,31 @@ export default function TransformerStation({
     document.body.style.cursor = 'auto';
   };
 
+  // 创建一个简单的文本网格，而不是使用Text组件
+  const transformerLabel = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    if (!context) return null;
+    
+    canvas.width = 256;
+    canvas.height = 128;
+    context.fillStyle = '#000000';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    
+    context.font = 'bold 48px Arial, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillStyle = '#ffffff';
+    context.fillText(`Transformer ${transformerIndex + 1}`, canvas.width / 2, canvas.height / 2);
+    
+    // 创建纹理
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    
+    return texture;
+  }, [transformerIndex]);
+
   return (
     <group 
       position={position} 
@@ -121,6 +146,7 @@ export default function TransformerStation({
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
       userData={{ type: 'transformer', transformerIndex }}
+      frustumCulled={false}
     >
       <mesh 
         receiveShadow 
@@ -210,18 +236,17 @@ export default function TransformerStation({
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
-      <Text
-        position={[0, 5, 2.5]}
-        rotation={[0, 0, 0]}
-        fontSize={1.2}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.1}
-        outlineColor="#000000"
-      >
-        {`Transformer ${transformerIndex + 1}`}
-      </Text>
+      {/* 使用平面网格和CanvasTexture替代Text组件 */}
+      {transformerLabel && (
+        <mesh position={[0, 5, 2.5]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[5, 2.5]} />
+          <meshBasicMaterial 
+            map={transformerLabel} 
+            transparent={true}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }
