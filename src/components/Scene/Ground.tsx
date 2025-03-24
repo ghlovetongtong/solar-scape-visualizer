@@ -85,7 +85,7 @@ export default function Ground({
       </mesh>
 
       {/* Render all saved boundaries */}
-      <group>{boundaryLines}</group>
+      <group frustumCulled={false}>{boundaryLines}</group>
     </>
   );
 }

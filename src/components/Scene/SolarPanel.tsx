@@ -223,6 +223,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
             castShadow
             receiveShadow
+            frustumCulled={false}
             userData={{ batchIndex, type: 'panel-instance' }}
             onClick={handleClick} // Add explicit onClick handler
           />
@@ -234,6 +235,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
             castShadow
             receiveShadow
+            frustumCulled={false}
             userData={{ batchIndex, type: 'panel-instance' }}
             onClick={handleClick} // Add explicit onClick handler
           />
@@ -245,6 +247,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             args={[bracketGeometry, materials.bracketMaterial, batch.length]}
             castShadow
             receiveShadow
+            frustumCulled={false}
             userData={{ batchIndex, type: 'panel-instance' }}
             onClick={handleClick} // Add explicit onClick handler
           />
@@ -259,6 +262,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             scale={new THREE.Vector3(1, 1, 1)}
             castShadow
             receiveShadow
+            frustumCulled={false}
             userData={{ type: 'panel', panelId: selectedPanel.id }}
             onClick={(e) => {
               e.stopPropagation();
@@ -282,6 +286,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
             userData={{ type: 'panel', panelId: selectedPanel.id }}
             castShadow
             receiveShadow
+            frustumCulled={false}
             onClick={(e) => {
               e.stopPropagation();
               onSelectPanel(selectedPanel.id);
