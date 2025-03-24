@@ -192,9 +192,9 @@ export default function Camera({
       
       {/* Camera label */}
       <Text
-        position={[0, 0.5, 0]}
+        position={[0, 3.5, 0]}
         rotation={[0, 0, 0]}
-        fontSize={0.5}
+        fontSize={3.5}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"

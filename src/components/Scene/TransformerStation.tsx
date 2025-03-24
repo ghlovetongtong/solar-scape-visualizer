@@ -211,9 +211,9 @@ export default function TransformerStation({
       </mesh>
       
       <Text
-        position={[0, 5, 2.5]}
+        position={[0, 8, 2.5]}
         rotation={[0, 0, 0]}
-        fontSize={1.2}
+        fontSize={3.2}
         color="#ffffff"
         anchorX="center"
         anchorY="middle"

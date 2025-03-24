@@ -74,7 +74,7 @@ export default function Terrain({
     <group>
       <Ground size={groundSize} savedBoundaries={savedBoundaries} />
       {/* <Vegetation 
-        count={500}  // Reduce vegetation count by half
+        count={50}  // Reduce vegetation count by half
         roadBoundary={roadBoundaryForVegetation}
         savedBoundaries={savedBoundaries}
       /> */}

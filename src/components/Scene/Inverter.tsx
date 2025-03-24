@@ -216,9 +216,9 @@ export default function Inverter({
 
       {/* Inverter label - make it more visible when selected */}
       <Text
-        position={[0, 2.7, 0]}
+        position={[0, 4.7, 0]}
         rotation={[0, 0, 0]}
-        fontSize={1.2}
+        fontSize={3.2}
         color={isSelected ? "#9b87f5" : "#ffffff"}
         anchorX="center"
         anchorY="middle"

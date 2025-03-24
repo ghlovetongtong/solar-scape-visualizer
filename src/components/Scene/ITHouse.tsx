@@ -171,9 +171,9 @@ export default function ITHouse({
       </mesh>
       
       <Text
-        position={[0, 5, 3.5]}
+        position={[0, 7, 3.5]}
         rotation={[0, 0, 0]}
-        fontSize={1.2}
+        fontSize={3.2}
         color="#333333"
         anchorX="center"
         anchorY="middle"

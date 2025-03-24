@@ -3,7 +3,7 @@ import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { useTexture } from '@react-three/drei';
 import { BoundaryPoint } from '@/hooks/useDrawBoundary';
-import groundImg from '@/assets/ground_2.jpg';
+import groundImg from '@/assets/ground_color_2.jpg';
 
 
 interface GroundProps {
@@ -30,7 +30,7 @@ export default function Ground({
   useMemo(() => {
     if (texture) {
       texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-      texture.repeat.set(6, 6); // Increased repeat from 4 to 6 to maintain texture density with larger ground
+      texture.repeat.set(3, 3); // Increased repeat from 4 to 6 to maintain texture density with larger ground
     }
   }, [texture]);
   
