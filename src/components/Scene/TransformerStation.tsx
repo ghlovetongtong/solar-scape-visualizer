@@ -1,5 +1,4 @@
-
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -100,7 +99,6 @@ export default function TransformerStation({
     }
   };
   
-  // Add hover effects
   const handlePointerOver = (e: THREE.Event) => {
     e.stopPropagation();
     setHovered(true);
@@ -113,7 +111,6 @@ export default function TransformerStation({
     document.body.style.cursor = 'auto';
   };
 
-  // 创建一个简单的文本网格，而不是使用Text组件
   const transformerLabel = useMemo(() => {
     const canvas = document.createElement('canvas');
     const context = canvas.getContext('2d');
@@ -131,7 +128,6 @@ export default function TransformerStation({
     context.fillStyle = '#ffffff';
     context.fillText(`Transformer ${transformerIndex + 1}`, canvas.width / 2, canvas.height / 2);
     
-    // 创建纹理
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     
@@ -236,7 +232,6 @@ export default function TransformerStation({
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
-      {/* 使用平面网格和CanvasTexture替代Text组件 */}
       {transformerLabel && (
         <mesh position={[0, 5, 2.5]} rotation={[0, 0, 0]}>
           <planeGeometry args={[5, 2.5]} />
