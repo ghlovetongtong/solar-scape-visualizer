@@ -56,13 +56,13 @@ export default function Ground({
       const color = colors[colorIndex];
       
       return (
-        <primitive 
+        <line 
           key={`boundary-${boundaryIndex}`} 
-          object={new THREE.Line(
-            geometry,
-            new THREE.LineBasicMaterial({ color, linewidth: 2 })
-          )} 
-        />
+          geometry={geometry}
+          // 修复更新后的Three.js版本中Line组件的参数问题
+        >
+          <lineBasicMaterial color={color} linewidth={2} />
+        </line>
       );
     }).filter(Boolean);
   }, [savedBoundaries]);
@@ -73,7 +73,7 @@ export default function Ground({
         rotation={[-Math.PI / 2, 0, 0]} 
         position={[0, 0, 0]} 
         receiveShadow
-        frustumCulled={false} // Prevent disappearing when zooming in close
+        frustumCulled={false} // 禁用视锥裁剪，防止在远距离时消失
       >
         <primitive object={groundGeometry} />
         <meshStandardMaterial 

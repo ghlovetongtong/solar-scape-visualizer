@@ -99,7 +99,7 @@ export default function Inverter({
   // Improved click handler to ensure event propagation is stopped correctly
   const handleClick = useCallback((event: any) => {
     // Stop propagation at all levels to prevent scene click
-    event.stopPropagation();
+    event.stopPropagation?.();
     if (event.nativeEvent) {
       event.nativeEvent.stopPropagation();
     }
@@ -113,8 +113,8 @@ export default function Inverter({
     }
   }, [inverterIndex, isSelected, onClick]);
   
-  const handlePointerDown = (e: THREE.Event) => {
-    e.stopPropagation();
+  const handlePointerDown = (e: any) => {
+    e.stopPropagation?.();
     
     if (onDragStart) {
       onDragStart(inverterIndex);
