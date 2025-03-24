@@ -25,9 +25,9 @@ export function createDeviceLabel(
   if (!context) return null;
   
   // Default values with customization options
-  const width = options.width || 1024;  // Increased from 512
-  const height = options.height || 512;  // Increased from 256
-  const fontSize = options.fontSize || 120;  // Increased from 72
+  const width = options.width || 2048;  // Significantly increased from 1024
+  const height = options.height || 1024;  // Significantly increased from 512
+  const fontSize = options.fontSize || 280;  // Significantly increased from 120
   const fontWeight = options.fontWeight || 'bold';
   const fontFamily = options.fontFamily || 'Arial, sans-serif';
   const textColor = options.textColor || '#ffffff';

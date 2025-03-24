@@ -223,8 +223,8 @@ export default function Inverter({
 
       {/* Inverter label using the new utility */}
       {inverterLabel && (
-        <mesh position={[0, 2.7, 0]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[6, 3]} />
+        <mesh position={[0, 4, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[12, 6]} />
           <meshBasicMaterial 
             map={inverterLabel} 
             transparent={true}

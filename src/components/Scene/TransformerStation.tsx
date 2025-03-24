@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -214,8 +215,8 @@ export default function TransformerStation({
       </mesh>
       
       {transformerLabel && (
-        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[8, 4]} />
+        <mesh position={[0, 9, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[16, 8]} />
           <meshBasicMaterial 
             map={transformerLabel} 
             transparent={true}
