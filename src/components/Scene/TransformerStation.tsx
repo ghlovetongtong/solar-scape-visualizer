@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -117,10 +118,10 @@ export default function TransformerStation({
     
     if (!context) return null;
     
-    canvas.width = 256;
-    canvas.height = 128;
+    canvas.width = 512; // Increased from 256 to make it wider
+    canvas.height = 256; // Increased from 128 to accommodate larger font
     
-    context.font = 'bold 48px Arial, sans-serif';
+    context.font = 'bold 72px Arial, sans-serif'; // Increased from 48px
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillStyle = '#ffffff';
@@ -231,8 +232,8 @@ export default function TransformerStation({
       </mesh>
       
       {transformerLabel && (
-        <mesh position={[0, 5, 2.5]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[5, 2.5]} />
+        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}> {/* Raised position from 5 to 7 */}
+          <planeGeometry args={[8, 4]} /> {/* Increased from [5, 2.5] to make it larger */}
           <meshBasicMaterial 
             map={transformerLabel} 
             transparent={true}
