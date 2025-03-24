@@ -1,3 +1,4 @@
+
 import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useThree, useFrame } from '@react-three/fiber';
@@ -223,8 +224,8 @@ export default function Inverter({
 
       {/* Inverter label using the new utility */}
       {inverterLabel && (
-        <mesh position={[0, 4, 0]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[12, 6]} />
+        <mesh position={[0, 6, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[24, 12]} />
           <meshBasicMaterial 
             map={inverterLabel} 
             transparent={true}

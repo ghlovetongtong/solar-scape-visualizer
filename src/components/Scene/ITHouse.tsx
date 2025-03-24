@@ -172,8 +172,8 @@ export default function ITHouse({
       </mesh>
       
       {houseLabel && (
-        <mesh position={[0, 7, 0]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[12, 6]} />
+        <mesh position={[0, 10, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[24, 12]} />
           <meshBasicMaterial 
             map={houseLabel} 
             transparent={true}
