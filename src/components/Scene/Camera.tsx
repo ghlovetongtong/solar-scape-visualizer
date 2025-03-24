@@ -198,7 +198,7 @@ export default function Camera({
       
       {/* Camera label using createDeviceLabel utility instead of Text */}
       {cameraLabel && (
-        <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
+        <mesh position={[0, 3, 0]} rotation={[0, 0, 0]}>
           <planeGeometry args={[24, 12]} />
           <meshBasicMaterial 
             map={cameraLabel} 
