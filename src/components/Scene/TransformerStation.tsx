@@ -214,8 +214,8 @@ export default function TransformerStation({
       </mesh>
       
       {transformerLabel && (
-        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[8, 4]} />
+        <mesh position={[0, 12, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[32, 16]} />
           <meshBasicMaterial 
             map={transformerLabel} 
             transparent={true}

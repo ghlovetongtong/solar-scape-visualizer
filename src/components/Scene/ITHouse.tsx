@@ -22,12 +22,10 @@ export default function ITHouse({
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
   
-  // Add useMemo for the ITHouse label
   const houseLabel = useMemo(() => {
     return createDeviceLabel('IT House');
   }, []);
   
-  // Setup scene-level event listeners for dragging
   useEffect(() => {
     if (!isDragging) return;
     
@@ -62,7 +60,6 @@ export default function ITHouse({
       }
     };
     
-    // Add event listeners to the canvas
     const domElement = gl.domElement;
     domElement.addEventListener('mousemove', handleGlobalMouseMove);
     domElement.addEventListener('mouseup', handleGlobalMouseUp);
@@ -175,8 +172,8 @@ export default function ITHouse({
       </mesh>
       
       {houseLabel && (
-        <mesh position={[0, 5, 3.5]} rotation={[0, 0, 0]}>
-          <planeGeometry args={[6, 3]} />
+        <mesh position={[0, 10, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[24, 12]} />
           <meshBasicMaterial 
             map={houseLabel} 
             transparent={true}
