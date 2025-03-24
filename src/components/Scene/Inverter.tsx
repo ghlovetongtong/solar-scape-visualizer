@@ -1,7 +1,7 @@
-import React, { useCallback, useRef, useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
+import { createDeviceLabel } from '../../utils/deviceLabels';
 
 interface InverterProps {
   position: THREE.Vector3;
@@ -28,6 +28,13 @@ export default function Inverter({
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
+  
+  // Add useMemo for the Inverter label with dynamic color based on selection
+  const inverterLabel = useMemo(() => {
+    return createDeviceLabel(`Inverter ${inverterIndex + 1}`, {
+      textColor: isSelected ? "#9b87f5" : "#ffffff"
+    });
+  }, [inverterIndex, isSelected]);
   
   // Define materials based on selection and dragging state
   const baseMaterial = isSelected
@@ -214,19 +221,17 @@ export default function Inverter({
         <meshStandardMaterial color="#111111" />
       </mesh>
 
-      {/* Inverter label - make it more visible when selected */}
-      <Text
-        position={[0, 4.7, 0]}
-        rotation={[0, 0, 0]}
-        fontSize={3.2}
-        color={isSelected ? "#9b87f5" : "#ffffff"}
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.12}
-        outlineColor="#000000"
-      >
-        {`Inverter ${inverterIndex + 1}`}
-      </Text>
+      {/* Inverter label using the new utility */}
+      {inverterLabel && (
+        <mesh position={[0, 2.7, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[6, 3]} />
+          <meshBasicMaterial 
+            map={inverterLabel} 
+            transparent={true}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }

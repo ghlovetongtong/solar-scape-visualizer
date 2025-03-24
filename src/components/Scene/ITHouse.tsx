@@ -1,8 +1,7 @@
-
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
+import { createDeviceLabel } from '../../utils/deviceLabels';
 
 interface ITHouseProps {
   position: THREE.Vector3;
@@ -22,6 +21,11 @@ export default function ITHouse({
   const groupRef = useRef<THREE.Group>(null);
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
+  
+  // Add useMemo for the ITHouse label
+  const houseLabel = useMemo(() => {
+    return createDeviceLabel('IT House');
+  }, []);
   
   // Setup scene-level event listeners for dragging
   useEffect(() => {
@@ -170,18 +174,16 @@ export default function ITHouse({
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
-      <Text
-        position={[0, 7, 3.5]}
-        rotation={[0, 0, 0]}
-        fontSize={3.2}
-        color="#333333"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.08}
-        outlineColor="#ffffff"
-      >
-        IT House
-      </Text>
+      {houseLabel && (
+        <mesh position={[0, 5, 3.5]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[6, 3]} />
+          <meshBasicMaterial 
+            map={houseLabel} 
+            transparent={true}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }

@@ -1,8 +1,7 @@
-
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
+import { createDeviceLabel } from '../../utils/deviceLabels';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
@@ -100,7 +99,6 @@ export default function TransformerStation({
     }
   };
   
-  // Add hover effects
   const handlePointerOver = (e: THREE.Event) => {
     e.stopPropagation();
     setHovered(true);
@@ -113,6 +111,10 @@ export default function TransformerStation({
     document.body.style.cursor = 'auto';
   };
 
+  const transformerLabel = useMemo(() => {
+    return createDeviceLabel(`Transformer ${transformerIndex + 1}`);
+  }, [transformerIndex]);
+
   return (
     <group 
       position={position} 
@@ -121,6 +123,7 @@ export default function TransformerStation({
       onPointerOver={handlePointerOver}
       onPointerOut={handlePointerOut}
       userData={{ type: 'transformer', transformerIndex }}
+      frustumCulled={false}
     >
       <mesh 
         receiveShadow 
@@ -210,18 +213,16 @@ export default function TransformerStation({
         <meshStandardMaterial color="#dddddd" roughness={0.4} />
       </mesh>
       
-      <Text
-        position={[0, 8, 2.5]}
-        rotation={[0, 0, 0]}
-        fontSize={3.2}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.1}
-        outlineColor="#000000"
-      >
-        {`Transformer ${transformerIndex + 1}`}
-      </Text>
+      {transformerLabel && (
+        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[8, 4]} />
+          <meshBasicMaterial 
+            map={transformerLabel} 
+            transparent={true}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }
