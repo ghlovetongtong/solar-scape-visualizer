@@ -1,8 +1,7 @@
-
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { Text } from '@react-three/drei';
 import { useThree, useFrame } from '@react-three/fiber';
+import { createDeviceLabel } from '../../utils/deviceLabels';
 
 interface TransformerStationProps {
   position: THREE.Vector3;
@@ -113,24 +112,7 @@ export default function TransformerStation({
   };
 
   const transformerLabel = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    
-    if (!context) return null;
-    
-    canvas.width = 512; // Increased from 256 to make it wider
-    canvas.height = 256; // Increased from 128 to accommodate larger font
-    
-    context.font = 'bold 72px Arial, sans-serif'; // Increased from 48px
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.fillStyle = '#ffffff';
-    context.fillText(`Transformer ${transformerIndex + 1}`, canvas.width / 2, canvas.height / 2);
-    
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.needsUpdate = true;
-    
-    return texture;
+    return createDeviceLabel(`Transformer ${transformerIndex + 1}`);
   }, [transformerIndex]);
 
   return (
@@ -232,8 +214,8 @@ export default function TransformerStation({
       </mesh>
       
       {transformerLabel && (
-        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}> {/* Raised position from 5 to 7 */}
-          <planeGeometry args={[8, 4]} /> {/* Increased from [5, 2.5] to make it larger */}
+        <mesh position={[0, 7, 2.5]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[8, 4]} />
           <meshBasicMaterial 
             map={transformerLabel} 
             transparent={true}
