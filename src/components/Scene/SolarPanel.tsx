@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -5,7 +6,6 @@ import { useTexture } from '@react-three/drei';
 import { createInstancedMesh, updateInstancedMesh, type InstanceData, getShadowIntensity } from '@/lib/instancedMesh';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import solarpanelImg from '@/assets/solarpanel.jpg';
-
 interface SolarPanelsProps {
   panelPositions: InstanceData[];
   selectedPanelId: number | null;
@@ -130,6 +130,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
   }, [panelPositions, batchSize]);
   
   const handleClick = (event: any) => {
+    // Ensure this function really stops propagation
     event.stopPropagation();
     
     if (event.intersections && event.intersections.length > 0) {
@@ -139,6 +140,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         const batchIndex = Math.floor(intersection.object.userData.batchIndex);
         const panelId = batchIndex * batchSize + intersection.instanceId;
         
+        // Ensure the index is valid
         if (panelId < panelPositions.length) {
           const actualPanelId = panelPositions[panelId].id;
           console.log(`Panel clicked: instanceId=${intersection.instanceId}, batchIndex=${batchIndex}, panelId=${actualPanelId}`);
@@ -151,6 +153,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         onSelectPanel(panelId);
         event.nativeEvent.stopPropagation();
       } else {
+        // If clicked on panel group but not a specific panel
         console.log('Clicked on panel group but not a specific panel');
       }
     }
@@ -171,9 +174,7 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
       const shadowedPanelMesh = shadowedPanelRefs.current[batchIndex];
       const bracketMesh = bracketInstancedMeshRefs.current[batchIndex];
       
-      if (sunlitPanelMesh) sunlitPanelMesh.frustumCulled = false;
-      if (shadowedPanelMesh) shadowedPanelMesh.frustumCulled = false;
-      if (bracketMesh) bracketMesh.frustumCulled = false;
+      if (!sunlitPanelMesh || !shadowedPanelMesh || !bracketMesh) return;
       
       batch.forEach((panel, index) => {
         const matrix = new THREE.Matrix4();
@@ -217,44 +218,35 @@ export default function SolarPanels({ panelPositions, selectedPanelId, onSelectP
         <group key={`batch-${batchIndex}`}>
           <instancedMesh
             ref={(mesh) => {
-              if (mesh) {
-                sunlitPanelRefs.current[batchIndex] = mesh;
-                mesh.frustumCulled = false;
-              }
+              if (mesh) sunlitPanelRefs.current[batchIndex] = mesh;
             }}
             args={[panelGeometry, materials.sunlitPanelMaterial, batch.length]}
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick}
+            onClick={handleClick} // Add explicit onClick handler
           />
           
           <instancedMesh
             ref={(mesh) => {
-              if (mesh) {
-                shadowedPanelRefs.current[batchIndex] = mesh;
-                mesh.frustumCulled = false;
-              }
+              if (mesh) shadowedPanelRefs.current[batchIndex] = mesh;
             }}
             args={[panelGeometry, materials.shadowedPanelMaterial, batch.length]}
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick}
+            onClick={handleClick} // Add explicit onClick handler
           />
           
           <instancedMesh
             ref={(mesh) => {
-              if (mesh) {
-                bracketInstancedMeshRefs.current[batchIndex] = mesh;
-                mesh.frustumCulled = false;
-              }
+              if (mesh) bracketInstancedMeshRefs.current[batchIndex] = mesh;
             }}
             args={[bracketGeometry, materials.bracketMaterial, batch.length]}
             castShadow
             receiveShadow
             userData={{ batchIndex, type: 'panel-instance' }}
-            onClick={handleClick}
+            onClick={handleClick} // Add explicit onClick handler
           />
         </group>
       ))}

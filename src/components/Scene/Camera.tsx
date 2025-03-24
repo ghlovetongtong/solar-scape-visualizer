@@ -30,24 +30,34 @@ export default function Camera({
   const [hovered, setHovered] = useState(false);
   const rotationSpeedRef = useRef(Math.random() * 0.02 + 0.01); // Random speed between 0.01 and 0.03
   
+  // Setup scene-level event listeners for dragging
   useEffect(() => {
     if (!isDragging) return;
     
     const handleGlobalMouseMove = () => {
       if (isDragging && onDrag) {
+        // Create a plane parallel to the ground at the object's height
         const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
+        
+        // Cast ray from mouse position
         raycaster.setFromCamera(mouse, camera);
         
+        // Find intersection with drag plane
         const intersection = new THREE.Vector3();
         raycaster.ray.intersectPlane(dragPlane, intersection);
         
         if (intersection && dragOffsetRef.current) {
+          // Apply the drag offset to maintain relative position
           intersection.sub(dragOffsetRef.current);
+          
+          // Only update X and Z positions (keep Y constant)
           const newPosition: [number, number, number] = [
             intersection.x,
-            position.y,
+            position.y, // Keep Y position constant
             intersection.z
           ];
+          
+          // Call the drag callback with the new position
           onDrag(cameraIndex, newPosition);
         }
       }
@@ -61,6 +71,7 @@ export default function Camera({
       }
     };
     
+    // Add event listeners to the canvas
     const domElement = gl.domElement;
     domElement.addEventListener('mousemove', handleGlobalMouseMove);
     domElement.addEventListener('mouseup', handleGlobalMouseUp);
@@ -73,25 +84,31 @@ export default function Camera({
     };
   }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, cameraIndex, gl.domElement]);
   
+  // Rotate camera slightly over time
   useFrame((state) => {
     if (cameraRef.current) {
       if (isDragging) {
+        // Stop rotation when dragging
         return;
       }
       
       if (autoRotate) {
+        // Continuous rotation with slight variation based on camera index
         cameraRef.current.rotation.y += rotationSpeedRef.current * 0.01;
+        
+        // Optional: Add slight swaying motion for more natural look
         cameraRef.current.rotation.z = Math.sin(state.clock.getElapsedTime() * 0.2 + cameraIndex) * 0.03;
       } else {
+        // If autoRotate is false, just keep the subtle back and forth motion
         cameraRef.current.rotation.y = Math.sin(state.clock.getElapsedTime() * 0.1 + cameraIndex) * 0.2;
       }
     }
   });
   
-  const handlePointerDown = (e: any) => {
-    e.stopPropagation?.();
+  const handlePointerDown = (e: THREE.Event) => {
+    e.stopPropagation();
     
-    if (e.button === 0) {
+    if (e.button === 0) { // Left click
       if (onClick) {
         onClick(cameraIndex);
       }
@@ -100,6 +117,7 @@ export default function Camera({
     if (onDragStart) {
       onDragStart(cameraIndex);
       
+      // Calculate and store the offset between the object position and the intersection point
       if (cameraRef.current) {
         const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -position.y);
         raycaster.setFromCamera(mouse, camera);
@@ -114,14 +132,15 @@ export default function Camera({
     }
   };
   
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation?.();
+  // Add hover effects
+  const handlePointerOver = (e: THREE.Event) => {
+    e.stopPropagation();
     setHovered(true);
     document.body.style.cursor = 'pointer';
   };
   
-  const handlePointerOut = (e: any) => {
-    e.stopPropagation?.();
+  const handlePointerOut = (e: THREE.Event) => {
+    e.stopPropagation();
     setHovered(false);
     document.body.style.cursor = 'auto';
   };
@@ -135,17 +154,21 @@ export default function Camera({
       onPointerOut={handlePointerOut}
       userData={{ type: 'camera', cameraIndex }}
     >
+      {/* Camera mount/pole */}
       <mesh castShadow position={[0, -5, 0]}>
         <cylinderGeometry args={[0.1, 0.1, 10, 8]} />
         <meshStandardMaterial color={hovered ? "#aaaaaa" : (isDragging ? "#aaaaaa" : "#888888")} roughness={0.6} />
       </mesh>
       
+      {/* Camera housing */}
       <group rotation={[0, 0, 0]}>
+        {/* Main camera body */}
         <mesh castShadow position={[0, 0, 0.2]}>
           <boxGeometry args={[0.3, 0.3, 0.8]} />
           <meshStandardMaterial color={hovered ? "#555555" : (isDragging ? "#555555" : "#333333")} roughness={0.5} metalness={0.7} />
         </mesh>
         
+        {/* Camera lens */}
         <mesh castShadow position={[0, 0, 0.6]} rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[0.12, 0.15, 0.1, 16]} />
           <meshPhysicalMaterial 
@@ -156,6 +179,7 @@ export default function Camera({
           />
         </mesh>
         
+        {/* Indicator light */}
         <mesh position={[0, 0.12, 0.2]}>
           <sphereGeometry args={[0.03, 8, 8]} />
           <meshStandardMaterial 
@@ -166,6 +190,7 @@ export default function Camera({
         </mesh>
       </group>
       
+      {/* Camera label */}
       <Text
         position={[0, 0.5, 0]}
         rotation={[0, 0, 0]}

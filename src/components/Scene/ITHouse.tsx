@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -11,7 +12,7 @@ interface ITHouseProps {
   onDrag?: (position: [number, number, number]) => void;
 }
 
-export default function ITHouse({
+export default function ITHouse({ 
   position,
   isDragging = false,
   onDragStart,
@@ -22,6 +23,7 @@ export default function ITHouse({
   const [dragOffset, setDragOffset] = useState<THREE.Vector3 | null>(null);
   const { raycaster, camera, mouse, gl } = useThree();
   
+  // Setup scene-level event listeners for dragging
   useEffect(() => {
     if (!isDragging) return;
     
@@ -56,6 +58,7 @@ export default function ITHouse({
       }
     };
     
+    // Add event listeners to the canvas
     const domElement = gl.domElement;
     domElement.addEventListener('mousemove', handleGlobalMouseMove);
     domElement.addEventListener('mouseup', handleGlobalMouseUp);
@@ -68,8 +71,8 @@ export default function ITHouse({
     };
   }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, dragOffset, gl.domElement]);
   
-  const handlePointerDown = (e: any) => {
-    e.stopPropagation?.();
+  const handlePointerDown = (e: THREE.Event) => {
+    e.stopPropagation();
     
     if (onDragStart) {
       onDragStart();

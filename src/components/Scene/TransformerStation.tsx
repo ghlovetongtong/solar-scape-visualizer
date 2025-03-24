@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
@@ -73,8 +74,8 @@ export default function TransformerStation({
     };
   }, [isDragging, onDrag, onDragEnd, camera, mouse, raycaster, position.y, transformerIndex, dragOffset, gl.domElement]);
   
-  const handlePointerDown = (e: any) => {
-    e.stopPropagation?.();
+  const handlePointerDown = (e: THREE.Event) => {
+    e.stopPropagation();
     
     if (e.button === 0) { // Left click
       if (onClick) {
@@ -99,14 +100,15 @@ export default function TransformerStation({
     }
   };
   
-  const handlePointerOver = (e: any) => {
-    e.stopPropagation?.();
+  // Add hover effects
+  const handlePointerOver = (e: THREE.Event) => {
+    e.stopPropagation();
     setHovered(true);
     document.body.style.cursor = 'pointer';
   };
   
-  const handlePointerOut = (e: any) => {
-    e.stopPropagation?.();
+  const handlePointerOut = (e: THREE.Event) => {
+    e.stopPropagation();
     setHovered(false);
     document.body.style.cursor = 'auto';
   };
