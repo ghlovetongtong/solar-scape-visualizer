@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
-import { Text } from '@react-three/drei';
+import { createDeviceLabel } from '../../utils/deviceLabels';
 
 interface CameraProps {
   position: THREE.Vector3;
@@ -29,6 +30,11 @@ export default function Camera({
   const { raycaster, camera, mouse, gl } = useThree();
   const [hovered, setHovered] = useState(false);
   const rotationSpeedRef = useRef(Math.random() * 0.02 + 0.01); // Random speed between 0.01 and 0.03
+  
+  // Generate camera label using the device label utility
+  const cameraLabel = useMemo(() => {
+    return createDeviceLabel(`Camera ${cameraIndex + 1}`);
+  }, [cameraIndex]);
   
   // Setup scene-level event listeners for dragging
   useEffect(() => {
@@ -190,19 +196,17 @@ export default function Camera({
         </mesh>
       </group>
       
-      {/* Camera label */}
-      <Text
-        position={[0, 0.5, 0]}
-        rotation={[0, 0, 0]}
-        fontSize={0.5}
-        color="#ffffff"
-        anchorX="center"
-        anchorY="middle"
-        outlineWidth={0.05}
-        outlineColor="#000000"
-      >
-        {`Camera ${cameraIndex + 1}`}
-      </Text>
+      {/* Camera label using createDeviceLabel utility instead of Text */}
+      {cameraLabel && (
+        <mesh position={[0, 8, 0]} rotation={[0, 0, 0]}>
+          <planeGeometry args={[24, 12]} />
+          <meshBasicMaterial 
+            map={cameraLabel} 
+            transparent={true}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
     </group>
   );
 }
