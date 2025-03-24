@@ -119,8 +119,6 @@ export default function TransformerStation({
     
     canvas.width = 256;
     canvas.height = 128;
-    context.fillStyle = '#000000';
-    context.fillRect(0, 0, canvas.width, canvas.height);
     
     context.font = 'bold 48px Arial, sans-serif';
     context.textAlign = 'center';
